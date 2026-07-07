@@ -1,0 +1,70 @@
+/* 
+Nome:                    011 - Histórico de Escala - Antes de Inserir
+Consultor:               Guilherme dos Santos
+Data Criação:            08/06/2026
+Data Última Atualização: 08/06/2026
+Utilização:              Regra criada para impedir a troca de histórico de escala, para escalas que tenham carga horária mensais diferentes.
+*/
+Definir cursor cur_R038HES;
+Definir cursor cur_R006ESC;
+Definir data dDatAlt;
+Definir data dDatAnt;
+Definir alfa aMesAnt;
+Definir alfa aMesAtu;
+Definir alfa aEscAnt;
+Definir alfa aEscAtu;
+Definir alfa aMensagem;
+
+@A TRAVA SOMENTE IRÁ ACONTECER QUEM ESTIVER NO GRUPO RH@
+nTemGru = PertenceGrupo("GP - RH Focais - Centralizador");
+  
+Se(nTemGru = 1){
+  nNumEmp = R038HES.NumEmp;
+  nTipCol = R038HES.TipCol;
+  nNumCad = R038HES.NumCad;
+  dDatAlt = R038HES.DatAlt;
+  nEscAtu = R038HES.CodEsc;
+  ConverteMascara(1, nEscAtu, aEscAtu, "Z[5]9999");
+
+  nMesAtu = 0;
+  nMesAnt = 0;
+  @BUSCAR A CARGA HORÁRIA MES DA ESCALA ATUAL@
+  cur_R006ESC.SQL "SELECT * FROM R006ESC WHERE CodEsc =:nEscAtu";
+  cur_R006ESC.AbrirCursor();
+  Se(cur_R006ESC.Achou){
+    nMesAtu = cur_R006ESC.HorMes;
+    ConverteMascara(4, nMesAtu, aMesAtu, "hhh:mm");
+  }
+  cur_R006ESC.FecharCursor();
+  
+  @PROCURAR A ESCALA ANTERIOR AO HISTÓRICO ATUAL@
+  cur_R038HES.SQL "SELECT * FROM R038HES WHERE NumEmp =:nNumEmp AND \
+                                               TipCol =:nTipCol AND \
+                                               NumCad =:nNumCad AND \
+                                               DatAlt <:dDatAlt ORDER BY DatAlt DESC";
+  cur_R038HES.AbrirCursor();
+  Se(cur_R038HES.Achou){
+    nEscAnt = cur_R038HES.CodEsc;
+    ConverteMascara(1, nEscAnt, aEscAnt, "Z[5]9999");
+    
+    @BUSCAR A CARGA HORÁRIA MÊS DA ESCALA ANTERIOR@
+    cur_R006ESC.SQL "SELECT * FROM R006ESC WHERE CodEsc =:nEscAnt";
+    cur_R006ESC.AbrirCursor();
+    Se(cur_R006ESC.Achou){
+      nMesAnt = cur_R006ESC.HorMes;
+      ConverteMascara(4, nMesAnt, aMesAnt, "hhh:mm");
+    }
+    cur_R006ESC.FecharCursor();
+    
+    Se(nMesAnt <> nMesAtu){
+      aMensagem = "Escala Anterior (" + aEscAnt + ") tem carga horária mensal de " + aMesAnt + ", já a escala que está sendo alterada (" + aEscAtu + "), tem carga horária mensal de: " + aMesAtu + ". Processo será cancelado!";
+      Mensagem(Erro, aMensagem);
+      Cancel(1);    
+    }
+    
+    
+    
+  }
+  cur_R038HES.FecharCursor();
+  
+}@FIM TEMGRU = 1@

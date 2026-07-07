@@ -1,0 +1,495 @@
+@ não usar @
+
+definir alfa anomfun; 
+definir alfa aendrua;
+definir alfa aendnum;
+definir alfa aendcpl;
+definir alfa animbai;                                
+definir alfa anomcid;
+definir alfa acodest;
+definir alfa aendcep;
+definir alfa anumtel;
+definir alfa aemacom;
+definir alfa amatfun;
+definir alfa atitred; @Verificar";@
+definir alfa atipsex; @descrição - primiera letra@
+definir alfa aativo; @ATIVO": "S" ou "N"@
+definir alfa acodfil; @Verificar@
+definir alfa aprofessor; @verificar "PROFESSOR": "S"@
+definir alfa anumctps; @"CTPS": "1325467981",@
+definir alfa aufctps; @"ESTADOCTPS": "PR",@
+definir alfa aseriectps; @"SERIECTPS": "1"@
+definir alfa alink;
+definir alfa alinkhub;
+definir alfa aretint;
+definir alfa aretinthub;
+definir alfa ahttp;
+definir alfa atoken;
+definir alfa adados;
+definir alfa acolatv;
+definir alfa anomcon;
+definir alfa ajson;
+definir alfa acabjson;
+definir alfa cdados;
+definir alfa asitafa;
+definir alfa anombai;
+definir alfa acodcid;
+definir alfa anumcpf;
+definir alfa anumcid;
+definir alfa aestcid;
+definir alfa aemacom;
+definir alfa aendnum;
+definir alfa anombai;
+definir alfa acodcid;
+definir alfa aendcep;
+definir alfa atipsex;
+definir alfa aestciv;
+definir alfa anompai;
+definir alfa atipcon;  
+definir alfa atitred;
+definir alfa anumemp;
+definir alfa anumemp;
+definir alfa atipcol;
+definir alfa anumcad;
+definir alfa anombai;
+definir alfa adatadm;
+definir alfa adatadm;
+definir alfa adatnas;
+definir alfa anumctp;
+definir alfa aserctp;
+definir alfa aestctp;
+definir alfa acodbai;
+definir alfa afuncao;
+definir alfa adatenv;
+definir alfa aunidade;
+definir alfa aretorno;
+definir alfa aprofessor;
+definir alfa ativo;
+definir alfa alog;
+definir alfa astatus;
+definir alfa acoderro;
+definir alfa aid;
+definir alfa are;
+definir alfa aid;
+definir alfa are; 
+definir alfa adate;
+definir alfa aContentType;
+definir alfa aTransferEncoding;
+definir alfa aresponseHeaders;
+definir alfa aresponseStatus;
+definir alfa arequestHeaders;
+definir alfa arequestMethod;
+definir alfa aresponseBody;   
+definir alfa arequestBody;  
+definir alfa arequestUrl;  
+definir alfa ahttphub;
+definir alfa ajsonhub;
+definir alfa ahttphub;
+definir alfa alinkhub; 
+definir alfa ajsonhub;  
+definir alfa arethub;
+definir alfa aConnection;
+definir alfa avary;
+definir alfa alocation;
+definir alfa axcontenttypeoptions;
+definir alfa axxssprotection;
+definir alfa aCacheControl;
+definir alfa apragma;
+definir alfa aexpires;
+definir alfa axframeoptions;
+definir alfa aCFCacheStatus;
+definir alfa aReportTo;
+definir alfa aNEL;
+definir alfa aServer;
+definir alfa aCFRAY;
+definir alfa altsvc;
+definir alfa aidprime;
+definir alfa atipcole;
+definir alfa areterro;
+definir alfa aemapar;
+
+definir data ddatnas;
+definir data ddatadm; 
+definir data ddatenv;
+
+definir numero nnumcpf;
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad;
+definir numero ncoderro;
+definir numero nhorenv;
+definir numero nidprime;
+definir numero nCodHwf;
+definir cursor curestciv;
+
+
+ddatenv = datsis;
+nhorenv = horsis;
+convertemascara(3,ddatenv, adatenv, "DD/MM/YYYY");
+
+@End Point@
+alink = "https://ff2e-homolog.mannesoftprime.com.br/mns_api_homolog2/"; 
+alinkhub = "https://apihub.maristabrasil.org/senior/hmg/monitoramento";
+
+@BUSCA COLABORADORES NÃO ENVIADOS@  
+
+adados="select fun.numemp, fun.tipcol, fun.numcad, fun.nomfun,       \
+               fun.numcpf, fun.datnas, cpl.endrua, cpl.endnum,       \
+               cpl.endcpl, bai.nombai, cid.nomcid, cpl.codest,       \
+               cpl.codcid, cpl.endcep, cpl.numtel, cpl.emacom,       \
+               fun.datadm, car.titred, fun.tipsex, fun.sitafa,       \
+               fun.codfil, fun.tipcon, fil.usu_idprime,              \
+               fun.numctp, fun.serctp, fun.estctp, cpl.emapar,       \
+               cpl.codbai, cpl.numcid, car.CodHwf                    \
+               from                                                  \
+               r034fun fun, r034cpl cpl, r030fil fil, r024car car,   \
+               r074bai bai, r074cid cid, r074est est                 \                         
+               where                                                 \
+               fun.numemp = cpl.numemp and                           \
+               fun.tipcol = cpl.tipcol and                           \
+               fun.numcad = cpl.numcad and                           \
+               fun.estcar = car.estcar and                           \
+               fun.codcar = car.codcar and                           \
+               fun.numemp = fil.numemp and                           \
+               fun.codfil = fil.codfil and                           \
+               cpl.codcid = cid.codcid and                           \
+               cpl.codbai = bai.codbai and                           \
+               cpl.codcid = bai.codcid and                           \
+               cpl.codpai = est.codpai and                           \
+               cpl.codest = est.codest and                           \
+               fun.numcpf > 0 and                                    \
+               fil.usu_idprime <> '' and                             \
+               fil.usu_idprime <> ' ' and                            \
+               fun.sitafa <> 7 and                                   \
+               not exists (select usu_numcpf from usu_tprime                 \
+                            where usu_numcpf = fun.numcpf and                \
+                                  usu_status = 'OK' and                      \
+               usu_datenv = (select max(dat.usu_datenv) from usu_tprime dat  \
+								                where                                        \
+												dat.usu_numcpf = usu_tprime.usu_numcpf and           \
+												dat.usu_status = 'OK') and                           \
+               usu_horenv = (select max(hor.usu_horenv) from usu_tprime hor  \
+								                where                                        \
+												hor.usu_numcpf = usu_tprime.usu_numcpf and           \
+												hor.usu_datenv = usu_tprime.usu_datenv and           \
+												hor.usu_status = 'OK'))";
+               
+               
+              
+SQL_Criar(cdados); 
+SQL_UsarSQLSenior2(cdados, 0); 
+SQL_UsarAbrangencia(cdados, 0);
+SQL_DEFINIRCOMANDO(cdados, adados);
+SQL_AbrirCursor(cdados); 
+ENQUANTO (SQL_EOF(cdados) = 0) 
+{ 
+  SQL_RetornarAlfa(cdados,"sitafa",asitafa);
+  SQL_RetornarAlfa(cdados,"nomfun",anomfun);
+  SQL_RetornarAlfa(cdados,"endrua",aendrua);
+  SQL_RetornarAlfa(cdados,"endnum",aendnum);
+  SQL_RetornarAlfa(cdados,"endcpl",aendcpl);
+  SQL_RetornarAlfa(cdados,"nombai",anombai);
+  SQL_RetornarAlfa(cdados,"codcid",acodcid);
+  SQL_RetornarAlfa(cdados,"endcep",aendcep);
+  SQL_RetornarAlfa(cdados,"numtel",anumtel);
+  SQL_RetornarAlfa(cdados,"numcpf",anumcpf);
+  SQL_RetornarAlfa(cdados,"numcid",anumcid);  
+  SQL_RetornarAlfa(cdados,"codest",acodest);
+  SQL_RetornarAlfa(cdados,"emacom",aemacom);
+  SQL_RetornarAlfa(cdados,"endnum",aendnum);
+  SQL_RetornarAlfa(cdados,"nombai",anombai);
+  SQL_RetornarAlfa(cdados,"codcid",acodcid);
+  SQL_RetornarAlfa(cdados,"endcep",aendcep);
+  SQL_RetornarAlfa(cdados,"tipsex",atipsex);
+  SQL_RetornarAlfa(cdados,"tipcon",atipcon);  
+  SQL_RetornarAlfa(cdados,"titred",atitred);
+  SQL_RetornarAlfa(cdados,"numctp",anumctp);
+  SQL_RetornarAlfa(cdados,"serctp",aserctp);
+  SQL_RetornarAlfa(cdados,"estctp",aestctp);
+  SQL_RetornarAlfa(cdados,"nomcid",anomcid);
+  SQL_RetornarAlfa(cdados,"emapar",aemapar);
+  SQL_RetornarInteiro(cdados,"numemp",nnumemp);
+  SQL_RetornarInteiro(cdados,"numcad",nnumcad);
+  SQL_RetornarInteiro(cdados,"tipcol",ntipcol);
+  SQL_RetornarInteiro(cdados,"codbai",ncodbai);
+  SQL_RetornarInteiro(cdados,"sitafa",nsitafa);
+  SQL_RetornarInteiro(cdados,"codfil",ncodfil);
+  SQL_RetornarInteiro(cdados,"numcpf",nnumcpf);
+  SQL_RetornarInteiro(cdados,"usu_idprime",nidprime);
+  SQL_RetornarInteiro(cdados,"CodHwf",nCodHwf);
+  
+  se((aemacom = "") ou (aemacom = " "))
+  {
+    aemacom = aemapar;
+    
+     se((aemacom = "") ou (aemacom = " "))
+    {
+      aemacom = anumcpf +"@marista.edu.br";
+    }
+  }
+  
+  intparaalfa(nnumemp,anumemp);
+  intparaalfa(nnumcad,anumcad);
+  intparaalfa(ntipcol,atipcol);
+  intparaalfa(nsitafa,asitafa);
+  intparaalfa(ncodfil,acodfil);
+  intparaalfa(ncodbail,acodbai);
+  intparaalfa(nidprime,aidprime);
+  
+  SQL_RetornarData(cdados,"datadm",ddatadm);
+  SQL_RetornarData(cdados,"datnas",ddatnas);
+  
+  se(nidprime < 200)
+  {
+    atipcole = "C";
+  }
+  senao
+  {
+    atipcole = "E";  
+  }
+ 
+  convertemascara(3,ddatadm, adatadm, "YYYY-MM-DD");        
+  convertemascara(3,ddatnas, adatnas, "YYYY-MM-DD");        
+
+  convertemascara(1,nnumcpf, anumcpf, "99999999999");
+
+  ativo = "S";
+  
+  se(nsitafa = 7)
+  {
+    ativo = "N";                                                       
+  }
+  
+  curestciv.sql "select keynam, valkey from r996lsf where lstnam = 'ltipcon' and keynam = :atipcon";
+  curestciv.abrircursor();
+  se(curestciv.achou)
+  {
+    aestciv = curestciv.valkey;
+    anomcon = curestciv.keynam; 
+  } 
+  curestciv.fecharcursor(); 
+  
+  aprofessor = "N";
+  se(nCodHwf = 1)
+  {     
+    aprofessor = "S";
+  }
+  aserctp = "1";
+                         
+  ajson ="";
+  ajson = "{\"ACAO\":";
+  ajson = ajson + "\"InserePessoa\",";
+  ajson = ajson + "\"InserePessoa\": [";  
+  ajson = ajson + "{\"NOME\":\""+anomfun+"\",";
+  ajson = ajson + "\"CPF\":\""+anumcpf+"\",";
+  ajson = ajson + "\"DATA_NASCIMENTO\":\""+adatnas+"\",";
+  ajson = ajson + "\"LOGRADOURO\":\""+aendrua+"\",";
+  ajson = ajson + "\"NUMERO\":\""+aendnum+"\",";
+  ajson = ajson + "\"COMPLEMENTO\":\""+aendcpl+"\",";
+  ajson = ajson + "\"BAIRRO\":\""+anombai+"\",";
+  ajson = ajson + "\"CIDADE\":\""+anomcid+"\",";
+  ajson = ajson + "\"UF\":\""+acodest+"\",";
+  ajson = ajson + "\"CEP\":\""+aendcep+"\",";
+  ajson = ajson + "\"FONE\":\""+anumtel+"\",";
+  ajson = ajson + "\"EMAIL\":\""+aemacom+"\",";
+  ajson = ajson + "\"MATR_FUNCIONARIO\":\""+anumcad+"\",";
+  ajson = ajson + "\"DATA_CONTRATACAO\":\""+adatadm+"\",";
+  ajson = ajson + "\"FUNCAO\":\""+atitred+"\",";
+  ajson = ajson + "\"SEXO\":\""+atipsex+"\",";
+  ajson = ajson + "\"ATIVO\":\""+ativo+"\",";  
+  ajson = ajson + "\"UNIDADE\":\""+aidprime+"\",";   
+  ajson = ajson + "\"PROFESSOR\":\""+aprofessor+"\","; @verificar@
+  ajson = ajson + "\"CTPS\":\""+anumctp+"\",";
+  ajson = ajson + "\"ESTADOCTPS\":\""+aestctp+"\",";
+  ajson = ajson + "\"SERIECTPS\":\""+aserctp+"\",";
+  ajson = ajson + "\"TIPO_COLEGIO\":\""+atipcole+"\""; 
+  ajson = ajson + "}]}";
+
+                                        
+  
+  alog = "Integrado com sucesso!";
+  astatus= "OK";
+  
+  @INSERE DADOS NA TABELA USU@
+  
+  iniciartransacao();
+  
+  
+   
+  HTTPOBJETO(AHTTP);
+  HttpHabilitaSNI(AHTTP);
+  HTTPDESABILITAERRORESPOSTA(AHTTP);
+  HTTPALTERACODIFCARACPADRAO(AHTTP, "UTF-8"); 
+  
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "Accept", "*/*"); 
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "Accept-encoding", "gzip, deflate, br, zstd"); 
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "Authorization", "Basic bWFyaXN0YXBpeGFwaTp3NU1nYkJGITFNUnNw"); 
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "Content-Type", "application/json"); 
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "Connection", "keep-alive");
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "TOKEN", "7NAG-CRYA-TSL3-OTCM-CZX0");
+  atoken = "";
+  HTTPPOST(AHTTP,alink,ajson,atoken);  
+  areterro = atoken;         
+  HTTPLECODIGORESPOSTA(AHTTP,ncoderro);
+  intparaalfa(ncoderro, acoderro);
+  
+  @Pegando dados Cabeçalho PARA O HUB@
+  HttpLeCabecalhoResposta(AHTTP, "Date", adate);
+  HttpLeCabecalhoResposta(AHTTP, "Content-Type", aContentType);
+  HttpLeCabecalhoResposta(AHTTP, "Transfer-Encoding", aTransferEncoding);
+  HttpLeCabecalhoResposta(AHTTP, "Connection", aConnection);
+  HttpLeCabecalhoResposta(AHTTP, "vary", avary);
+  HttpLeCabecalhoResposta(AHTTP, "location", alocation);
+  HttpLeCabecalhoResposta(AHTTP, "x-content-type-options", axcontenttypeoptions);
+  HttpLeCabecalhoResposta(AHTTP, "x-xss-protection", axxssprotection);
+  HttpLeCabecalhoResposta(AHTTP, "Cache-Control", aCacheControl);
+  HttpLeCabecalhoResposta(AHTTP, "pragma", apragma);
+  HttpLeCabecalhoResposta(AHTTP, "expires", aexpires);
+  HttpLeCabecalhoResposta(AHTTP, "x-frame-options", axframeoptions);
+  HttpLeCabecalhoResposta(AHTTP, "CF-Cache-Status", aCFCacheStatus);
+  HttpLeCabecalhoResposta(AHTTP, "Report-To", aReportTo);
+  HttpLeCabecalhoResposta(AHTTP, "NEL", aNEL);
+  HttpLeCabecalhoResposta(AHTTP, "Server", aServer);
+  HttpLeCabecalhoResposta(AHTTP, "CF-RAY", aCFRAY);
+  HttpLeCabecalhoResposta(AHTTP, "alt-svc", altsvc);
+  
+  TROCASTRING(aReportTo,"\"","",aReportTo);
+  TROCASTRING(aNEL,"\"","",aNEL);
+  TROCASTRING(altsvc,"\"","",altsvc);
+  TROCASTRING(atoken,"\"","",atoken);
+  atoken = atoken+"\"";
+  
+  se((ncoderro = 200) ou (ncoderro = 201))   
+  {    
+    execsqlex("insert into usu_tprime                                         \
+            (usu_numemp, usu_tipcol, usu_numcad, usu_nomfun, usu_numcpf,      \
+             usu_datnas, usu_endrua, usu_endnum, usu_endcpl, usu_codbai,      \
+             usu_codcid, usu_codest, usu_endcep, usu_numtel, usu_emacom,      \
+             usu_datadm, usu_funcao, usu_tipsex, usu_sitafa, usu_unidade,     \
+             usu_professor, usu_numctp, usu_serctp, usu_estctp, usu_datenv,   \
+             usu_horenv, usu_status, usu_log, usu_codfil                      \
+             )                                                                \
+             values                                                           \
+            (:nnumemp, :ntipcol, :nnumcad, :anomfun, :anumcpf,                \
+             :ddatnas, :aendrua, :aendnum, :aendcpl, :acodbai,                \
+             :acodcid, :acodest, :aendcep, :anumtel, :aemacom,                \
+             :ddatadm, :atitred, :atipsex, :asitafa, :aidprime,               \
+             :aprofessor, :anumctp, :aserctp, :aestctp, :ddatenv,             \
+             :nhorenv, :astatus, :alog, :acodfil)", nerro, aretorno);
+    
+    
+             
+   
+    finalizartransacao(); 
+  }
+  senao
+  {
+    @desfazertransacao();@
+    desfazertransacao();
+    
+    execsqlex("insert into usu_tprime                                         \
+            (usu_numemp, usu_tipcol, usu_numcad, usu_nomfun, usu_numcpf,      \
+             usu_datnas, usu_endrua, usu_endnum, usu_endcpl, usu_codbai,      \
+             usu_codcid, usu_codest, usu_endcep, usu_numtel, usu_emacom,      \
+             usu_datadm, usu_funcao, usu_tipsex, usu_sitafa, usu_unidade,     \
+             usu_professor, usu_numctp, usu_serctp, usu_estctp, usu_datenv,   \
+             usu_horenv, usu_status, usu_log, usu_codfil                      \
+             )                                                                \
+             values                                                           \
+            (:nnumemp, :ntipcol, :nnumcad, :anomfun, :anumcpf,                \
+             :ddatnas, :aendrua, :aendnum, :aendcpl, :acodbai,                \
+             :acodcid, :acodest, :aendcep, :anumtel, :aemacom,                \
+             :ddatadm, :atitred, :atipsex, :asitafa, :aidprime,               \
+             :aprofessor, :anumctp, :aserctp, :aestctp, :ddatenv,             \
+             :nhorenv, :astatus, :alog, :acodfil)", nerro, areterro);
+    
+    @Armazena dodos do erro em uma tabela de log@
+    
+    execsql "insert into usu_tintlyclog \
+             (usu_datlog, usu_horlog,   \
+              usu_codlog, usu_msglog)   \
+              values                    \
+              (:ddatenv, :nhorenv,      \
+               :ncoderro,:atoken)";   
+  }  
+  
+  @MONTANDO VAREIAVEL QUE ARMAZENA OS DADOS DO CABEÇALHO DE RETRORNO@
+  aresponseHeaders = aresponseHeaders + "\"{";
+  aresponseHeaders = aresponseHeaders +"Date:"+ adate+",";
+  aresponseHeaders = aresponseHeaders +"Content-Type:"+aContentType+",";
+  aresponseHeaders = aresponseHeaders +"Transfer-Encoding:"+aTransferEncoding+",";
+  aresponseHeaders = aresponseHeaders +"Connection:"+aConnection+",";
+  aresponseHeaders = aresponseHeaders +"vary:"+avary+",";
+  aresponseHeaders = aresponseHeaders +"location:"+alocation+",";
+  aresponseHeaders = aresponseHeaders +"x-content-type-options:"+axcontenttypeoptions+",";
+  aresponseHeaders = aresponseHeaders +"x-xss-protection:"+axxssprotection+",";
+  aresponseHeaders = aresponseHeaders +"Cache-Control:"+aCacheControl+",";
+  aresponseHeaders = aresponseHeaders +"pragma:"+apragma+",";
+  aresponseHeaders = aresponseHeaders +"expires:"+aexpires+",";
+  aresponseHeaders = aresponseHeaders +"x-frame-options:"+axframeoptions+",";
+  aresponseHeaders = aresponseHeaders +"CF-Cache-Status:"+aCFCacheStatus+",";
+  aresponseHeaders = aresponseHeaders +"Report-To:"+aReportTo+",";
+  aresponseHeaders = aresponseHeaders +"NEL:"+aNEL+",";
+  aresponseHeaders = aresponseHeaders +"Server:"+aServer+",";
+  aresponseHeaders = aresponseHeaders +"CF-RAY:"+aCFRAY+",";
+  aresponseHeaders = aresponseHeaders +"alt-svc:"+altsvc;
+  aresponseHeaders = aresponseHeaders + "}\""; 
+  
+  arequestBody = ajson; 
+  
+  @Remove " da string@
+  trocastring(arequestBody, "\"", "", arequestBody);
+  
+  arequestHeaders = arequestHeaders + "Accept:*//*,"; 
+  arequestHeaders = arequestHeaders + "Accept-encoding:gzip, deflate, br, zstd,"; 
+  arequestHeaders = arequestHeaders + "Authorization:Basic bWFyaXN0YXBpeGFwaTp3NU1nYkJGITFNUnNw,";
+  arequestHeaders = arequestHeaders + "Content-Type: application/json";
+  arequestHeaders = arequestHeaders + "Connection: keep-alive";
+  arequestHeaders = arequestHeaders + "TOKEN: 7NAG-CRYA-TSL3-OTCM-CZX0\"";
+  
+  arequestMethod = "POST\"";
+  
+  arequestUrl = "https://ff2e-homolog.mannesoftprime.com.br/mns_api_homolog2/\""; 
+  
+  aresponseBody = atoken;
+  @trocastring(arequestBody, "\"", "", arequestBody); @
+  aresponseStatus = acoderro;                                                        
+  
+  @MONTANDO O BODY DO HUB@
+  ajsonhub = ajsonhub + "{";
+  ajsonhub = ajsonhub + "\"requestBody\":\""+arequestBody+"\",";
+  ajsonhub = ajsonhub + "\"requestHeaders\":\""+arequestHeaders+",";
+  ajsonhub = ajsonhub + "\"requestMethod\":\""+arequestMethod+",";
+  ajsonhub = ajsonhub + "\"requestUrl\":\""+arequestUrl+",";
+  ajsonhub = ajsonhub + "\"responseBody\":\""+aresponseBody+",";
+  ajsonhub = ajsonhub + "\"responseHeaders\":"+aresponseHeaders+",";
+  ajsonhub = ajsonhub + "\"responseStatus\":"+aresponseStatus;
+  ajsonhub = ajsonhub + "}";    
+    
+  @CHAMA O HUB@
+  HTTPOBJETO(ahttphub);
+  HttpHabilitaSNI(ahttphub);
+  HTTPDESABILITAERRORESPOSTA(ahttphub);
+  HTTPALTERACODIFCARACPADRAO(ahttphub, "UTF-8"); 
+  
+  HTTPALTERACABECALHOREQUISICAO(ahttphub, "Accept", "*/*"); 
+  HTTPALTERACABECALHOREQUISICAO(ahttphub, "Accept-encoding", "gzip, deflate, br, zstd"); 
+  HTTPALTERACABECALHOREQUISICAO(ahttphub, "Connection", "keep-alive"); 
+  HTTPALTERACABECALHOREQUISICAO(ahttphub, "Content-Type", "application/json");
+  HTTPALTERACABECALHOREQUISICAO(ahttphub, "Ocp-Apim-Subscription-Key", "ef9803b2f5d546a18aa134fd0858e0e3");  
+  
+  HTTPPOST(ahttphub,alinkhub,ajsonhub,arethub);           
+  HTTPLECODIGORESPOSTA(ahttphub,ncoderrohub);    
+  
+   arethub = "HUB - "+arethub;
+   execsql "insert into usu_tinthub  \
+             (usu_datlog, usu_horlog,   \
+              usu_codlog, usu_msglog)   \
+              values                    \
+              (:ddatenv, :nhorenv,      \
+               :ncoderrohub, :arethub)";               
+ 
+  SQL_PROXIMO(cdados);
+}
+SQL_FECHARCURSOR(cdados);
+SQL_DESTRUIR(cdados);     

@@ -1,0 +1,15 @@
+
+Se (TipCal = 62)
+  Inicio
+    Definir Data dDatDem;
+    Definir Data dDatDem2;
+    
+    dDatDem = R042Rcm.DatDem;
+    dDatDem2 = R042Rcm.DatDem;
+    DesMontaData (dDatDem,xDiaRes,xMesRes,xAnoRes);
+    UltimoDia (dDatDem2);
+    DesMontaData (dDatDem2,xDiaMes,xMesMes,xAnoMes);
+    xValDia = RefEvt / 30;
+    ValEvt = xValDia * xDiaRes;
+    x = 0;      
+  Fim;
