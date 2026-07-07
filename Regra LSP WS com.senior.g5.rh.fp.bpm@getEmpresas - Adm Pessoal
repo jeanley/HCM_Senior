@@ -1,0 +1,46 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 09/12/2024
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aNomEmp;
+Definir Alfa aNumEmp;
+
+aNomEmp = getEmpresas.enomemp;
+aNumEmp = getEmpresas.enumemp;
+
+aSQL = "SELECT NUMEMP, NOMEMP FROM R030EMP WHERE 1 = 1";
+
+Se((aNumEmp <> "") e (aNumEMp <> " "))
+aSQL = aSQL + " AND NUMEMP = " + aNumEmp;
+
+Se((aNomEmp <> "") e (aNomEmp <> " "))
+aSQL = aSQL + " AND NOMEMP LIKE '%" + aNomEmp + "%'";
+
+aSQL = aSQL + " ORDER BY NUMEMP, NOMEMP";
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,ASQL);          
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarAlfa(cBusca, "NOMEMP", aNomEmp);
+  SQL_RetornarInteiro(cBusca, "NUMEMP", nNumEmp);
+  
+  ConverteMascara(1, nNumEmp, aNumEmp, "9[4]");
+    
+  getEmpresas.empresas.CriarLinha();  
+  getEmpresas.empresas.snomemp = aNomEmp;
+  getEmpresas.empresas.snumemp = aNumEmp;
+  getEmpresas.empresas.empresa  = aNumEmp + " - " + aNomEmp;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

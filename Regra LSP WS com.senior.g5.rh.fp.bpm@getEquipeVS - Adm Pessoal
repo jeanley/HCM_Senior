@@ -1,0 +1,494 @@
+Definir Alfa cEquipe;
+Definir Alfa cTipCon;
+Definir Alfa aSQL;                                  
+Definir Alfa aLisLid;    
+Definir Alfa aNomFun;
+Definir Alfa aNomFun;
+Definir Alfa aSinal;
+Definir Alfa aTitRed;
+Definir Alfa aNomLoc;
+Definir Alfa aNomFil;
+Definir Alfa aTipCol;
+Definir Alfa aDesCon;
+Definir Alfa aVerif;
+Definir Alfa aPosTra;
+Definir Alfa aCodSin;
+Definir Alfa aNomSin;
+Definir Alfa aDatAdm;
+Definir Alfa aCarHor;
+Definir Alfa aDesPos;
+Definir Alfa aCarLid;
+Definir Alfa aCodEtb;
+Definir Alfa aPosTra;
+Definir Alfa aDesPos;
+Definir Alfa aNomEmp;
+Definir Alfa aTipSal;
+Definir Alfa aCodVin;
+Definir Alfa aEscala;
+Definir Alfa aNumEmp;
+Definir Alfa aTipCol;
+Definir Alfa aNumCad;
+Definir Alfa aValSal;
+Definir Alfa aCodFil;  
+Definir Alfa aSQLDoc;
+Definir Alfa cDocente;
+Definir Alfa aSQLNoDoc;
+Definir Alfa cNoDocente;
+Definir Alfa aDesApf;
+Definir Alfa aSeqApf;
+Definir Alfa aCodApf;
+Definir Alfa aHorMes;
+Definir Alfa aHorSem;
+Definir Alfa aValApf;
+Definir Alfa aDatIni;
+Definir Alfa aInfCom;
+Definir Alfa aEnter;
+Definir Alfa aTotMes;
+Definir Alfa aTotSem;
+Definir Alfa aValSal;
+Definir Alfa aCodCcu;
+Definir Alfa aNomCcu; 
+Definir Alfa aEstPos;
+Definir Alfa aPosTra;
+x=x;
+
+Definir Numero nseqapf;
+Definir Numero ncodapf;
+Definir Numero nhormes;
+Definir Numero nhorsem;                                                                                           
+Definir Numero nvalapf;   
+Definir Numero nFNumEmp;
+Definir Numero nFTipCol;
+Definir Numero nFNumCad;                                        
+Definir Numero nValSal;
+Definir Numero nTipCon;
+Definir Numero nNumEmp;
+Definir Numero nTipCol;
+Definir Numero nNumCad;
+Definir Numero nCarHor;
+Definir Numero nCodSin;                          
+Definir Numero nNumEmpLid;
+Definir Numero nTipColLid;
+Definir Numero nNumCadLid;
+Definir Numero nCodEtb;
+Definir Numero nTipSal; 
+Definir Numero nNomFun;     
+Definir Numero nEstPos; 
+Definir Numero nPosTra; 
+Definir Cursor cR070FIL;
+Definir Alfa   aSQlAux ;
+
+
+Definir Alfa aTipUni; 
+
+Definir Alfa aCondAux ;
+
+Definir Data dDatAdm;
+Definir Data   DDATALTSAL;
+definir data ddatini;
+definir data ddatzer;
+
+RetornaASCII(13, aEnter); 
+
+  X=X;
+ 
+
+nNumEmp = getEquipeVS.enumemp;
+nTipCol = getEquipeVS.etipcol;
+nNumCad = getEquipeVS.enumcad;
+aNomFun = getEquipeVS.enomfun; 
+aEstPos = getEquipeVS.eestpos;
+aPosTra = getEquipeVS.epostra;
+
+TamanhoAlfa (aNomFun, nNomFun); 
+TamanhoAlfa (aEstPos, nEstPos);
+TamanhoAlfa (aPosTra, nPosTra);
+
+
+
+cR070FIL.Sql " SELECT R030FIL.usu_tipuni FROM R034FUN, R030FIL  \
+               WHERE  R034FUN.NUMEMP = R030FIL.NUMEMP           \
+                AND   R034FUN.CODFIL = R030FIL.CODFIL           \
+                AND   R034FUN.NUMEMP = :nNumEmp                        \
+                AND   R034FUN.tipcol = :nTipCol                       \
+                and   R034FUN.numcad = :nNumCad" ;
+cR070FIL.AbrirCursor();
+Se (cR070FIL.Achou) {
+   aTipUni =  cR070FIL.USU_TIPUNI ; 
+}
+cR070FIL.FecharCursor();
+
+
+ /*
+SQL_Criar          (aSqlCur);                                                    
+SQL_UsarSqlSenior2 (aSqlCur, 0);
+SQL_UsarAbrangencia(aSqlCur, 0);                        
+SQL_DefinirComando (aSqlCur, "SELECT count (*) QTDPOS                                               \
+                            FROM R034FUN AS FUN1                                                    \
+                            INNER JOIN R017HIE AS FUN1_HIE                                          \
+                                ON FUN1.ESTPOS = FUN1_HIE.ESTPOS                                    \
+                               AND FUN1.POSTRA = FUN1_HIE.POSTRA                                    \
+                               AND FUN1_HIE.CODTHP = 1                                              \
+                               AND FUN1_HIE.REVHIE = (                                              \
+                                    SELECT MAX(TAB01.REVHIE)                                        \
+                                    FROM R017HIE AS TAB01                                           \
+                                    WHERE TAB01.ESTPOS = FUN1_HIE.ESTPOS                            \
+                                      AND TAB01.POSTRA = FUN1_HIE.POSTRA                            \
+                                      AND TAB01.CODTHP = FUN1_HIE.CODTHP                            \
+                               )                                                                    \
+                            INNER JOIN R017HIE AS HIE_SUB                                            \
+                                ON HIE_SUB.ESTPOS = FUN1_HIE.ESTPOS                                  \
+                               AND HIE_SUB.CODTHP = FUN1_HIE.CODTHP                                  \
+                               AND HIE_SUB.REVHIE = FUN1_HIE.REVHIE                                  \
+                               AND LEFT(HIE_SUB.POSPOS, LEN(FUN1_HIE.POSPOS)) = FUN1_HIE.POSPOS      \
+                               AND LEN(HIE_SUB.POSPOS) > LEN(FUN1_HIE.POSPOS)                        \
+                                  AND  HIE_SUB.POSPOS <> FUN1_HIE.POSPOS                             \
+                                                                                                     \
+                               WHERE FUN1.NUMEMP = :NUMEMP                                                 \
+                                AND FUN1.TIPCOL =  :TIPCOL                                                  \
+                                AND FUN1.NUMCAD =  :NUMCAD")   ;
+                                
+SQL_DefinirInteiro (aSqlCur, "NUMEMP", nNumEmp);
+SQL_DefinirInteiro (aSqlCur, "TIPCOL", nTipCol);
+SQL_DefinirInteiro (aSqlCur, "NUMCAD", nNumCad);
+SQl_AbrirCursor(aSqlCur);
+SQl_RetornarInteiro(aSqlCur, "QTDPOS",nQtdPos) ; */
+
+
+ 
+@matricula fixa temporariamente@
+
+
+Se ((aTipUni  = "COR") e (nNumCad <> 10008803) e (nNumCad <> 010031470)){       
+
+        ASQL= "SELECT                                                                             \
+                 FUN.NUMEMP,                                                                      \
+                 FUN.TIPCOL,                                                                      \
+                 FUN.NUMCAD,                                                                      \
+                 FUN.NOMFUN,                                                                      \
+                 FUN.VALSAL,                                                                      \
+                 FUN.CODFIL,                                                                      \
+                 FUN.DATADM,                                                                      \
+                 FUN.CODETB,                                                                      \
+                 FUN.TIPSAL,                                                                      \
+                 FUN.CODVIN,                                                                      \
+                 FUN.TIPCON,                                                                      \
+                 FUN.POSTRA,                                                                      \
+                 CAR.TITRED,                                                                      \
+                 ORN.NOMLOC,                                                                      \
+                 FIL.NOMFIL,                                                                      \
+                 HSI.CODSIN,                                                                      \
+                 POS.DESPOS,                                                                      \
+                 SIN.CODSIN,                                                                      \
+                 SIN.NOMSIN,                                                                      \
+                 EMP.NOMEMP,                                                                      \
+                 VIN.DESVIN,                                                                      \
+                 SIN.USU_CARHOR,                                                                  \
+                 ESC.USU_NOMCOM                                                                   \
+                   FROM                                                                           \
+                     R034FUN FUE                                                                  \
+                       INNER JOIN R017HIE HIE ON                                                  \
+                                          HIE.ESTPOS = FUE.ESTPOS                                 \
+                                      AND HIE.POSTRA = FUE.POSTRA                                 \
+                       INNER JOIN R017HIE HEN ON                                                  \
+                                          HEN.CODTHP = HIE.CODTHP                                 \
+                                      AND HEN.CODTHP = 1                                          \
+                                      AND SUBSTRING(HEN.POSPOS, 1, LEN(HIE.POSPOS)) = HIE.POSPOS  \
+                                      AND HEN.IDEPOS > HIE.IDEPOS                                 \
+                                      AND HEN.REVHIE = HIE.REVHIE                                 \
+                       INNER JOIN R034FUN FUN ON                                                  \
+                                          FUN.ESTPOS = HEN.ESTPOS                                 \
+                                      AND FUN.POSTRA = HEN.POSTRA                                 \
+                       INNER JOIN R024CAR CAR ON                                                  \
+                                          CAR.ESTCAR = FUN.ESTCAR                                 \
+                                      AND CAR.CODCAR = FUN.CODCAR                                 \
+                       INNER JOIN R016ORN ORN ON                                                  \
+                                          ORN.TABORG = FUN.TABORG                                 \
+                                      AND ORN.NUMLOC = FUN.NUMLOC                                 \
+                       INNER JOIN R038HSI HSI ON                                                  \
+                                          HSI.NUMEMP = FUN.NUMEMP                                 \
+                                      AND HSI.TIPCOL = FUN.TIPCOL                                 \
+                                      AND HSI.NUMCAD = FUN.NUMCAD                                 \
+                                      AND HSI.DATALT = (SELECT MAX(TAB1.DATALT)                   \
+                                                          FROM R038HSI TAB1                       \
+                                                            WHERE TAB1.NUMEMP = FUN.NUMEMP        \
+                                                              AND TAB1.TIPCOL = FUN.TIPCOL        \
+                                                              AND TAB1.NUMCAD = FUN.NUMCAD)       \
+                       INNER JOIN R030FIL FIL ON                                                  \
+                                          FIL.CODFIL = FUN.CODFIL                                 \
+                                      AND FIL.NUMEMP = FUN.NUMEMP                                 \
+                       INNER JOIN R014SIN SIN ON                                                  \
+                                          SIN.CODSIN = HSI.CODSIN                                 \
+                       INNER JOIN R017POS POS ON                                                  \
+                                          POS.ESTPOS = FUN.ESTPOS                                 \
+                                      AND POS.POSTRA = FUN.POSTRA                                 \
+                       INNER JOIN R030EMP EMP ON                                                  \
+                                          EMP.NUMEMP = FUN.NUMEMP                                 \
+                       INNER JOIN R022VIN VIN ON                                                  \
+                                          VIN.CODVIN = FUN.CODVIN                                 \
+                       INNER JOIN R006ESC ESC ON                                                  \
+                                          ESC.CODESC = FUN.CODESC                                 \
+                         WHERE FUE.NUMEMP = :nNumEmp                                              \
+                           AND FUE.TIPCOL = :nTipCol                                              \
+                           AND FUE.NUMCAD = :nNumCad                                              \
+                           AND FUE.SITAFA <> 7                                                    \
+                           AND FUN.SITAFA <> 7                                                    \                  
+                           AND HIE.REVHIE = (SELECT MAX(TAB2.REVHIE)                              \
+                                               FROM R017HIE TAB2                                  \
+                                                 WHERE TAB2.ESTPOS = HIE.ESTPOS                   \
+                                                   AND TAB2.CODTHP = HIE.CODTHP)"; 
+}
+Senao 
+{
+    ASQL = "SELECT FUN.NUMEMP,                                                                            \
+                   FUN.TIPCOL,                                                                            \
+                   FUN.NUMCAD,                                                                            \
+                   FUN.NOMFUN,                                                                            \
+                   FUN.VALSAL,                                                                            \
+                   FUN.CODFIL,                                                                            \
+                   FUN.DATADM,                                                                            \
+                   FUN.CODETB,                                                                            \
+                   FUN.TIPSAL,                                                                            \
+                   FUN.CODVIN,                                                                            \
+                   FUN.TIPCON,                                                                            \
+                   FUN.POSTRA,                                                                            \
+                   CAR.TITRED,                                                                            \
+                   ORN.NOMLOC,                                                                            \
+                   FIL.NOMFIL,                                                                            \
+                   HSI.CODSIN,                                                                            \
+                   POS.DESPOS,                                                                            \
+                   SIN.CODSIN,                                                                            \
+                   SIN.NOMSIN,                                                                            \
+                   EMP.NOMEMP,                                                                            \
+                   VIN.DESVIN,                                                                            \
+                   SIN.USU_CARHOR,                                                                        \
+                   ESC.USU_NOMCOM                                                                         \
+            FROM R034FUN FUN                                                                              \
+            ##CONDICAOAUX##                                                                               \
+            INNER JOIN R024CAR CAR ON CAR.ESTCAR = FUN.ESTCAR                                             \
+                                  AND CAR.CODCAR = FUN.CODCAR                                             \
+            INNER JOIN R016ORN ORN ON ORN.TABORG = FUN.TABORG                                             \
+                                  AND ORN.NUMLOC = FUN.NUMLOC                                             \
+            INNER JOIN R038HSI HSI ON HSI.NUMEMP = FUN.NUMEMP                                             \
+                                  AND HSI.TIPCOL = FUN.TIPCOL                                             \
+                                  AND HSI.NUMCAD = FUN.NUMCAD                                             \
+                                  AND HSI.DATALT = (SELECT MAX(TAB1.DATALT)                               \
+                                                     FROM R038HSI TAB1                                    \
+                                                    WHERE TAB1.NUMEMP = FUN.NUMEMP                        \
+                                                      AND TAB1.TIPCOL = FUN.TIPCOL                        \
+                                                      AND TAB1.NUMCAD = FUN.NUMCAD)                       \
+            INNER JOIN R030FIL FIL ON FIL.CODFIL = FUN.CODFIL                                             \
+                                  AND FIL.NUMEMP = FUN.NUMEMP                                             \
+            INNER JOIN R014SIN SIN ON SIN.CODSIN = HSI.CODSIN                                             \
+            INNER JOIN R017POS POS ON POS.ESTPOS = FUN.ESTPOS                                             \
+                                  AND POS.POSTRA = FUN.POSTRA                                             \
+            INNER JOIN R030EMP EMP ON EMP.NUMEMP = FUN.NUMEMP                                             \
+            INNER JOIN R022VIN VIN ON VIN.CODVIN = FUN.CODVIN                                             \
+            INNER JOIN R006ESC ESC ON ESC.CODESC = FUN.CODESC                                             \
+            WHERE FUN_SOL.NUMEMP = :nNumEmp                                                               \
+              AND FUN_SOL.TIPCOL = :nTipCol                                                               \
+              AND FUN_SOL.NUMCAD = :nNumCad                                                               \
+              AND FUN.SITAFA <> 7";   
+              
+        
+        
+         aCondAux =  "INNER JOIN R034FUN FUN_SOL ON (FUN_SOL.NUMEMP = FUN.NUMEMP  \
+                                              AND FUN_SOL.CODFIL = FUN.CODFIL) " ;
+                                              
+        @temporario para consegir fazer recisão de colanorador, irá ser feito uma reunião para definir uma estrategia de abrangenca de colaboraodres@
+        Se  (nNumCad = 10008803)  {                                              
+            aCondAux =   "INNER JOIN R034FUN FUN_SOL ON (FUN_SOL.NUMEMP = FUN.NUMEMP  \
+                                              AND  ((FUN_SOL.CODFIL = FUN.CODFIL) OR  \
+                                                    (FUN.CODFIL = 1033)) ) " ;         
+        }
+        Se  (nNumCad = 010031470)  {                                              
+            aCondAux =   "INNER JOIN R034FUN FUN_SOL ON (FUN_SOL.NUMEMP = FUN.NUMEMP  \
+                                              AND  ((FUN_SOL.CODFIL = FUN.CODFIL) OR  \
+                                                    (FUN.CODFIL = 1052)) )" ;         
+        }
+        
+          Se  (nNumCad = 20014739)  {                                              
+            aCondAux =   "INNER JOIN R034FUN FUN_SOL ON (FUN_SOL.NUMEMP = FUN.NUMEMP  \
+                                              AND  ((FUN_SOL.CODFIL = FUN.CODFIL) OR  \
+                                                    (FUN.CODFIL = 2057)) ) " ;     
+        }
+        
+        
+          Se  (nNumCad = 20004034)  {                                              
+            aCondAux =   "INNER JOIN R034FUN FUN_SOL ON (FUN_SOL.NUMEMP = FUN.NUMEMP  \
+                                              AND  ((FUN_SOL.CODFIL = FUN.CODFIL) OR  \
+                                                    (FUN.CODFIL = 2050)) ) " ;     
+        }
+        Se  (nNumCad = 20007247)  {                                              
+            aCondAux =   "INNER JOIN R034FUN FUN_SOL ON (FUN_SOL.NUMEMP = FUN.NUMEMP  \
+                                              AND  ((FUN_SOL.CODFIL = FUN.CODFIL) OR  \
+                                                    (FUN.CODFIL = 2055) OR \
+                                                    (FUN.CODFIL = 2036) OR \
+                                                    (FUN.CODFIL = 2026)) ) " ;     
+        }   
+        Se  (nNumCad = 20006449)  {                                              
+            aCondAux =   "INNER JOIN R034FUN FUN_SOL ON (FUN_SOL.NUMEMP = FUN.NUMEMP  \
+                                              AND  ((FUN_SOL.CODFIL = FUN.CODFIL) OR  \
+                                                    (FUN.CODFIL = 2051)) ) " ;     
+        }
+        
+     TrocaString(aSQL,"##CONDICAOAUX## ",aCondAux,aSQL);
+     
+                                                                                  
+}               
+  
+  
+
+aNomFun =getEquipeVS.enomfun;                                      
+Minusculo(aNomFun, aNomFun, "N");
+
+Se((nEstPos > 0) e (nPosTra > 0))
+{
+  aSQL = aSQL + " AND FUN.ESTPOS = " + aEstPos; 
+  aSQL = aSQL + " AND FUN.POSTRA = '" + aPosTra +"'";  
+}
+
+Se(nNomFun > 0)
+{
+  aSQL = aSQL + " AND LOWER(FUN.NOMFUN) LIKE '%"+aNomFun+"%'"; 
+}
+
+aSQL = aSQL + " ORDER BY FUN.NOMFUN ";
+
+SQL_Criar          (cEquipe);                                                    
+SQL_UsarSqlSenior2 (cEquipe, 0);
+SQL_UsarAbrangencia(cEquipe, 0);                        
+SQL_DefinirComando (cEquipe, aSQL);
+SQL_DefinirInteiro (cEquipe, "nNumEmp", nNumEmp);
+SQL_DefinirInteiro (cEquipe, "nTipCol", nTipCol);
+SQL_DefinirInteiro (cEquipe, "nNumCad", nNumCad);
+SQL_AbrirCursor    (cEquipe);                                                        
+Enquanto(SQL_EOF(cEquipe) = 0)
+{
+  SQL_RetornarInteiro  (cEquipe, "NUMEMP", nFNumEmp);
+  SQL_RetornarInteiro  (cEquipe, "TIPCOL", nFTipCol);
+  SQL_RetornarInteiro  (cEquipe, "NUMCAD", nFNumCad);
+  SQL_RetornarInteiro  (cEquipe, "CODFIL", nCodFil);
+  SQL_RetornarInteiro  (cEquipe, "TIPCON", nTipCon);
+  SQL_RetornarInteiro  (cEquipe, "TIPSAL", nTipSal);
+  SQL_RetornarAlfa     (cEquipe, "NOMEMP", aNomEmp);
+  SQL_RetornarAlfa     (cEquipe, "NOMFIL", aNomFil);
+  SQL_RetornarAlfa     (cEquipe, "NOMFUN", aNomFun);
+  SQL_RetornarAlfa     (cEquipe, "TITRED", aTitRed);    
+  SQL_RetornarAlfa     (cEquipe, "NOMLOC", aNomLoc);
+  SQL_RetornarAlfa     (cEquipe, "POSTRA", aPosTra);
+  SQL_RetornarAlfa     (cEquipe, "NOMSIN", aNomSin);
+  SQL_RetornarAlfa     (cEquipe, "DESPOS", aDesPos);
+  SQL_RetornarAlfa     (cEquipe, "DESVIN", aCodVin);   
+  SQL_RetornarFlutuante(cEquipe, "VALSAL", nValSal);
+  SQL_RetornarData     (cEquipe, "DATADM", dDatAdm);  
+  SQL_RetornarInteiro  (cEquipe, "CODSIN", nCodSin);
+  SQL_RetornarInteiro  (cEquipe, "CODETB", nCodEtb);
+  SQL_RetornarInteiro  (cEquipe, "USU_CARHOR", nCarHor);
+  SQL_RetornarAlfa     (cEquipe, "USU_NOMCOM", aEscala);
+  
+  ConverteMascara(3,dDatAdm, aDatAdm, "DD/MM/YYYY");
+  ConverteMascara(4,nCarHor, aCarHor,"hh:mm");
+  
+  IntParaAlfa(nCodSin, aCodSin);  
+  
+  @ Cargo Liderança @ 
+  RetornaPostoColaborador(nFNumEmp, nFTipCol, nFNumCad, DatSis, nEstPos, aPosTra, aDesPos);
+  RetornaChefePosto(2, nEstPos, 1, DatSis, aPosTra, nNumEmpLid, nTipColLid, nNumCadLid);
+  
+  Se(nNumEmpLid = 0)
+  {
+  	aCarLid = "N";
+  }
+  Senao 
+  {
+  	aCarLid = "S";
+  }
+  
+  @ Estabilidade @
+  Se(nCodEtb <> 0)
+  {
+    aCodEtb = "S";
+  }
+  Senao
+  {
+    aCodEtb = "N";
+  }
+  
+  @ Tipo de contrato @
+  aSQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE LSTNAM = 'LTipCon' AND KEYNAM = :nTipCon ";                                
+
+
+  SQL_Criar          (cTipCon);
+  SQL_UsarSQLSenior2 (cTipCon,0);
+  SQL_UsarAbrangencia(cTipCon,0);
+  SQL_DefinirComando (cTipCon,ASQL);
+  SQL_DefinirInteiro (cTipCon,"nTipCon",nTipCon);
+  SQL_AbrirCursor    (cTipCon);
+  Se(SQL_EOF(cTipCon) = 0)
+  {
+    SQL_RetornarAlfa(cTipCon, "VALKEY", aDesCon);
+  }
+  SQL_FecharCursor(cTipCon);
+  SQL_Destruir(cTipCon);
+  
+  @ Tipo de salário @
+  aSQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE LSTNAM = 'LTipSal' AND KEYNAM = :nTipSal ";                                  
+  
+  SQL_Criar          (cTipCon);
+  SQL_UsarSQLSenior2 (cTipCon,0);
+  SQL_UsarAbrangencia(cTipCon,0);
+  SQL_DefinirComando (cTipCon, aSQL);
+  SQL_DefinirInteiro (cTipCon, "nTipSal", nTipSal);
+  SQL_AbrirCursor    (cTipCon);
+  SE(SQL_EOF(cTipCon) = 0)
+  {
+    SQL_RetornarAlfa(cTipCon, "VALKEY", aTipSal);
+  }
+  SQL_FecharCursor(cTipCon);
+  SQL_Destruir(cTipCon);
+  
+  IntParaAlfa(nFNumEmp, aNumEmp);
+  IntParaAlfa(nFTipCol, aTipCol);
+  IntParaAlfa(nFNumCad, aNumCad);
+  IntParaAlfa(nCodFil,  aCodFil);
+  IntParaAlfa(nTipCol,  aTipCol);
+  
+  ConverteMascara(2, nValSal, aValSal, "ZZZ.ZZZ.ZZ9,99");
+          
+  getEquipeVS.equipe.CRIARLINHA();
+  getEquipeVS.equipe.numemp = aNumEmp;
+  getEquipeVS.equipe.nomemp = aNomEmp;
+  getEquipeVS.equipe.tipcol = aTipCol;                
+  getEquipeVS.equipe.numcad = aNumCad;                                                            
+  getEquipeVS.equipe.nomfun = aNomFun;
+  getEquipeVS.equipe.titred = aTitRed;
+  getEquipeVS.equipe.nomloc = aNomLoc;
+  getEquipeVS.equipe.valsal = aValSal;
+  getEquipeVS.equipe.codfil = aCodFil;
+  getEquipeVS.equipe.nomfil = aNomFil;
+  getEquipeVS.equipe.tipcon = aTipCol;
+  getEquipeVS.equipe.datadm = aDatAdm;
+  getEquipeVS.equipe.postra = aDesPos;
+  getEquipeVS.equipe.codsin = aCodSin;
+  getEquipeVS.equipe.nomsin = aNomSin;
+  getEquipeVS.equipe.carhor = aCarHor;
+  getEquipeVS.equipe.carlid = aCarLid;
+  getEquipeVS.equipe.codetb = aCodEtb;
+  getEquipeVS.equipe.tipsal = aTipSal; 
+  getEquipeVS.equipe.codvin = aCodVin; 
+  getEquipeVS.equipe.escala = aEscala;    
+  getEquipeVS.equipe.destipcon = aDesCon;
+  
+  SQL_Proximo(cEquipe);
+}
+SQL_FecharCursor(cEquipe);
+SQL_Destruir(cEquipe);
+
+
+
+
+
+
+    
+     

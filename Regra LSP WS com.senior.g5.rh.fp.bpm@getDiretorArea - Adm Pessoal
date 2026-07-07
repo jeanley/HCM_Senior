@@ -1,0 +1,205 @@
+/*                                     
+  Luis Gustavo Nardello                                                          
+  Data de Criação: 12/08/2025     
+*/
+
+Definir Alfa cBusca;
+Definir Cursor cPosPos;
+
+Definir Alfa cCursor;
+Definir Alfa aSQL;    
+Definir Alfa aNomFun;
+Definir Alfa aEstPos;
+Definir Alfa aPosTra;
+Definir Alfa aNomDir;
+Definir Alfa aUsuDir;
+Definir Alfa aNomGer;
+Definir Alfa aUsuGer;
+Definir Alfa aPosDir;
+Definir Alfa aPosGer;
+Definir Alfa aPosPos;
+               
+Definir Numero nEstPos; 
+
+aEstPos = getDiretorArea.eestpos;
+aPosTra = getDiretorArea.epostra; 
+
+cPosPos.SQL "SELECT POSPOS, IDEPOS FROM R017HIE WHERE ESTPOS = 2 AND POSTRA = :aPosTra";                                        
+
+cPosPos.AbrirCursor();
+Se(cPosPos.Achou)
+{
+  aPosPos = cPosPos.PosPos;
+  nIdePos = cPosPos.IdePos;
+  
+  aPosDir = aPosPos;
+  aPosGer = aPosPos;
+  
+  CopiarAlfa (aPosDir, 0, 4);
+  CopiarAlfa (aPosGer, 0, 6);
+}   
+            
+aSQL = "SELECT POS.ESTPOS,                                                        \
+               POS.POSTRA,                                                        \
+               POS.DESRED,                                                        \
+               CAR.TABORG,                                                        \
+               CAR.NUMLOC,                                                        \
+               CAR.NUMLOC,                                                        \
+               CAR.CODCCU,                                                        \                  
+               ORN.NOMLOC,                                                        \
+               HIIE.CODLOC,                                                       \
+               CCU.NOMCCU                                                         \
+                 FROM                                                             \
+                   R017HIE HIE,                                                   \
+                   R017CAR CAR,                                                   \      
+                   R017POS POS,                                                   \      
+                   R016ORN ORN,                                                   \      
+                   R016HIE HIIE,                                                  \       
+                   R018CCU CCU                                                    \
+                     WHERE CAR.DATINI = (SELECT MAX(SCAR.DATINI)                  \      
+                                           FROM R017CAR SCAR                      \      
+                                             WHERE SCAR.ESTPOS = CAR.ESTPOS       \      
+                                               AND SCAR.POSTRA = CAR.POSTRA)      \      
+                           AND POS.ESTPOS  = CAR.ESTPOS                           \                              
+                           AND POS.POSTRA = CAR.POSTRA                            \          
+                           AND ORN.TABORG = CAR.TABORG                            \          
+                           AND ORN.NUMLOC = CAR.NUMLOC                            \          
+                           AND HIIE.TABORG = CAR.TABORG                           \          
+                           AND HIIE.NUMLOC = CAR.NUMLOC                           \          
+                           AND HIIE.DATINI = (SELECT MAX(SHIE.DATINI)             \          
+                                               FROM R016HIE SHIE                  \         
+                                                 WHERE SHIE.TABORG = HIIE.TABORG  \          
+                                                   AND SHIE.NUMLOC = HIIE.NUMLOC) \          
+                           AND CCU.NUMEMP = CAR.NUMEMP                            \          
+                           AND CCU.CODCCU = CAR.CODCCU                            \                                    
+                           AND HIE.ESTPOS = 2                                     \            
+                           AND HIE.POSPOS = :aPosGer                              \                             
+                           AND HIE.ESTPOS = POS.ESTPOS                            \            
+                           AND HIE.POSTRA = POS.POSTRA";                                   
+                  
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca, 0);
+SQL_UsarSQLSenior2 (cBusca, 0);
+SQL_DefinirComando (cBusca, ASQL);
+SQL_DefinirAlfa    (cBusca, "aPosGer", aPosGer);
+SQL_AbrirCursor    (cBusca);
+
+Se(SQL_EOF(cBusca) = 0)
+{ 
+  SQL_RetornarInteiro(cBusca, "ESTPOS", nEstPos);
+  SQL_RetornarAlfa   (cBusca, "POSTRA", aPosTra);  
+  
+  aSQL = "SELECT FUN.NOMFUN, LOWER(ENT.NOMENT) NOMUSU                          \
+                    FROM R034USU USU, R034FUN FUN, R910ENT ENT                 \
+                      WHERE FUN.NUMEMP = USU.NUMEMP                            \
+                        AND FUN.TIPCOL = USU.TIPCOL                            \
+                        AND FUN.NUMCAD = USU.NUMCAD                            \
+                        AND ENT.CODENT = USU.CODUSU                            \
+                        AND ENT.TIPENT = 'U'                                   \
+                        AND FUN.ESTPOS = :nEstPos                              \
+                        AND FUN.POSTRA = :aPosTra";
+  
+  SQL_Criar(cCursor);
+  SQL_UsarSqlSenior2 (cCursor, 0);
+  SQL_UsarAbrangencia(cCursor, 0);
+  SQL_DefinirComando (cCursor, aSQL);
+  SQL_DefinirInteiro (cCursor,"nEstPos", nEstPos);
+  SQL_DefinirAlfa    (cCursor,"aPosTra", aPosTra);
+  SQL_AbrirCursor    (cCursor); 
+  
+  Se(SQL_EOF(cCursor) = 0)
+  {
+    SQL_RetornarAlfa(cCursor, "NOMFUN", aNomGer);
+    SQL_RetornarAlfa(cCursor, "NOMUSU", aUsuGer);    
+    
+    getDiretorArea.snomnv3 = aNomGer;
+    getDiretorArea.susunv3 = aUsuGer;  
+  }
+  SQL_FecharCursor(cCursor);
+  SQL_Destruir(cCursor);         
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca);          
+
+
+aSQL = "SELECT POS.ESTPOS,                                                        \
+               POS.POSTRA,                                                        \
+               POS.DESRED,                                                        \
+               CAR.TABORG,                                                        \
+               CAR.NUMLOC,                                                        \
+               CAR.NUMLOC,                                                        \
+               CAR.CODCCU,                                                        \                  
+               ORN.NOMLOC,                                                        \
+               HIIE.CODLOC,                                                       \
+               CCU.NOMCCU                                                         \
+                 FROM                                                             \
+                   R017HIE HIE,                                                   \
+                   R017CAR CAR,                                                   \      
+                   R017POS POS,                                                   \      
+                   R016ORN ORN,                                                   \      
+                   R016HIE HIIE,                                                  \       
+                   R018CCU CCU                                                    \
+                     WHERE CAR.DATINI = (SELECT MAX(SCAR.DATINI)                  \      
+                                           FROM R017CAR SCAR                      \      
+                                             WHERE SCAR.ESTPOS = CAR.ESTPOS       \      
+                                               AND SCAR.POSTRA = CAR.POSTRA)      \      
+                                               AND POS.ESTPOS  = CAR.ESTPOS       \                              
+                           AND POS.POSTRA = CAR.POSTRA                            \          
+                           AND ORN.TABORG = CAR.TABORG                            \          
+                           AND ORN.NUMLOC = CAR.NUMLOC                            \          
+                           AND HIIE.TABORG = CAR.TABORG                           \          
+                           AND HIIE.NUMLOC = CAR.NUMLOC                           \          
+                           AND HIIE.DATINI = (SELECT MAX(SHIE.DATINI)             \          
+                                               FROM R016HIE SHIE                  \         
+                                                 WHERE SHIE.TABORG = HIIE.TABORG  \          
+                                                   AND SHIE.NUMLOC = HIIE.NUMLOC) \          
+                           AND CCU.NUMEMP = CAR.NUMEMP                            \          
+                           AND CCU.CODCCU = CAR.CODCCU                            \                                  
+                           AND HIE.ESTPOS = 2                                     \            
+                           AND HIE.POSPOS = :aPosDir                              \                               
+                           AND HIE.ESTPOS = POS.ESTPOS                            \            
+                           AND HIE.POSTRA = POS.POSTRA";                                   
+                  
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,ASQL);
+SQL_DefinirAlfa    (cBusca,"aPosDir", aPosDir);
+SQL_AbrirCursor    (cBusca);
+
+Se(SQL_EOF(cBusca) = 0)
+{   
+  SQL_RetornarInteiro(cBusca, "ESTPOS", nEstPos);
+  SQL_RetornarAlfa   (cBusca, "POSTRA", aPosTra);  
+  
+  aSQL = "SELECT FUN.NOMFUN, LOWER(ENT.NOMENT) NOMUSU                          \
+                    FROM R034USU USU, R034FUN FUN, R910ENT ENT                 \
+                      WHERE FUN.NUMEMP = USU.NUMEMP                            \
+                        AND FUN.TIPCOL = USU.TIPCOL                            \
+                        AND FUN.NUMCAD = USU.NUMCAD                            \
+                        AND ENT.CODENT = USU.CODUSU                            \
+                        AND ENT.TIPENT = 'U'                                   \
+                        AND FUN.ESTPOS = :nEstPos                              \
+                        AND FUN.POSTRA = :aPosTra";
+  
+  SQL_Criar(cCursor);
+  SQL_UsarSqlSenior2 (cCursor, 0);
+  SQL_UsarAbrangencia(cCursor, 0);
+  SQL_DefinirComando (cCursor, aSQL);
+  SQL_DefinirInteiro (cCursor,"nEstPos", nEstPos);
+  SQL_DefinirAlfa    (cCursor,"aPosTra", aPosTra);
+  SQL_AbrirCursor    (cCursor); 
+  
+  Se(SQL_EOF(cCursor) = 0)
+  {
+    SQL_RetornarAlfa(cCursor, "NOMFUN", aNomDir);
+    SQL_RetornarAlfa(cCursor, "NOMUSU", aUsuDir);  
+    
+    getDiretorArea.snomnv2 = aNomDir;
+    getDiretorArea.susunv2 = aUsuDir;  
+  }
+  SQL_FecharCursor(cCursor);
+  SQL_Destruir(cCursor);         
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

@@ -1,0 +1,1444 @@
+DEFINIR ALFA   CEQUIPE;
+DEFINIR ALFA   CTIPCON;
+DEFINIR ALFA   ASQL;                                  
+DEFINIR ALFA   ALISTALIDER;    
+DEFINIR ALFA   ANOMFUN;
+DEFINIR ALFA   AFNOMFUN;
+DEFINIR ALFA   ASINAL;
+DEFINIR ALFA   ATITRED;
+DEFINIR ALFA   ANOMLOC;
+DEFINIR ALFA   ANOMFIL;
+DEFINIR ALFA   ATIPCON;
+DEFINIR ALFA   ADESTIPCON;
+DEFINIR ALFA   AVERIF;
+DEFINIR ALFA   APOSTRA;
+DEFINIR ALFA   ACODSIN;
+DEFINIR ALFA   ANOMSIN;
+DEFINIR ALFA   ADATADM;
+DEFINIR ALFA   ACARHOR;
+DEFINIR ALFA   ADESPOS;
+DEFINIR ALFA   ACARLID;
+DEFINIR ALFA   ACODETB;
+Definir Alfa   aPosTra;
+Definir Alfa   aDesPos;
+DEFINIR ALFA   ANOMEMP;
+DEFINIR ALFA   ATIPSAL;
+DEFINIR ALFA   ADATULTSAL;
+DEFINIR ALFA   AMOTULTSAL;
+DEFINIR ALFA   ACODVIN;
+DEFINIR ALFA   AESCALA;
+Definir Alfa  aCodEst;
+Definir ALfa aCodCar ;
+
+
+DEFINIR NUMERO NFNUMEMP;
+DEFINIR NUMERO NFTIPCOL;
+DEFINIR NUMERO NFNUMCAD;                                        
+DEFINIR NUMERO NVALSAL;
+DEFINIR NUMERO NTIPCON;
+DEFINIR NUMERO NNUMEMP;
+DEFINIR NUMERO NTIPCOL;
+DEFINIR NUMERO NNUMCAD;
+DEFINIR NUMERO HCARHOR;
+DEFINIR NUMERO NCODSIN;                          
+DEFINIR NUMERO NNUMEMPLID;
+DEFINIR NUMERO NTIPCOLLID;
+DEFINIR NUMERO NNUMCADLID;
+DEFINIR NUMERO NCODETB;
+DEFINIR NUMERO NTIPSAL;
+Definir Numero nvalsal;      
+
+DEFINIR DATA   DDATADM;
+DEFINIR DATA   DDATALTSAL;
+Definir Alfa  TIPO_MOVIMENTACAO ;
+Definir Alfa  MOTIVO_AMPLIACAO ;
+Definir Alfa AMPLIACAO_SUBSTITUICAO;       AMPLIACAO_SUBSTITUICAO        = "Substituição" ;
+Definir Alfa MOVIMENTACAO_ENQUADRAMENTO;  MOVIMENTACAO_ENQUADRAMENTO = "Enquadramento de Cargo";
+Definir ALfa MOVIMENTACAO_CARGAHORAIA;    MOVIMENTACAO_CARGAHORAIA   = "Alteração Carga Horaria";
+
+
+DEFINIR ALFA asql_docente;
+DEFINIR ALFA cur_docente;
+DEFINIR ALFA asql_naodocente;
+DEFINIR ALFA cur_naodocente;
+Definir Cursor cR070FIL;
+definir alfa adesapf;
+definir alfa aseqapf;
+definir alfa acodapf;
+definir alfa ahormes;
+definir alfa ahorsem;
+definir alfa avalapf;
+definir alfa adatini;
+definir alfa infocom;
+definir alfa aenter;
+definir alfa atotmes;
+definir alfa atotsem;
+definir alfa avalsal;
+definir alfa acodccu;
+definir alfa anomccu;
+Definir Alfa aCodLoc;
+Definir Alfa aCodFil;
+Definir ALfa aCodEmp;
+Definir ALfa aTipCon;
+Definir Alfa aCondAux;
+Definir Alfa aCmpRef;
+Definir Alfa aTipUni;
+
+definir numero nseqapf;
+definir numero ncodapf;
+definir numero nhormes;
+definir numero nhorsem;                                                                                           
+definir numero nvalapf;
+
+definir data ddatini;
+definir data ddatzer;
+Definir Data dCmpRef;
+Definir Alfa aPosPai ;
+Definir Alfa aTipCor;
+Definir Cursor cR034FUN;
+
+@Renan 24/07@
+Definir Alfa aNumCad ;
+
+Definir Funcao RetornaAtsDescontosFolhaAnterior(Numero pNumEmp, Numero pTipCol,Numero pNumCad, Numero End pValAts, Numero End pValDes);
+Definir Funcao RetornaAtsDescontosFolhaAnterior2(Numero pNumEmp, Numero pTipCol, Numero pNumCad, Numero End pValAts, Numero End pValDes);
+
+RETORNAASCII(13, AENTER);
+
+
+NNUMEMP =getEquipe.enumemp;
+NTIPCOL =getEquipe.etipcol;
+NNUMCAD =getEquipe.enumcad;
+AFNOMFUN =getEquipE.enomfun; 
+AVERIF = getEquipe.enomfun; 
+aCmpRef = getEquipe.CmpRef;
+
+aCmpRef = "01/"+aCmpRef ;
+
+
+AVERIF = "aaa" ;
+
+
+
+cR070FIL.Sql " SELECT R030FIL.usu_tipuni,R030FIL.codfil  FROM R034FUN, R030FIL  \
+               WHERE  R034FUN.NUMEMP = R030FIL.NUMEMP           \
+                AND   R034FUN.CODFIL = R030FIL.CODFIL           \
+                AND   R034FUN.NUMEMP = :NNUMEMP                        \
+                AND   R034FUN.tipcol = :NTIPCOL                       \
+                and   R034FUN.numcad = :NNUMCAD" ;
+cR070FIL.AbrirCursor();
+Se (cR070FIL.Achou) {
+   aTipUni =  cR070FIL.USU_TIPUNI ;
+   nFilSol =  cR070FIL.CodFil ; 
+}
+cR070FIL.FecharCursor();
+
+
+
+
+
+
+TIPO_MOVIMENTACAO = getEquipe.tipmov ;
+MOTIVO_AMPLIACAO =   getEquipe.motamp;
+
+@ RENAN TRATAMENTOS DE FILTROS PARA  FLUXO DE MOVIMENTAÇÃO DE PESOAL@
+aCondAux =  "" ;
+@MOVIMENTAÇAO ENQADRAMENTO DE CARGO TRAZ APENAS ADMISTRATIVO@
+Se (TIPO_MOVIMENTACAO = MOVIMENTACAO_ENQUADRAMENTO)
+   aCondAux = "AND NF.TIPCON <> 10";
+
+@Redução de Carga Horaria motivo Substituição que dizer que esta fazendo uma cara horaria de doscente então o substituto tem que ser docente@   
+Se ((TIPO_MOVIMENTACAO = MOVIMENTACAO_CARGAHORAIA) e (MOTIVO_AMPLIACAO = AMPLIACAO_SUBSTITUICAO))  
+    aCondAux = "AND NF.TIPCON = 10"; 
+    
+ 
+
+EstaNulo (TIPO_MOVIMENTACAO,nRetNull);
+Se ((nRetNull = 0)  e (MOTIVO_AMPLIACAO <> AMPLIACAO_SUBSTITUICAO)) {
+  @SE EXISTIR PROCESSO BPM EM ANDAMEMTNO OU APROVADA NA COMPTENCIA, O COLABODOR NEM APARECE NA PESQUISA DE ACOROD COM A MOVIMENTAÇÃO EM QUESTÃO@  
+  @AlfaparaData(aCmpRef, "DD/MM/YYYY", dCmpRef);  @
+ @ DateToDB(dCmpRef, 1, aCmpRef); @
+  aCondAux = aCondAux + " AND NOT EXISTS (SELECT 1 FROM USU_T000BMV BMV \
+                                          WHERE BMV.USU_NUMEMP = NF.NUMEMP \
+                                            AND BMV.USU_TIPCOL = NF.TIPCOL \
+                                            AND BMV.USU_NUMCAD = NF.NUMCAD  \
+                                            AND BMV.USU_STAAPR IN ('E','A') \
+                                            AND BMV.USU_TIPMOV = '"+TIPO_MOVIMENTACAO+"'\
+                                            AND BMV.USU_CMPMOV = CONVERT(DATE, '"+aCmpRef+"', 103))";
+
+
+}
+
+@SE a unidade do solcitante for corporativa carrega apenas quem esta dentro da sua estrura de postos@   
+Se (aTipUni = "COR") {
+
+ @paleativo para colaboradora 10008803 iremos fazer uma reunião para definição de casos de corporativos que precisar ver outros colaboraodres alem de sua hirarquia de posto@
+ 
+ Se ((NNUMEMP = 1) e (NNUMCAD = 10008803)) {
+     aCondAux = aCondAux +  "AND ((ISNULL(HIE_NF.POSPOS,'') LIKE CONCAT(ISNULL(HIE_NC.POSPOS,''), '%')) OR (NC.NUMEMP = NF.NUMEMP AND  NC.CODFIL = NF.CODFIL))"  ;    
+ }
+ Senao {
+  Se (NNUMCAD = 10031470) {
+     aCondAux = aCondAux +  "AND NC.NUMEMP = NF.NUMEMP AND  NC.CODFIL = NF.CODFIL OR NF.CODFIL = 1052"  ;    
+  }
+   Se (NNUMCAD = 30009998) {
+    aCondAux = aCondAux  +  "AND (NF.NUMEMP in (3,4))" ;
+   }
+   Senao {
+     aCondAux = aCondAux +  "AND ISNULL(HIE_NF.POSPOS,'') LIKE CONCAT(ISNULL(HIE_NC.POSPOS,''), '%')"  ;
+  }   
+   
+ }       @Janaina da Silva Alves (20004034) - deve ter acesso às filiais 2037 e 2050; @
+ 
+ 
+ 
+   
+
+}
+Senao {   @se for for unidade carrega dos colaboradores das empresa / filial do solicitante@
+
+ @consdição temporaria @
+ 
+ Se ((nFilSol = 1041) ou (nFilSol = 1012))  { 
+     aCondAux = aCondAux +  " AND NC.NUMEMP = NF.NUMEMP AND NF.CODFIL in (1012,1041,1061)" ;
+ }
+ Senao
+   aCondAux = aCondAux + " AND NC.NUMEMP = NF.NUMEMP AND  NC.CODFIL = NF.CODFIL"  ;
+
+} 
+
+
+
+ 
+
+     
+    
+      ASQL= "SELECT                                                  \            
+          NC.CODFIL,                                                 \
+          NC.NUMEMP,                                                 \
+          NF.NUMEMP,                                                 \
+          NF.TIPCOL,                                                 \
+          NF.CODEST,                                                  \
+          NF.NUMCAD,                                                   \
+          NF.NOMFUN,                                                   \
+          C.TITRED,                                                    \
+          O.NOMLOC,                                                     \
+          NF.VALSAL,        \
+          NF.CODFIL,                                                  \
+          NF.DATADM,                                                  \
+          FI.NOMFIL,                                                  \
+          HI.CODSIN,                                                  \
+          NF.TIPCON,                                                  \
+          NF.POSTRA,                                                  \
+          NF.ESTPOS,                                                  \
+          POS.DESPOS,                                                 \
+          SN.CODSIN,                                                  \
+          SN.NOMSIN,                                                  \
+          EM.NOMEMP,                                                  \
+          SN.USU_CARHOR,                                              \
+          NF.CODETB,                                                  \
+          NF.TIPSAL,                                                  \
+          NF.CODVIN,                                                  \
+          VI.DESVIN,                                                  \
+          ES.USU_NomCom,                                              \
+          C.CODCAR,                                                   \
+          O.NUMLOC,                                                   \
+          ES.HORSEM,                                                  \
+          ES.HORMES                                                   \
+      FROM R034FUN NC                                                 \
+      JOIN R034FUN NF                                                 \
+        ON NF.NUMEMP = NC.NUMEMP                                      \
+       AND NF.CODFIL = NC.CODFIL                                      \
+       AND NF.SITAFA <> 7                                             \
+       AND NF.NUMCAD <> NC.NUMCAD                                     \
+      INNER JOIN R024CAR C                                             \
+        ON C.ESTCAR = NF.ESTCAR AND C.CODCAR = NF.CODCAR              \
+      INNER JOIN R016ORN O                                             \
+        ON O.TABORG = NF.TABORG AND O.NUMLOC = NF.NUMLOC              \
+      INNER JOIN R038HSI HI                                            \
+        ON HI.NUMEMP = NF.NUMEMP                                      \
+       AND HI.TIPCOL = NF.TIPCOL                                      \
+       AND HI.NUMCAD = NF.NUMCAD                                      \
+       AND HI.DATALT = (                                              \
+           SELECT MAX(DAT.DATALT)                                     \
+           FROM R038HSI DAT                                           \
+           WHERE DAT.NUMEMP = NF.NUMEMP                               \
+             AND DAT.TIPCOL = NF.TIPCOL                               \
+             AND DAT.NUMCAD = NF.NUMCAD                               \
+       )                                                              \
+      INNER JOIN R030FIL FI                                            \
+        ON FI.NUMEMP = NF.NUMEMP AND FI.CODFIL = NF.CODFIL            \
+      INNER JOIN R014SIN SN                                            \
+        ON SN.CODSIN = HI.CODSIN                                      \
+      INNER JOIN R017POS POS                                           \
+        ON POS.ESTPOS = NF.ESTPOS AND POS.POSTRA = NF.POSTRA          \
+      INNER JOIN R030EMP EM                                            \
+        ON EM.NUMEMP = NF.NUMEMP                                      \
+      INNER JOIN R022VIN VI                                            \
+        ON VI.CODVIN = NF.CODVIN                                      \
+      INNER JOIN R006ESC ES                                            \
+        ON ES.CODESC = NF.CODESC                                      \
+      WHERE NC.NUMEMP = :NUMEMP                                       \
+        AND NC.TIPCOL = :TIPCOL                                       \
+        AND NC.NUMCAD = :NUMCAD                                      \
+        AND NF.SITAFA <> 7   \                                       \
+      ##CONDICAO_AUXILAIR## ";  
+      
+      
+ASQL = "SELECT                                                      \
+        NC.CODFIL,                                                  \
+        NC.NUMEMP,                                                  \
+        NF.NUMEMP,                                                  \
+        NF.TIPCOL,                                                  \
+        NF.CODEST,                                                  \
+        NF.NUMCAD,                                                  \
+        NF.NOMFUN,                                                  \
+        C.TITRED,                                                   \
+        O.NOMLOC,                                                   \
+        NF.VALSAL,                                                  \
+        NF.CODFIL,                                                  \
+        NF.DATADM,                                                  \
+        FI.NOMFIL,                                                  \
+        HI.CODSIN,                                                  \
+        NF.TIPCON,                                                  \
+        NF.POSTRA,                                                  \
+        NF.ESTPOS,                                                  \
+        POS.DESPOS,                                                 \
+        SN.CODSIN,                                                  \
+        SN.NOMSIN,                                                  \
+        EM.NOMEMP,                                                  \
+        SN.USU_CARHOR,                                              \
+        NF.CODETB,                                                  \
+        NF.TIPSAL,                                                  \
+        NF.CODVIN,                                                  \
+        VI.DESVIN,                                                  \
+        ES.USU_NomCom,                                              \
+        C.CODCAR,                                                   \
+        O.NUMLOC,                                                   \
+        ES.HORSEM,                                                  \
+        ES.HORMES,                                                  \
+        FI_NC.usu_tipuni                                            \
+    FROM R034FUN NC                                                 \
+    JOIN R034FUN NF                                                 \
+        ON NF.SITAFA <> 7                                           \
+       AND NF.NUMCAD <> NC.NUMCAD                                   \
+    INNER JOIN R024CAR C                                             \
+        ON C.ESTCAR = NF.ESTCAR                                     \
+       AND C.CODCAR = NF.CODCAR                                     \
+    INNER JOIN R016ORN O                                             \
+        ON O.TABORG = NF.TABORG                                     \
+       AND O.NUMLOC = NF.NUMLOC                                     \
+    INNER JOIN R038HSI HI                                            \
+        ON HI.NUMEMP = NF.NUMEMP                                    \
+       AND HI.TIPCOL = NF.TIPCOL                                    \
+       AND HI.NUMCAD = NF.NUMCAD                                    \
+       AND HI.DATALT = (                                            \
+            SELECT MAX(DAT.DATALT)                                  \
+            FROM R038HSI DAT                                        \
+            WHERE DAT.NUMEMP = NF.NUMEMP                            \
+              AND DAT.TIPCOL = NF.TIPCOL                            \
+              AND DAT.NUMCAD = NF.NUMCAD                            \
+       )                                                            \
+    INNER JOIN R030FIL FI                                           \
+        ON FI.NUMEMP = NF.NUMEMP                                    \
+       AND FI.CODFIL = NF.CODFIL                                    \
+    INNER JOIN R030FIL FI_NC                                        \
+        ON FI_NC.NUMEMP = NC.NUMEMP                                 \
+       AND FI_NC.CODFIL = NC.CODFIL                                 \
+    INNER JOIN R014SIN SN                                            \
+        ON SN.CODSIN = HI.CODSIN                                    \
+    INNER JOIN R017POS POS                                          \
+        ON POS.ESTPOS = NF.ESTPOS                                   \
+       AND POS.POSTRA = NF.POSTRA                                   \
+    INNER JOIN R030EMP EM                                           \
+        ON EM.NUMEMP = NF.NUMEMP                                    \
+    INNER JOIN R022VIN VI                                            \
+        ON VI.CODVIN = NF.CODVIN                                    \
+    INNER JOIN R006ESC ES                                            \
+        ON ES.CODESC = NF.CODESC                                    \
+    INNER JOIN R017HIE HIE_NC                                       \
+        ON HIE_NC.ESTPOS = NC.ESTPOS                                \
+       AND HIE_NC.POSTRA = NC.POSTRA                                \
+       AND HIE_NC.CODTHP = 1                                        \
+       AND HIE_NC.REVHIE = (                                        \
+            SELECT MAX(TAB.REVHIE)                                  \
+            FROM R017HIE TAB                                        \
+            WHERE TAB.ESTPOS = NC.ESTPOS                            \
+              AND TAB.POSTRA = NC.POSTRA                            \
+              AND TAB.CODTHP = HIE_NC.CODTHP                        \
+       )                                                            \
+    INNER JOIN R017HIE HIE_NF                                       \
+        ON HIE_NF.ESTPOS = NF.ESTPOS                                \
+       AND HIE_NF.POSTRA = NF.POSTRA                                \
+       AND HIE_NF.CODTHP = 1                                        \
+       AND HIE_NF.REVHIE = (                                        \
+            SELECT MAX(TAB2.REVHIE)                                  \
+            FROM R017HIE TAB2                                        \
+            WHERE TAB2.ESTPOS = NF.ESTPOS                            \
+              AND TAB2.POSTRA = NF.POSTRA                            \
+              AND TAB2.CODTHP = HIE_NF.CODTHP)                       \
+        WHERE NC.NUMEMP = :NUMEMP                                   \
+          AND NC.TIPCOL  = :TIPCOL                                \
+         AND NC.NUMCAD = :NUMCAD                                 \
+              ##CONDICAO_AUXILAIR## "   ;                       
+                                                                    
+@RENAN TROCA STRING CONDIÇÃO AUXILIAR@       
+TrocaString (ASQL, "##CONDICAO_AUXILAIR##", aCondAux, ASQL);
+
+AFNOMFUN =getEquipe.enomfun;                                      
+MINUSCULO(AFNOMFUN,AFNOMFUN,"N");
+ 
+SE((AFNOMFUN <> "") e (AFNOMFUN <> " "))
+{
+  ASQL = ASQL + " AND LOWER(NF.NOMFUN) LIKE '%"+AFNOMFUN+"%'"; 
+}
+
+ASQL = ASQL + " ORDER BY NF.NOMFUN ";
+
+SQL_CRIAR(CEQUIPE);                                                    
+SQL_USARABRANGENCIA(CEQUIPE,0);
+SQL_USARSQLSENIOR2(CEQUIPE,0);                        
+SQL_DEFINIRCOMANDO(CEQUIPE,ASQL);
+SQL_DEFINIRINTEIRO(CEQUIPE,"NUMEMP",NNUMEMP);
+SQL_DEFINIRINTEIRO(CEQUIPE,"TIPCOL",NTIPCOL);
+SQL_DEFINIRINTEIRO(CEQUIPE,"NUMCAD",NNUMCAD);
+SQL_ABRIRCURSOR(CEQUIPE);                                                        
+ENQUANTO(SQL_EOF(CEQUIPE) = 0)
+{
+  SQL_RETORNARINTEIRO(CEQUIPE,"NUMEMP",NFNUMEMP);
+  SQL_RETORNARINTEIRO(CEQUIPE,"TIPCOL",NFTIPCOL);
+  SQL_RETORNARINTEIRO(CEQUIPE,"NUMCAD",NFNUMCAD);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODFIL",NCODFIL);
+  SQL_RETORNARINTEIRO(CEQUIPE,"TIPCON",NTIPCON);
+  SQL_RETORNARINTEIRO(CEQUIPE,"TIPSAL",NTIPSAL);
+  SQL_RETORNARALFA(CEQUIPE,"NOMEMP",ANOMEMP);
+  SQL_RETORNARALFA(CEQUIPE,"NOMFIL",ANOMFIL);
+  SQL_RETORNARALFA(CEQUIPE,"NOMFUN",AFNOMFUN);
+  SQL_RETORNARALFA(CEQUIPE,"TITRED",ATITRED);    
+  SQL_RETORNARALFA(CEQUIPE,"NOMLOC",ANOMLOC);
+  SQL_RETORNARALFA(CEQUIPE,"POSTRA",APOSTRA);
+  SQL_RETORNARALFA(CEQUIPE,"NOMSIN",ANOMSIN);
+  SQL_RETORNARALFA(CEQUIPE,"DESPOS",ADESPOS);
+  SQL_RETORNARALFA(CEQUIPE,"DESVIN",ACODVIN);
+  SQL_RETORNARALFA(CEQUIPE,"USU_NomCom",AESCALA);
+  SQL_RETORNARFLUTUANTE(CEQUIPE,"VALSAL",NVALSAL);
+  SQL_RETORNARDATA(CEQUIPE,"DATADM",DDATADM);
+  SQL_RETORNARINTEIRO(CEQUIPE,"USU_CARHOR",HCARHOR);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODSIN",NCODSIN);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODETB",NCODETB);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODEST",nCodEst);
+  convertemascara(3,ddatadm, adatadm, "DD/MM/YYYY");
+
+  SQL_RETORNARALFA(CEQUIPE,"CodCar",aCodCar);
+  SQL_RETORNARINTEIRO(CEQUIPE,"NumLoc",nNumLoc);
+  SQl_RetornarInteiro(CEQUIPE,"ESTPOS",nEstPos) ;
+     
+  RetDifDat (2,ddatadm, DatSis, nMesSer); @tempo de serviço em meses@
+  
+  @RENAN@
+  Definir Alfa aHorSemT;                                       
+  Definir Alfa aHorMesT;
+  SQL_RetornarInteiro(CEQUIPE, "HORSEM", nHorSem);
+  SQL_RetornarInteiro(CEQUIPE, "HORMES", nHorMes);
+  
+  ConverteMascara (4,nHorSem,aHorSemT,"#Q#hh:mm");
+  ConverteMascara (4,nHorMes,aHorMesT,"hhh:mm");
+  
+    convertemascara(4,hcarhor, acarhor,"#Q#hh:mm");
+  
+  Se (nHorSem = 0)
+    aHorSemT = "00:00" ;
+  
+  Se (nHorMes = 0)
+     aHorMesT = "000:00" ;  
+     
+     
+  Se (hcarhor = 0)
+    acarhor = "00:00";
+      
+  
+  
+  Definir Alfa aPosPai;
+  Definir Alfa aNomChe;
+  aNomChe  = "";
+  RetornaPostoPai(APOSTRA, nEstPos, 1, DatSis, aPosPai);
+  cR034FUN.Sql "SELECT NOMFUN FROM R034FUN\
+                WHERE POSTRA =  :aPosPai \
+                   AND ESTPOS = :nEstPos \
+                   AND SITAFA <> 7";
+                   
+  cR034FUN.AbrirCursor();
+  Se (cR034FUN.Achou) {
+  
+     aNomChe =  cR034FUN.NomFun;
+  
+  
+  }
+  cR034FUN.FecharCursor();
+  /*nHorSem = nHorSem / 60;                                   
+  nHorMes = nHorMes / 60; */
+  
+  /*nHorSemMin = HoraParaMinuto(nHorSem,0);
+  nHorMesMin = HoraParaMinuto(nHorMes,0);*/
+  
+    
+  intparaalfa(ncodsim,acodsin); 
+  IntParaAlfa(nCodEst,aCodEst); 
+
+  
+  @RENAN 25/07@
+  RetornaCodLoc (nNumLoc,aCodLoc);
+  intParaAlfa(NFNUMCAD,aNumCad); 
+  IntParaAlfa(NFNUMEMP,aCodEmp);
+  IntParaAlfa(NCODFIL,aCodFil);
+  IntParaAlfa(nTipCon,aTipCon);
+  
+  
+  @ Cargo Liderança @ 
+  RetornaPostoColaborador(NFNUMEMP, NFTIPCOL, NFNUMCAD, DatSis, nEstPos, aPosTra, aDesPos);
+  RetornaChefePosto(2, nEstPos, 1, DatSis, aPosTra, nNumEmpLid, nTipColLid, nNumCadLid);
+  
+  SE(nNumEmpLid = 0)
+  {
+  	ACARLID = "N";
+  }
+  SENAO 
+  {
+  	ACARLID = "S";
+  }
+  
+  @ Estabilidade @
+  SE(NCODETB <> 0)
+  {
+    ACODETB = "S";
+  }
+  SENAO
+  {
+    ACODETB = "N";
+  }
+  
+  @ Tipo de contrato @
+  ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipCon' AND KEYNAM = :NTIPCON ";                                
+
+
+  SQL_CRIAR(CTIPCON);
+  SQL_USARABRANGENCIA(CTIPCON,0);
+  SQL_USARSQLSENIOR2(CTIPCON,0);
+  SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+  SQL_DefinirInteiro(CTIPCON,"NTIPCON",NTIPCON);
+  SQL_ABRIRCURSOR(CTIPCON);
+  SE(SQL_EOF(CTIPCON) = 0)
+  {
+    SQL_RETORNARALFA(CTIPCON,"VALKEY",ADESTIPCON);
+  }
+  SQL_FECHARCURSOR(CTIPCON);
+  SQL_DESTRUIR(CTIPCON);
+  
+  @ Tipo de salário @
+  ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipSal' AND KEYNAM = :NTIPSAL ";                                
+  SQL_CRIAR(CTIPCON);
+  SQL_USARABRANGENCIA(CTIPCON,0);
+  SQL_USARSQLSENIOR2(CTIPCON,0);
+  SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+  SQL_DefinirInteiro(CTIPCON,"NTIPSAL",NTIPSAL);
+  SQL_ABRIRCURSOR(CTIPCON);
+  SE(SQL_EOF(CTIPCON) = 0)
+  {
+    SQL_RETORNARALFA(CTIPCON,"VALKEY",ATIPSAL);
+  }
+  SQL_FECHARCURSOR(CTIPCON);
+  SQL_DESTRUIR(CTIPCON);
+  
+  
+  @ Histórico de salário @
+  ASQL= " SELECT TOP 1 HSA.DATALT, MOT.NOMMOT                                  \
+          FROM R038HSA HSA, R076MOT MOT                                        \
+          WHERE HSA.NUMEMP = :NFNUMEMP                                         \
+            AND HSA.TIPCOL = :NFTIPCOL                                         \
+            AND HSA.NUMCAD = :NFNUMCAD                                         \
+            AND HSA.CODMOT = MOT.CODMOT                                        \
+            AND HSA.CODMOT NOT IN (7,8,12,18,23,999)                               \
+          ORDER BY HSA.DATALT DESC, HSA.SEQALT DESC";                                
+  SQL_CRIAR(CTIPCON);
+  SQL_USARABRANGENCIA(CTIPCON,0);
+  SQL_USARSQLSENIOR2(CTIPCON,0);
+  SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+  SQL_DefinirInteiro(CTIPCON,"NFNUMEMP",NFNUMEMP);
+  SQL_DefinirInteiro(CTIPCON,"NFTIPCOL",NFTIPCOL);
+  SQL_DefinirInteiro(CTIPCON,"NFNUMCAD",NFNUMCAD);
+  SQL_ABRIRCURSOR(CTIPCON);
+  SE(SQL_EOF(CTIPCON) = 0)
+  {
+    SQL_RETORNARDATA(CTIPCON,"DATALT",DDATALTSAL);
+    SQL_RETORNARALFA(CTIPCON,"NOMMOT",AMOTULTSAL);
+  }
+  SQL_FECHARCURSOR(CTIPCON);
+  SQL_DESTRUIR(CTIPCON);
+  
+  convertemascara(3,DDATALTSAL, ADATULTSAL, "DD/MM/YYYY");
+  
+
+  
+  RetornaAtsDescontosFolhaAnterior(NFNUMEMP,NFTIPCOL,NFNUMCAD,nValAts,nValDes);
+  Definir Alfa aValAts;
+  Definir Alfa aVAlDes;
+  aValAts = "" ;
+  aVAlDes = "";
+  
+  
+ /* convertemascara(1, nValAts, aValAts,"ZZZ.ZZZ.ZZ9,99");
+  convertemascara(1, nValDes, aVAlDes,"ZZZ.ZZZ.ZZ9,99");
+  TiraEspacos (aValAts, aValAts);
+  TiraEspacos (aVAlDes, aVAlDes); */
+          
+  getEquipe.equipe.CRIARLINHA();
+  getEquipe.equipe.numemp = NFNUMEMP;
+  getEquipe.equipe.nomemp = ANOMEMP;
+  getEquipe.equipe.tipcol = NFTIPCOL;                
+  getEquipe.equipe.numcad = NFNUMCAD;                                                            
+  getEquipe.equipe.nomfun = AFNOMFUN;
+  getEquipe.equipe.titred = ATITRED;
+  getEquipe.equipe.nomloc = ANOMLOC;
+  
+  
+  /*
+      RENAN
+      PEGA VLAOR BASE DA FICHA CCOMPLENTAR APENAS PARA ADMISITRATIVO
+  
+  */
+  Se (NTIPCON <> 10)
+  getEquipe.equipe.valsal = NVALSAL;
+  
+  
+  getEquipe.equipe.codfil = NCODFIL;
+  getEquipe.equipe.nomfil = ANOMFIL;
+  getEquipe.equipe.tipcon = NTIPCON;
+  getEquipe.equipe.destipcon = ADESTIPCON;
+  getEquipe.equipe.datadm = adatadm;
+  getEquipe.equipe.postra = ADESPOS;
+  getEquipe.equipe.codsin = acodsin;
+  getEquipe.equipe.nomsin = anomsin;
+  getEquipe.equipe.carhor = acarhor;
+  getEquipe.equipe.carlid = acarlid;
+  getEquipe.equipe.codetb = acodetb;
+  getEquipe.equipe.tipsal = ATIPSAL; 
+  getEquipe.equipe.datultsal = ADATULTSAL; 
+  getEquipe.equipe.motultsal = AMOTULTSAL; 
+  getEquipe.equipe.codvin = ACODVIN; 
+  getEquipe.equipe.escala = AESCALA;
+  getEquipe.equipe.codest = aCodEst;
+   getEquipe.equipe.NomChe = aNomChe ;
+  
+   
+  getEquipe.equipe.Colaborador =   aNumCad + " - " + AFNOMFUN ;
+  getEquipe.equipe.posto =   APOSTRA  + " - " +   ADESPOS ;
+  getEquipe.equipe.cargo = aCodCar + " - " + ATITRED ;
+  getEquipe.equipe.local =  aCodLoc + " - " + ANOMLOC  ;
+  getEquipe.equipe.empresa =  aCodEmp + " - " + ANOMEMP  ;
+  getEquipe.equipe.filial =  aCodfil + " - " + ANOMFIL  ;
+  getEquipe.equipe.contrato =  aTipCon + " - " + ADESTIPCON  ;
+  getEquipe.equipe.valats = nValAts;
+  getEquipe.equipe.valdes = nValDes;
+  getEquipe.equipe.horsemesc = aHorSemT  ;
+  getEquipe.equipe.hormesesc = aHorMesT  ;
+  getEquipe.equipe.messer = nMesSer ;
+  
+  
+@ INICIO DO SE FOR DOCENTE@ 
+infocom = ""; 
+SE(NTIPCON = 10)
+{                                                   
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+ddathoj = datsis;
+ddatatu = datsis;
+ddataux = datsis;
+ultimodia(ddataux); 
+ntotsem = 0 ; 
+nTalApf = 0 ; 
+NVALSAL = 0;  
+nhorsem = 0 ;  
+nhormes = 0; 
+infocom = "" ;           
+                  
+  asql_docente = "select r171apf.seqapf, r171apf.codapf,        \
+                       r171apf.hormes, r171apf.valapf,        \              
+                       r171ati.desapf, r171apf.datini         \
+                         from r171apf, r171ati                \
+                         where                                \
+                         r171apf.codapf = r171ati.codapf and  \
+                         numemp = :NFNUMEMP and                \                                                                               
+                         tipcol = :NFTIPCOL and                \
+                         numcad = :NFNUMCAD and                \
+                         ((datfim = :ddatzer) or              \
+                         (datfim > :ddathoj))";
+  
+  SQL_Criar(cur_docente); 
+  SQL_UsarSQLSenior2(cur_docente, 0); 
+  SQL_UsarAbrangencia(cur_docente, 0);
+  SQL_DEFINIRCOMANDO(cur_docente, asql_docente);
+  
+  SQL_DEFINIRDATA(cur_docente, "ddatzer", ddatzer);
+  SQL_DEFINIRDATA(cur_docente, "ddathoj", ddathoj);
+  SQL_DEFINIRINTEIRO(cur_docente, "NFNUMEMP", NFNUMEMP);
+  SQL_DEFINIRINTEIRO(cur_docente, "NFTIPCOL", NFTIPCOL); 
+  SQL_DEFINIRINTEIRO(cur_docente, "NFNUMCAD", NFNUMCAD);
+  
+  SQL_AbrirCursor(cur_docente); 
+  ENQUANTO (SQL_EOF(cur_docente) = 0) @Se cursor posição final retorna 1@                             
+  { 
+    SQL_RetornarInteiro(cur_docente, "seqapf", nseqapf);
+    SQL_RetornarInteiro(cur_docente, "codapf", ncodapf);
+    SQL_RetornarInteiro(cur_docente, "hormes", nhormes);
+    SQL_RetornarFlutuante(cur_docente, "valapf", nvalapf);
+    SQL_RetornarAlfa(cur_docente, "desapf", adesapf);
+    SQL_RetornarData(cur_docente, "datini", ddatini);
+   
+    intparaalfa(nseqapf, aseqapf);
+    intparaalfa(nhormes, ahormes);
+
+    convertemascara(1, nvalapf, avalapf,"zzz.zzz.zzz.zz9,99");
+    convertemascara(3, ddatini, adatini, "DD/MM/YYYY");
+    TiraEspacos (avalapf, avalapf);                                                   
+    
+  
+                    
+     
+    @nhormes = nhormes/60;@
+    nhorsem = nhormes /4.5;                    
+                                                                                                                       
+    ntotsem = ntotsem + nhorsem;
+    ntotmes = ntotmes + nhormes;
+    nSalAti  =  nvalapf * (nhormes/60);
+    NVALSAL =  NVALSAL +   nSalAti; 
+    
+                                                                                          
+    convertemascara(4,nhormes, ahormes,"hhh:mm");
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    
+    
+    infocom = infocom + "> Atividade: "+adesapf+" | Início: "+adatini+" Hora(s) Semanal: "+ahorsem+" | Hora(s) Mensal:"+ahormes+" | Salário hora: R$"+avalapf+aenter+
+                        "---------------------------------------------------------------------------------------------------------------------------------------------------------"+aenter;
+    
+    nhorsem = 0;
+    nhormes = 0;
+    
+      
+    SQL_PROXIMO(cur_docente);
+    }
+  SQL_FECHARCURSOR(cur_docente);
+  SQL_DESTRUIR(cur_docente);
+    
+  convertemascara(4,ntotmes, atotmes,"hh:mm");
+  TiraEspacos(atotmes,atotmes);
+  convertemascara(4,ntotsem, atotsem,"hh:mm");
+  TiraEspacos(atotsem,atotsem);
+  
+
+
+ 
+  getEquipe.equipe.valsal = NVALSAL;
+  
+  getEquipe.equipe.horsem = atotsem; 
+  getEquipe.equipe.infocom = infocom;   
+} 
+ @FIM DO SE FOR DOCENTE@
+ @INICIO SENAO FOR DOCENTE@
+/*SE(NTIPCON <> 10)
+{
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+ddathoj = datsis;
+ddatatu = datsis;
+ddataux = datsis;
+ultimodia(ddataux);                   
+                  
+  asql_naodocente = "select r034fun.ValSal, r034fun.EstPos, r034fun.PosTra, r034fun.CodCcu, r018ccu.NomCcu \ 
+                    from   r034fun, r017car, r018ccu                                                       \
+                    where  r034fun.NumEmp = :NFNUMEMP and                                                   \
+                           r034fun.TipCol = :NFTIPCOL and                                                   \
+                           r034fun.NumCad = :NFNUMCAD and                                                   \
+                           r017car.EstPos = r034fun.EstPos and                                             \
+                           r017car.PosTra = r034fun.PosTra and                                             \
+                           r018ccu.NumEmp = :NFNUMEMP and                                                   \
+                           r018ccu.CodCcu = r034fun.CodCcu";
+  
+  SQL_Criar(cur_naodocente); 
+  SQL_UsarSQLSenior2(cur_naodocente, 0); 
+  SQL_UsarAbrangencia(cur_naodocente, 0);
+  SQL_DEFINIRCOMANDO(cur_naodocente, asql_naodocente);
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFNUMEMP", NFNUMEMP);
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFTIPCOL", NFTIPCOL); 
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFNUMCAD", NFNUMCAD);
+  
+  SQL_AbrirCursor(cur_naodocente); 
+  ENQUANTO (SQL_EOF(cur_naodocente) = 0) @Se cursor posição final retorna 1@
+  { 
+    SQL_RETORNARALFA(cur_naodocente, "codccu", acodccu);
+    SQL_RETORNARALFA(cur_naodocente, "nomccu", anomccu);
+    SQL_RetornarFlutuante(cur_naodocente, "valsal", nvalapf);
+   
+    intparaalfa(nseqapf, aseqapf);
+    intparaalfa(nhormes, ahormes);                                                                                           
+
+    convertemascara(1, nvalsal, avalsal,"zzz.zzz.zzz.zz9,99");
+    convertemascara(3, ddatini, adatini, "DD/MM/YYYY");
+    TiraEspacos(avalsal, avalsal);
+    
+  
+                    
+   
+    @nhormes = nhormes/60;@
+    nhorsem = nhormes /4.5;                    
+                                                                                                                       
+    ntotsem = ntotsem + nhorsem;
+    ntotmes = ntotmes + nhormes;
+  
+    convertemascara(4,nhormes, ahormes,"hh:mm");
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    
+    
+    infocom = infocom + "Centro de Custo: "+anomccu+" | Código Centro de Custo: "+acodccu+" | Hora(s) Mensal: Ainda não buscando | Valor Salário: R$"+avalsal+aenter+
+                        "---------------------------------------------------------------------------------------------------------------------------------------------------------"+aenter;  
+    
+    
+    nhorsem = 0;
+    nhormes = 0;
+    
+      
+    SQL_PROXIMO(cur_naodocente);
+    }
+  SQL_FECHARCURSOR(cur_naodocente);
+  SQL_DESTRUIR(cur_naodocente);
+  
+    convertemascara(4,ntotmes, atotmes,"hh:mm");
+  TiraEspacos(atotmes,atotmes);
+  convertemascara(4,ntotsem, atotsem,"hh:mm");
+  TiraEspacos(atotsem,atotsem);
+
+  getEquipe.equipe.infocom = infocom; 
+ 
+ } */
+ @FIM DO SENAO FOR DOCENTE@
+
+                 
+  SQL_PROXIMO(CEQUIPE);
+}
+SQL_FECHARCURSOR(CEQUIPE);
+SQL_DESTRUIR(CEQUIPE);
+
+SE((AVERIF = "") ou (AVERIF = " "))
+{
+  ASQL= "SELECT FUN.NUMEMP, FUN.TIPCOL, FUN.NUMCAD, FUN.NOMFUN, CAR.TITRED,   \
+       ORN.NOMLOC, FUN.VALSAL, FUN.CODFIL, FUN.DATADM, FIL.NOMFIL,            \
+       FUN.POSTRA, POS.DESPOS, HIS.CODSIN, FUN.CODETB, EMP.NOMEMP,            \
+       FUN.TIPCON, USU_CARHOR, SN.NOMSIN, SN.USU_CARHOR, FUN.TIPSAL,          \
+       FUN.CODVIN, VIN.DESVIN, ESC.USU_NomCom  ,FUN.numloc,fun.codcar                               \
+       FROM                                                                   \
+       R034FUN FUN, R024CAR CAR, R016ORN ORN, R030EMP EMP, R006ESC ESC,       \
+       R038HSI HIS, R030FIL FIL, R014SIN SN, R017POS POS, R022VIN VIN         \
+       WHERE FUN.NUMEMP = :NUMEMP                                             \
+       AND FUN.TIPCOL = :TIPCOL                                               \ 
+       AND FUN.NUMCAD = :NUMCAD                                               \
+       AND FUN.CODFIL = FIL.CODFIL                                            \
+       AND FUN.NUMEMP = FIL.NUMEMP                                            \
+       AND EMP.NUMEMP = FUN.NUMEMP                                            \
+       AND FUN.ESTPOS = POS.ESTPOS                                            \
+       AND FUN.POSTRA = POS.POSTRA                                            \
+       AND FUN.NUMEMP = HIS.NUMEMP                                            \
+       AND FUN.TIPCOL = HIS.TIPCOL                                            \
+       AND FUN.NUMCAD = HIS.NUMCAD                                            \ 
+       AND FUN.ESTCAR = CAR.ESTCAR                                            \
+       AND FUN.CODCAR = CAR.CODCAR                                            \
+       AND FUN.TABORG = ORN.TABORG                                            \
+       AND FUN.NUMLOC = ORN.NUMLOC                                            \
+       AND SN.CODSIN  = HIS.CODSIN                                            \
+       AND VIN.CODVIN = FUN.CODVIN                                            \
+       AND ESC.CODESC = FUN.CODESC                                            \
+       AND HIS.DATALT = (SELECT MAX(DAT.DATALT) FROM R038HSI DAT              \
+                        WHERE DAT.NUMEMP = FUN.NUMEMP AND                     \
+                              DAT.TIPCOL = FUN.TIPCOL AND                     \
+                              DAT.NUMCAD = FUN.NUMCAD)"; 
+                              
+  SQL_CRIAR(CEQUIPE);                                                    
+  SQL_USARABRANGENCIA(CEQUIPE,0);
+  SQL_USARSQLSENIOR2(CEQUIPE,0);                        
+  SQL_DEFINIRCOMANDO(CEQUIPE,ASQL);
+  SQL_DEFINIRINTEIRO(CEQUIPE,"NUMEMP",NNUMEMP);
+  SQL_DEFINIRINTEIRO(CEQUIPE,"TIPCOL",NTIPCOL);
+  SQL_DEFINIRINTEIRO(CEQUIPE,"NUMCAD",NNUMCAD);
+  SQL_ABRIRCURSOR(CEQUIPE);                                                        
+  SE(SQL_EOF(CEQUIPE) = 0)
+  {
+    SQL_RETORNARINTEIRO(CEQUIPE,"NUMEMP",NNUMEMP);
+    SQL_RETORNARINTEIRO(CEQUIPE,"TIPCOL",NTIPCOL);
+    SQL_RETORNARINTEIRO(CEQUIPE,"NUMCAD",NNUMCAD);
+    SQL_RETORNARINTEIRO(CEQUIPE,"CODFIL",NCODFIL);
+    SQL_RETORNARINTEIRO(CEQUIPE,"TIPCON",NTIPCON);
+    SQL_RETORNARINTEIRO(CEQUIPE,"TIPSAL",NTIPSAL);
+    SQL_RETORNARALFA(CEQUIPE,"NOMEMP",ANOMEMP);
+    SQL_RETORNARALFA(CEQUIPE,"NOMFIL",ANOMFIL);
+    SQL_RETORNARALFA(CEQUIPE,"NOMFUN",AFNOMFUN);
+    SQL_RETORNARALFA(CEQUIPE,"TITRED",ATITRED);    
+    SQL_RETORNARALFA(CEQUIPE,"NOMLOC",ANOMLOC); 
+    SQL_RETORNARFLUTUANTE(CEQUIPE,"VALSAL",NVALSAL);
+    SQL_RETORNARALFA(CEQUIPE,"DESPOS",ADESPOS);
+    SQL_RETORNARALFA(CEQUIPE,"DESVIN",ACODVIN);
+    SQL_RETORNARDATA(CEQUIPE,"DATADM",DDATADM);
+    SQL_RETORNARINTEIRO(CEQUIPE,"USU_CARHOR",HCARHOR);
+    SQL_RETORNARINTEIRO(CEQUIPE,"CODSIN",NCODSIN);
+    SQL_RETORNARALFA(CEQUIPE,"NOMSIN",ANOMSIN);
+    SQL_RETORNARINTEIRO(CEQUIPE,"CODETB",NCODETB);
+    SQL_RETORNARALFA(CEQUIPE,"USU_NomCom",AESCALA);
+     SQL_RETORNARALFA(CEQUIPE,"CodCar",aCodCar);
+    SQL_RETORNARINTEIRO(CEQUIPE,"NumLoc",nNumLoc);
+    
+    convertemascara(3,ddatadm, adatadm, "DD/MM/YYYY");
+    convertemascara(4,hcarhor, acarhor,"hh:mm");
+    
+    @RENAN 25/07@
+  RetornaCodLoc (nNumLoc,aCodLoc);
+  intParaAlfa(NFNUMCAD,aNumCad); 
+  IntParaAlfa(NNUMEMP,aCodEmp);
+  IntParaAlfa(NCODFIL,aCodFil);
+  IntParaAlfa(nTipCon,aTipCon);
+  
+    
+    intparaalfa(ncodsim,acodsin);  
+    
+    @ Tipo de contrato @    
+    ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipCon' AND KEYNAM = :NTIPCON ";                                
+
+    SQL_CRIAR(CTIPCON);
+    SQL_USARABRANGENCIA(CTIPCON,0);
+    SQL_USARSQLSENIOR2(CTIPCON,0);
+    SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+    SQL_DefinirInteiro(CTIPCON,"NTIPCON",NTIPCON);
+    SQL_ABRIRCURSOR(CTIPCON);
+    SE(SQL_EOF(CTIPCON) = 0)
+    {
+      SQL_RETORNARALFA(CTIPCON,"VALKEY",ADESTIPCON);
+    }
+    SQL_FECHARCURSOR(CTIPCON);
+    SQL_DESTRUIR(CTIPCON);
+    
+    @ Tipo de salário @
+    ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipSal' AND KEYNAM = :NTIPSAL ";                                
+  
+  
+    SQL_CRIAR(CTIPCON);
+    SQL_USARABRANGENCIA(CTIPCON,0);
+    SQL_USARSQLSENIOR2(CTIPCON,0);
+    SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+    SQL_DefinirInteiro(CTIPCON,"NTIPSAL",NTIPSAL);
+    SQL_ABRIRCURSOR(CTIPCON);
+    SE(SQL_EOF(CTIPCON) = 0)
+    {
+      SQL_RETORNARALFA(CTIPCON,"VALKEY",ATIPSAL);
+    }
+    SQL_FECHARCURSOR(CTIPCON);
+    SQL_DESTRUIR(CTIPCON);
+    
+    @ Cargo Liderança @ 
+    RetornaPostoColaborador(NNUMEMP, NTIPCOL, NNUMCAD, DatSis, nEstPos, aPosTra, aDesPos);
+    RetornaChefePosto(2, nEstPos, 1, DatSis, aPosTra, nNumEmpLid, nTipColLid, nNumCadLid);
+    
+    SE(nNumEmpLid = 0)
+    {
+    	ACARLID = "N";
+    }
+    SENAO 
+    {
+    	ACARLID = "S";
+    }
+    
+    @ Estabilidade @
+    SE(NCODETB <> 0)
+    {
+      ACODETB = "S";
+    }
+    SENAO
+    {
+      ACODETB = "N";
+    }
+    
+    @ Histórico de salário @
+    ASQL= " SELECT TOP 1 HSA.DATALT, MOT.NOMMOT                                  \
+            FROM R038HSA HSA, R076MOT MOT                                        \
+            WHERE HSA.NUMEMP = :NNUMEMP                                         \
+              AND HSA.TIPCOL = :NTIPCOL                                         \
+              AND HSA.NUMCAD = :NNUMCAD                                         \
+              AND HSA.CODMOT = MOT.CODMOT                                        \
+            ORDER BY HSA.DATALT DESC, HSA.SEQALT DESC";                                
+    SQL_CRIAR(CTIPCON);
+    SQL_USARABRANGENCIA(CTIPCON,0);
+    SQL_USARSQLSENIOR2(CTIPCON,0);
+    SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+    SQL_DefinirInteiro(CTIPCON,"NNUMEMP",NNUMEMP);
+    SQL_DefinirInteiro(CTIPCON,"NTIPCOL",NTIPCOL);
+    SQL_DefinirInteiro(CTIPCON,"NNUMCAD",NNUMCAD);
+    SQL_ABRIRCURSOR(CTIPCON);
+    SE(SQL_EOF(CTIPCON) = 0)
+    {
+      SQL_RETORNARDATA(CTIPCON,"DATALT",DDATALTSAL);
+      SQL_RETORNARALFA(CTIPCON,"NOMMOT",AMOTULTSAL);
+    }
+    SQL_FECHARCURSOR(CTIPCON);
+    SQL_DESTRUIR(CTIPCON);
+    
+    convertemascara(3,DDATALTSAL, ADATULTSAL, "DD/MM/YYYY");
+
+    getEquipe.equipe.CRIARLINHA();
+    getEquipe.equipe.numemp = NNUMEMP;
+    getEquipe.equipe.nomemp = ANOMEMP;    
+    getEquipe.equipe.tipcol = NTIPCOL;                
+    getEquipe.equipe.numcad = NNUMCAD;
+    getEquipe.equipe.nomfun = AFNOMFUN;
+    getEquipe.equipe.postra = ADESPOS;
+    getEquipe.equipe.titred = ATITRED;
+    getEquipe.equipe.nomloc = ANOMLOC;
+    getEquipe.equipe.valsal = NVALSAL;
+    getEquipe.equipe.codfil = NCODFIL;
+    getEquipe.equipe.nomfil = ANOMFIL;
+    getEquipe.equipe.tipcon = NTIPCON;
+    getEquipe.equipe.datadm = adatadm;
+    getEquipe.equipe.destipcon = ADESTIPCON;
+    getEquipe.equipe.codsin = acodsin;
+    getEquipe.equipe.nomsin = anomsin;
+    getEquipe.equipe.carhor = acarhor;
+    getEquipe.equipe.carlid = acarlid;
+    getEquipe.equipe.codetb = acodetb;
+    getEquipe.equipe.tipsal = ATIPSAL; 
+    getEquipe.equipe.datultsal = ADATULTSAL; 
+    getEquipe.equipe.motultsal = AMOTULTSAL; 
+    getEquipe.equipe.codvin = ACODVIN; 
+    getEquipe.equipe.escala = AESCALA;
+    @RENAN 25/07@
+    intParaAlfa(NNUMCAD,aNumCad) ;
+  
+    getEquipe.equipe.Colaborador =   aNumCad + " - " + AFNOMFUN ;
+    getEquipe.equipe.Colaborador =   aNumCad + " - " + AFNOMFUN ;
+    getEquipe.equipe.posto =   APOSTRA  + " - " +   ADESPOS ;
+    getEquipe.equipe.cargo = aCodCar + " - " + ATITRED ;
+    getEquipe.equipe.local =  aCodLoc + " - " + ANOMLOC  ;    
+    getEquipe.equipe.empresa =  aCodEmp + " - " + ANOMEMP  ;
+    getEquipe.equipe.filial =  aCodfil + " - " + ANOMFIL  ; 
+    getEquipe.equipe.contrato =  aTipCon + " - " + ADESTIPCON  ; 
+   
+    
+    @ INICIO DO SE FOR DOCENTE@  
+SE(NTIPCON = 10)
+{                                                   
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+ddathoj = datsis;
+ddatatu = datsis;
+ddataux = datsis;
+ultimodia(ddataux);                   
+                  
+  asql_docente = "select r171apf.seqapf, r171apf.codapf,        \
+                       r171apf.hormes, r171apf.valapf,        \              
+                       r171ati.desapf, r171apf.datini         \
+                         from r171apf, r171ati                \
+                         where                                \
+                         r171apf.codapf = r171ati.codapf and  \
+                         numemp = :NFNUMEMP and                \
+                         tipcol = :NFTIPCOL and                \
+                         numcad = :NFNUMCAD and                \
+                         ((datfim = :ddatzer) or              \
+                         (datfim > :ddathoj))";
+  
+  SQL_Criar(cur_docente); 
+  SQL_UsarSQLSenior2(cur_docente, 0); 
+  SQL_UsarAbrangencia(cur_docente, 0);
+  SQL_DEFINIRCOMANDO(cur_docente, asql_docente);
+  SQL_DEFINIRDATA(cur_docente, "ddatzer", ddatzer);
+  SQL_DEFINIRDATA(cur_docente, "ddathoj", ddathoj);
+  SQL_DEFINIRINTEIRO(cur_docente, "NFNUMEMP", NFNUMEMP);                                                           
+  SQL_DEFINIRINTEIRO(cur_docente, "NFTIPCOL", NFTIPCOL); 
+  SQL_DEFINIRINTEIRO(cur_docente, "NFNUMCAD", NFNUMCAD);
+  
+  SQL_AbrirCursor(cur_docente); 
+  ENQUANTO (SQL_EOF(cur_docente) = 0) @Se cursor posição final retorna 1@
+  { 
+    SQL_RetornarInteiro(cur_docente, "seqapf", nseqapf);
+    SQL_RetornarInteiro(cur_docente, "codapf", ncodapf);
+    SQL_RetornarInteiro(cur_docente, "hormes", nhormes);
+    SQL_RetornarFlutuante(cur_docente, "valapf", nvalapf);
+    SQL_RetornarAlfa(cur_docente, "desapf", adesapf);
+    SQL_RetornarData(cur_docente, "datini", ddatini);
+   
+    intparaalfa(nseqapf, aseqapf);
+    intparaalfa(nhormes, ahormes);
+
+    convertemascara(1, nvalapf, avalapf,"zzz.zzz.zzz.zz9,99");
+    convertemascara(3, ddatini, adatini, "DD/MM/YYYY");                                                    
+    TiraEspacos (avalapf, avalapf);
+    
+  
+                    
+   
+    @nhormes = nhormes/60;@                                                                             
+    nhorsem = nhormes /4.5;                                                                                 
+                                                                                                                       
+    ntotsem = ntotsem + nhorsem;
+    ntotmes = ntotmes + nhormes;
+  
+    convertemascara(4,nhormes, ahormes,"hh:mm");
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    
+    
+    infocom = infocom + "> Atividade: "+adesapf+" | Início: "+adatini+" Hora(s) Semanal: "+ahorsem+" | Hora(s) Mensal:"+ahormes+" | Salário hora: R$"+avalapf+aenter+
+                        "---------------------------------------------------------------------------------------------------------------------------------------------------------"+aenter;
+    
+    
+    nhorsem = 0;
+    nhormes = 0;
+    
+      
+    SQL_PROXIMO(cur_docente);
+    }
+  SQL_FECHARCURSOR(cur_docente);
+  SQL_DESTRUIR(cur_docente);
+    
+  convertemascara(4,ntotmes, atotmes,"hh:mm");
+  TiraEspacos(atotmes,atotmes);
+  convertemascara(4,ntotsem, atotsem,"hh:mm");
+  TiraEspacos(atotsem,atotsem);
+
+  getEquipe.equipe.infocom = infocom;   
+}                                                                                                                                       
+ @FIM DO SE FOR DOCENTE@
+ @INICIO SENAO FOR DOCENTE@
+SE(NTIPCON <> 10)
+{
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+ddathoj = datsis;
+ddatatu = datsis;
+ddataux = datsis;
+ultimodia(ddataux);                   
+                  
+  asql_naodocente = "select r034fun.ValSal, r034fun.EstPos, r034fun.PosTra, r034fun.CodCcu, r018ccu.NomCcu \ 
+                    from   r034fun, r017car, r018ccu                                                       \
+                    where  r034fun.NumEmp = :NFNUMEMP and                                                   \
+                           r034fun.TipCol = :NFTIPCOL and                                                   \
+                           r034fun.NumCad = :NFNUMCAD and                                                   \
+                           r017car.EstPos = r034fun.EstPos and                                             \
+                           r017car.PosTra = r034fun.PosTra and                                             \
+                           r018ccu.NumEmp = :NFNUMEMP and                                                   \
+                           r018ccu.CodCcu = r034fun.CodCcu";
+  
+  SQL_Criar(cur_naodocente); 
+  SQL_UsarSQLSenior2(cur_naodocente, 0); 
+  SQL_UsarAbrangencia(cur_naodocente, 0);
+  SQL_DEFINIRCOMANDO(cur_naodocente, asql_naodocente);
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFNUMEMP", NFNUMEMP);
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFTIPCOL", NFTIPCOL);                                                                              
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFNUMCAD", NFNUMCAD);
+  
+  SQL_AbrirCursor(cur_naodocente); 
+  ENQUANTO (SQL_EOF(cur_naodocente) = 0) @Se cursor posição final retorna 1@
+  { 
+    SQL_RETORNARALFA(cur_naodocente, "codccu", acodccu);
+    SQL_RETORNARALFA(cur_naodocente, "nomccu", anomccu);
+    SQL_RetornarFlutuante(cur_naodocente, "valsal", nvalsal);
+   
+    intparaalfa(nseqapf, aseqapf);
+    intparaalfa(nhormes, ahormes);
+
+    convertemascara(1, nvalsal, avalsal,"zzz.zzz.zzz.zz9,99");
+    convertemascara(3, ddatini, adatini, "DD/MM/YYYY");
+    TiraEspacos(avalsal, avalsal);
+    
+  
+                                                                                             
+   
+    @nhormes = nhormes/60;@
+    nhorsem = nhormes /4.5;                    
+                                                                                                                       
+    ntotsem = ntotsem + nhorsem;
+    ntotmes = ntotmes + nhormes;
+  
+    convertemascara(4,nhormes, ahormes,"hh:mm");
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    
+    
+    infocom = infocom + "Centro de Custo: "+anomccu+" | Código Centro de Custo: "+acodccu+" | Hora(s) Mensal: Ainda não buscando | Valor Salário: R$"+avalsal+aenter+
+                        "---------------------------------------------------------------------------------------------------------------------------------------------------------"+aenter;
+    
+    
+    nhorsem = 0;
+    nhormes = 0;
+    
+      
+    SQL_PROXIMO(cur_naodocente);
+    }
+  SQL_FECHARCURSOR(cur_naodocente);
+  SQL_DESTRUIR(cur_naodocente);
+                                                                                                                      
+  
+    convertemascara(4,ntotmes, atotmes,"hh:mm");
+  TiraEspacos(atotmes,atotmes);
+  convertemascara(4,ntotsem, atotsem,"hh:mm");
+  TiraEspacos(atotsem,atotsem);
+
+  getEquipe.equipe.infocom = infocom;  
+ 
+ }
+ @FIM DO SENAO FOR DOCENTE@
+      
+  }
+  SQL_FECHARCURSOR(CEQUIPE);
+  SQL_DESTRUIR(CEQUIPE);
+}
+
+
+Funcao RetornaAtsDescontosFolhaAnterior(Numero pNumEmp, Numero pTipCol, Numero pNumCad, Numero End pValAts, Numero End pValDes);
+{
+
+   /*
+       Renan Roberto Raimundo
+       Retorna  VALOR ATS e desconto 
+       ultima comptencia anterior
+       caso na comptencia anteior a do mes n~çao tenha nada calculo de folha
+       retorna a ultima compentencia calculada
+   
+   */
+   Definir Alfa aCurAux;
+   pValDes = 0;
+   pValAts = 0;
+   nValAts = 0;
+   nValDes = 0;
+   
+   
+   
+   Sql_Criar(aCurAux);
+   Sql_UsarAbrangencia(aCurAux,0);
+   Sql_UsarSqlSenior2(aCurAux,0);                                                            
+   Sql_DefinirComando(aCurAux, "SELECT                                                              \
+                                CAL.PERREF,                                                         \
+                                VER.NUMEMP,                                                         \
+                                VER.TIPCOL,                                                         \
+                                VER.NUMCAD,                                                         \
+                                SUM(CASE WHEN CAL.TIPCAL = 11 AND EVC.TIPEVE = 3                    \
+                                         THEN VER.VALEVE ELSE 0 END) AS TOTALDESC,            \
+                                SUM(CASE WHEN CAL.TIPCAL IN (11,12,13) AND EVC.USU_EVEATS = 'S'     \
+                                         THEN VER.VALEVE ELSE 0 END) AS TOTALATS           \
+                            FROM R046VER AS VER                                                     \
+                            JOIN R044CAL AS CAL                                                     \
+                              ON CAL.NUMEMP = VER.NUMEMP                                            \
+                             AND CAL.CODCAL = VER.CODCAL                                            \
+                            JOIN R008EVC AS EVC                                                     \
+                              ON EVC.CODTAB = VER.TABEVE                                            \
+                             AND EVC.CODEVE = VER.CODEVE                                            \
+                            WHERE VER.NUMEMP = :NUMEMP                                               \
+                              AND VER.TIPCOL = :TIPCOL                                               \
+                              AND VER.NUMCAD = :NUMCAD                                               \
+                              AND (                                                                 \
+                                    (CAL.TIPCAL = 11 AND EVC.TIPEVE = 3)                            \
+                                 OR (CAL.TIPCAL IN (11,12,13) AND EVC.USU_EVEATS = 'S')             \
+                              )                                                                     \
+                              AND CAL.PERREF =                                                      \
+                                  ISNULL(                                                           \
+                                                                                                    \
+                                    (                                                               \
+                                      SELECT MAX(CAL2.PERREF)                                       \
+                                      FROM R046VER AS VER2                                          \
+                                      JOIN R044CAL AS CAL2                                          \
+                                        ON CAL2.NUMEMP = VER2.NUMEMP                                \
+                                       AND CAL2.CODCAL = VER2.CODCAL                                \
+                                      JOIN R008EVC AS EVC2                                          \
+                                        ON EVC2.CODTAB = VER2.TABEVE                                \
+                                       AND EVC2.CODEVE = VER2.CODEVE                                \
+                                      WHERE VER2.NUMEMP = VER.NUMEMP                                \
+                                        AND VER2.TIPCOL = VER.TIPCOL                                \
+                                        AND VER2.NUMCAD = VER.NUMCAD                                \
+                                        AND (                                                       \
+                                              (CAL2.TIPCAL = 11 AND EVC2.TIPEVE = 3)                \
+                                           OR (CAL2.TIPCAL IN (11,12,13) AND EVC2.USU_EVEATS = 'S')  \
+                                        )                                                            \
+                                        AND CAL2.PERREF <= DATEFROMPARTS(                            \
+                                                               YEAR(DATEADD(MONTH,-1,GETDATE())),    \
+                                                               MONTH(DATEADD(MONTH,-1,GETDATE())), 1) \
+                                    ),                                                                \
+                                                                                                       \
+                                    (                                                                  \
+                                      SELECT MIN(CAL3.PERREF)                                          \
+                                      FROM R046VER AS VER3                                             \
+                                      JOIN R044CAL AS CAL3                                             \
+                                        ON CAL3.NUMEMP = VER3.NUMEMP                                   \
+                                       AND CAL3.CODCAL = VER3.CODCAL                                   \
+                                      JOIN R008EVC AS EVC3                                             \
+                                        ON EVC3.CODTAB = VER3.TABEVE                                   \
+                                       AND EVC3.CODEVE = VER3.CODEVE                                   \
+                                      WHERE VER3.NUMEMP = VER.NUMEMP                                   \
+                                        AND VER3.TIPCOL = VER.TIPCOL                                   \
+                                        AND VER3.NUMCAD = VER.NUMCAD                                   \
+                                        AND (                                                          \
+                                              (CAL3.TIPCAL = 11 AND EVC3.TIPEVE = 3)                    \
+                                           OR (CAL3.TIPCAL IN (11,12,13) AND EVC3.USU_EVEATS = 'S')     \
+                                        )                                                               \
+                                        AND CAL3.PERREF >= DATEFROMPARTS(                               \
+                                                               YEAR(DATEADD(MONTH,-1,GETDATE())),       \
+                                                               MONTH(DATEADD(MONTH,-1,GETDATE())), 1)   \
+                                    )                                                                   \
+                                  )                                                                     \
+                            GROUP BY                                                                    \
+                                CAL.PERREF,                                                             \
+                                VER.NUMEMP,                                                             \
+                                VER.TIPCOL,                                                              \
+                                VER.NUMCAD") ;
+
+
+   SQl_DefinirInteiro(aCurAux, "NUMEMP", pNumEmp);
+   SQl_DefinirInteiro(aCurAux, "TIPCOL", pTipCol);
+   SQl_DefinirInteiro(aCurAux, "NUMCAD", pNumCad);
+   Sql_AbrirCursor(aCurAux);
+   Se (SQL_EOF( aCurAux) = 0) {
+      
+       Sql_RetornarFlutuante(aCurAux, "TOTALDESC",nValDes);
+       Sql_RetornarFlutuante(aCurAux, "TOTALATS" ,nValAts);
+   }  
+   Sql_FecharCursor(aCurAux);
+   Sql_Destruir(aCurAux);
+  
+   pValAts =   nValAts;
+   pValDes =   nValDes; 
+   
+   
+
+}
+
+
+Funcao RetornaAtsDescontosFolhaAnterior2(Numero pNumEmp, Numero pTipCol, Numero pNumCad, Numero End pValAts, Numero End pValDes);
+{
+
+   /*
+       Renan Roberto Raimundo
+       Retorna  VALOR ATS e desconto 
+       ultima comptencia anterior
+       caso na comptencia anteior a do mes n~çao tenha nada calculo de folha
+       retorna a ultima compentencia calculada
+   
+   */
+   Definir Alfa aCurAux;
+   pValDes = 0;
+   pValAts = 0;
+   Definir Data dCmpRef;
+   
+   DesMontaData (DatSis, nDia, nMes, nAno);
+   nDia = 1 ;
+   
+   Se (nMes = 1) {
+     nMes = 12 ;
+     nAno --;
+   }
+   Senao {
+     nMes --;
+   }
+   
+   MontaData (01,nMes, nAno, dCmpRef);
+   
+   
+   
+   Sql_Criar(aCurAux);
+   Sql_UsarAbrangencia(aCurAux,0);
+   Sql_UsarSqlSenior2(aCurAux,0);                                                            
+   Sql_DefinirComando(aCurAux, "SELECT                                                              \
+                                CAL.PERREF,                                                         \
+                                VER.NUMEMP,                                                         \
+                                VER.TIPCOL,                                                         \
+                                VER.NUMCAD,                                                         \
+                                SUM(CASE WHEN CAL.TIPCAL = 11 AND EVC.TIPEVE = 3                    \
+                                         THEN VER.VALEVE ELSE 0 END) AS TOTALDESC,            \
+                                SUM(CASE WHEN CAL.TIPCAL IN (11,12,13) AND EVC.USU_EVEATS = 'S'     \
+                                         THEN VER.VALEVE ELSE 0 END) AS TOTALATS           \
+                            FROM R046VER AS VER                                                     \
+                            JOIN R044CAL AS CAL                                                     \
+                              ON CAL.NUMEMP = VER.NUMEMP                                            \
+                             AND CAL.CODCAL = VER.CODCAL                                            \
+                            JOIN R008EVC AS EVC                                                     \
+                              ON EVC.CODTAB = VER.TABEVE                                            \
+                             AND EVC.CODEVE = VER.CODEVE                                            \
+                            WHERE VER.NUMEMP = :NUMEMP                                               \
+                              AND VER.TIPCOL = :TIPCOL                                               \
+                              AND VER.NUMCAD = :NUMCAD                                               \
+                              AND (                                                                 \
+                                    (CAL.TIPCAL = 11 AND EVC.TIPEVE = 3)                            \
+                                 OR (CAL.TIPCAL IN (11,12,13) AND EVC.USU_EVEATS = 'S')             \
+                              )                                                                     \
+                              AND CAL.PERREF =                                                      \
+                                  ISNULL(                                                           \
+                                                                                                    \
+                                    (                                                               \
+                                      SELECT MAX(CAL2.PERREF)                                       \
+                                      FROM R046VER AS VER2                                          \
+                                      JOIN R044CAL AS CAL2                                          \
+                                        ON CAL2.NUMEMP = VER2.NUMEMP                                \
+                                       AND CAL2.CODCAL = VER2.CODCAL                                \
+                                      JOIN R008EVC AS EVC2                                          \
+                                        ON EVC2.CODTAB = VER2.TABEVE                                \
+                                       AND EVC2.CODEVE = VER2.CODEVE                                \
+                                      WHERE VER2.NUMEMP = VER.NUMEMP                                \
+                                        AND VER2.TIPCOL = VER.TIPCOL                                \
+                                        AND VER2.NUMCAD = VER.NUMCAD                                \
+                                        AND (                                                       \
+                                              (CAL2.TIPCAL = 11 AND EVC2.TIPEVE = 3)                \
+                                           OR (CAL2.TIPCAL IN (11,12,13) AND EVC2.USU_EVEATS = 'S')  \
+                                        )                                                            \
+                                        AND CAL2.PERREF <= :CMPREF  \
+                                    ),                                                                \
+                                                                                                       \
+                                    (                                                                  \
+                                      SELECT MIN(CAL3.PERREF)                                          \
+                                      FROM R046VER AS VER3                                             \
+                                      JOIN R044CAL AS CAL3                                             \
+                                        ON CAL3.NUMEMP = VER3.NUMEMP                                   \
+                                       AND CAL3.CODCAL = VER3.CODCAL                                   \
+                                      JOIN R008EVC AS EVC3                                             \
+                                        ON EVC3.CODTAB = VER3.TABEVE                                   \
+                                       AND EVC3.CODEVE = VER3.CODEVE                                   \
+                                      WHERE VER3.NUMEMP = VER.NUMEMP                                   \
+                                        AND VER3.TIPCOL = VER.TIPCOL                                   \
+                                        AND VER3.NUMCAD = VER.NUMCAD                                   \
+                                        AND (                                                          \
+                                              (CAL3.TIPCAL = 11 AND EVC3.TIPEVE = 3)                    \
+                                           OR (CAL3.TIPCAL IN (11,12,13) AND EVC3.USU_EVEATS = 'S')     \
+                                        )                                                               \
+                                        AND CAL3.PERREF >= :CMPREF                                      \
+                                    )                                                                   \
+                                  )                                                                     \
+                            GROUP BY                                                                    \
+                                CAL.PERREF,                                                             \
+                                VER.NUMEMP,                                                             \
+                                VER.TIPCOL,                                                              \
+                                VER.NUMCAD") ;
+
+
+   SQl_DefinirInteiro(aCurAux, "NUMEMP", pNumEmp);
+   SQl_DefinirInteiro(aCurAux, "TIPCOL", pTipCol);
+   SQl_DefinirInteiro(aCurAux, "NUMCAD", pNumCad);
+   SQl_DefinirDAta  (aCurAux, "CMPREF",  dCmpRef);
+   Sql_AbrirCursor(aCurAux);
+   Se (SQL_EOF( aCurAux) = 0) {
+       Sql_RetornarFlutuante(aCurAux, "TOTALDESC",nValDes);
+       Sql_RetornarFlutuante(aCurAux, "TOTALATS" ,nValAts);
+   }  
+   Sql_FecharCursor(aCurAux);
+   Sql_Destruir(aCurAux);
+   
+     pValAts =   nValAts;
+     pValDes =   nValDes;
+   
+
+}
+
+
+
+
+
+
+
+    
+     

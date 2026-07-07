@@ -1,0 +1,878 @@
+DEFINIR ALFA   CEQUIPE;
+DEFINIR ALFA   CTIPCON;
+DEFINIR ALFA   ASQL;                                  
+DEFINIR ALFA   ALISTALIDER;    
+DEFINIR ALFA   ANOMFUN;
+DEFINIR ALFA   AFNOMFUN;
+DEFINIR ALFA   ASINAL;
+DEFINIR ALFA   ATITRED;
+DEFINIR ALFA   ANOMLOC;
+DEFINIR ALFA   ANOMFIL;
+DEFINIR ALFA   ATIPCON;
+DEFINIR ALFA   ADESTIPCON;
+DEFINIR ALFA   AVERIF;
+DEFINIR ALFA   APOSTRA;
+DEFINIR ALFA   ACODSIN;
+DEFINIR ALFA   ANOMSIN;
+DEFINIR ALFA   ADATADM;
+DEFINIR ALFA   ACARHOR;
+DEFINIR ALFA   ADESPOS;
+DEFINIR ALFA   ACARLID;
+DEFINIR ALFA   ACODETB;
+Definir Alfa   aPosTra;
+Definir Alfa   aDesPos;
+DEFINIR ALFA   ANOMEMP;
+DEFINIR ALFA   ATIPSAL;
+DEFINIR ALFA   ADATULTSAL;
+DEFINIR ALFA   AMOTULTSAL;
+DEFINIR ALFA   ACODVIN;
+DEFINIR ALFA   AESCALA;
+Definir Alfa  aCodEst;
+Definir ALfa aCodCar ;
+
+
+DEFINIR NUMERO NFNUMEMP;
+DEFINIR NUMERO NFTIPCOL;
+DEFINIR NUMERO NFNUMCAD;                                        
+DEFINIR NUMERO NVALSAL;
+DEFINIR NUMERO NTIPCON;
+DEFINIR NUMERO NNUMEMP;
+DEFINIR NUMERO NTIPCOL;
+DEFINIR NUMERO NNUMCAD;
+DEFINIR NUMERO HCARHOR;
+DEFINIR NUMERO NCODSIN;                          
+DEFINIR NUMERO NNUMEMPLID;
+DEFINIR NUMERO NTIPCOLLID;
+DEFINIR NUMERO NNUMCADLID;
+DEFINIR NUMERO NCODETB;
+DEFINIR NUMERO NTIPSAL;
+Definir Numero nvalsal;      
+
+DEFINIR DATA   DDATADM;
+DEFINIR DATA   DDATALTSAL;
+
+
+DEFINIR ALFA asql_docente;
+DEFINIR ALFA cur_docente;
+DEFINIR ALFA asql_naodocente;
+DEFINIR ALFA cur_naodocente;
+definir alfa adesapf;
+definir alfa aseqapf;
+definir alfa acodapf;
+definir alfa ahormes;
+definir alfa ahorsem;
+definir alfa avalapf;
+definir alfa adatini;
+definir alfa infocom;
+definir alfa aenter;
+definir alfa atotmes;
+definir alfa atotsem;
+definir alfa avalsal;
+definir alfa acodccu;
+definir alfa anomccu;
+Definir Alfa aCodLoc;
+Definir Alfa aCodFil;
+Definir ALfa aCodEmp;
+Definir ALfa aTipCon;
+
+
+definir numero nseqapf;
+definir numero ncodapf;
+definir numero nhormes;
+definir numero nhorsem;                                                                                           
+definir numero nvalapf;
+
+definir data ddatini;
+definir data ddatzer;
+
+@Renan 24/07@
+Definir Alfa aNumCad ;
+
+RETORNAASCII(13, AENTER);
+
+
+NNUMEMP = getEquipeMov.enumemp;
+NTIPCOL =getEquipeMov.etipcol;
+NNUMCAD =getEquipeMov.enumcad;
+AFNOMFUN =getEquipeMov.enomfun; 
+AVERIF = getEquipeMov.enomfun; 
+
+NNUMEMP =3 ;  
+NTIPCOL =  1;
+NNUMCAD =  30009017;
+
+ 
+
+ASQL= "SELECT NF.NUMEMP, NF.TIPCOL, NF.CODEST, NF.NUMCAD, NF.NOMFUN, C.TITRED,           \
+       O.NOMLOC, NF.VALSAL, NF.CODFIL, NF.DATADM, FI.NOMFIL, HI.CODSIN,       \
+       NF.TIPCON, NF.POSTRA, POS.DESPOS, SN.CODSIN, SN.NOMSIN, EM.NOMEMP,     \ 
+       SN.USU_CARHOR, NF.CODETB, NF.TIPSAL, NF.CODVIN, VI.DESVIN,             \
+       ES.USU_NomCom  ,C.CODCAR, O.NUMLOC                                                       \
+       FROM                                                                   \
+       R034FUN NC, R017HIE HC, R017HIE HF, R034FUN NF, R024CAR C, R016ORN O,  \
+       R038HSI HI, R030FIL FI, R014SIN SN, R017POS POS, R030EMP EM,           \
+       R022VIN VI, R006ESC ES                                                 \
+       WHERE NC.NUMEMP = :NUMEMP                                              \
+       AND NC.TIPCOL = :TIPCOL                                                \ 
+       AND NC.NUMCAD = :NUMCAD                                                \
+       AND NF.ESTPOS = POS.ESTPOS                                             \
+       AND NF.POSTRA = POS.POSTRA                                             \
+       AND HC.ESTPOS = NC.ESTPOS                                              \
+       AND HC.POSTRA = NC.POSTRA                                              \
+       AND NF.CODFIL = FI.CODFIL                                              \
+       AND NF.NUMEMP = FI.NUMEMP                                              \
+       AND NF.NUMEMP = HI.NUMEMP                                              \
+       AND EM.NUMEMP = NF.NUMEMP                                              \
+       AND NF.TIPCOL = HI.TIPCOL                                              \
+       AND NF.NUMCAD = HI.NUMCAD                                              \
+       AND SN.CODSIN = HI.CODSIN                                              \
+       AND VI.CODVIN = NF.CODVIN                                              \
+       AND ES.CODESC = NF.CODESC                                              \
+       AND HI.DATALT = (SELECT MAX(DAT.DATALT) FROM R038HSI DAT               \
+                        WHERE DAT.NUMEMP = NF.NUMEMP AND                      \
+                              DAT.TIPCOL = NF.TIPCOL AND                      \
+                              DAT.NUMCAD = NF.NUMCAD)                         \
+       AND HF.CODTHP   = 1                                                    \
+       AND HC.CODTHP = HF.CODTHP                                              \ 
+       AND SUBSTRING(HF.POSPOS,1,LEN(HC.POSPOS)) = HC.POSPOS                  \ 
+       AND HF.IDEPOS > HC.IDEPOS                                              \
+       AND NF.ESTPOS = HF.ESTPOS                                              \
+       AND NF.POSTRA = HF.POSTRA                                              \
+       AND NF.SITAFA <> 7                                                     \
+       AND NC.SITAFA <> 7                                                     \
+       AND HC.REVHIE =                                                        \
+       (SELECT MAX(HCC.REVHIE) FROM R017HIE HCC WHERE                         \
+               HCC.ESTPOS = HC.ESTPOS AND HCC.CODTHP = HC.CODTHP)             \
+       AND HF.REVHIE = HC.REVHIE                                              \
+       AND C.ESTCAR = NF.ESTCAR                                               \
+       AND C.CODCAR = NF.CODCAR                                               \
+       AND O.TABORG = NF.TABORG                                               \
+       AND O.NUMLOC = NF.NUMLOC ";
+
+
+AFNOMFUN =getEquipeMov.enomfun;                                      
+MINUSCULO(AFNOMFUN,AFNOMFUN,"N");
+ 
+
+
+SE((AFNOMFUN <> "") ou (AFNOMFUN <> " "))
+{
+  ASQL = ASQL + " AND LOWER(NF.NOMFUN) LIKE '%"+AFNOMFUN+"%'"; 
+}
+
+ASQL = ASQL + " ORDER BY NF.NOMFUN ";
+
+SQL_CRIAR(CEQUIPE);                                                    
+SQL_USARABRANGENCIA(CEQUIPE,0);
+SQL_USARSQLSENIOR2(CEQUIPE,0);                        
+SQL_DEFINIRCOMANDO(CEQUIPE,ASQL);
+SQL_DEFINIRINTEIRO(CEQUIPE,"NUMEMP",NNUMEMP);
+SQL_DEFINIRINTEIRO(CEQUIPE,"TIPCOL",NTIPCOL);
+SQL_DEFINIRINTEIRO(CEQUIPE,"NUMCAD",NNUMCAD);
+SQL_ABRIRCURSOR(CEQUIPE);                                                        
+ENQUANTO(SQL_EOF(CEQUIPE) = 0)
+{
+  SQL_RETORNARINTEIRO(CEQUIPE,"NUMEMP",NFNUMEMP);
+  SQL_RETORNARINTEIRO(CEQUIPE,"TIPCOL",NFTIPCOL);
+  SQL_RETORNARINTEIRO(CEQUIPE,"NUMCAD",NFNUMCAD);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODFIL",NCODFIL);
+  SQL_RETORNARINTEIRO(CEQUIPE,"TIPCON",NTIPCON);
+  SQL_RETORNARINTEIRO(CEQUIPE,"TIPSAL",NTIPSAL);
+  SQL_RETORNARALFA(CEQUIPE,"NOMEMP",ANOMEMP);
+  SQL_RETORNARALFA(CEQUIPE,"NOMFIL",ANOMFIL);
+  SQL_RETORNARALFA(CEQUIPE,"NOMFUN",AFNOMFUN);
+  SQL_RETORNARALFA(CEQUIPE,"TITRED",ATITRED);    
+  SQL_RETORNARALFA(CEQUIPE,"NOMLOC",ANOMLOC);
+  SQL_RETORNARALFA(CEQUIPE,"POSTRA",APOSTRA);
+  SQL_RETORNARALFA(CEQUIPE,"NOMSIN",ANOMSIN);
+  SQL_RETORNARALFA(CEQUIPE,"DESPOS",ADESPOS);
+  SQL_RETORNARALFA(CEQUIPE,"DESVIN",ACODVIN);
+  SQL_RETORNARALFA(CEQUIPE,"USU_NomCom",AESCALA);
+  SQL_RETORNARFLUTUANTE(CEQUIPE,"VALSAL",NVALSAL);
+  SQL_RETORNARDATA(CEQUIPE,"DATADM",DDATADM);
+  SQL_RETORNARINTEIRO(CEQUIPE,"USU_CARHOR",HCARHOR);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODSIN",NCODSIN);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODETB",NCODETB);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODEST",nCodEst);
+  convertemascara(3,ddatadm, adatadm, "DD/MM/YYYY");
+  convertemascara(4,hcarhor, acarhor,"hh:mm");
+  SQL_RETORNARALFA(CEQUIPE,"CodCar",aCodCar);
+  SQL_RETORNARINTEIRO(CEQUIPE,"NumLoc",nNumLoc);
+  
+  intparaalfa(ncodsim,acodsin); 
+  IntParaAlfa(nCodEst,aCodEst); 
+
+  
+  @RENAN 25/07@
+  RetornaCodLoc (nNumLoc,aCodLoc);
+  intParaAlfa(NFNUMCAD,aNumCad); 
+  IntParaAlfa(NFNUMEMP,aCodEmp);
+  IntParaAlfa(NCODFIL,aCodFil);
+  IntParaAlfa(nTipCon,aTipCon);
+  
+  
+  @ Cargo Liderança @ 
+  RetornaPostoColaborador(NFNUMEMP, NFTIPCOL, NFNUMCAD, DatSis, nEstPos, aPosTra, aDesPos);
+  RetornaChefePosto(2, nEstPos, 1, DatSis, aPosTra, nNumEmpLid, nTipColLid, nNumCadLid);
+  
+  SE(nNumEmpLid = 0)
+  {
+  	ACARLID = "N";
+  }
+  SENAO 
+  {
+  	ACARLID = "S";
+  }
+  
+  @ Estabilidade @
+  SE(NCODETB <> 0)
+  {
+    ACODETB = "S";
+  }
+  SENAO
+  {
+    ACODETB = "N";
+  }
+  
+  @ Tipo de contrato @
+  ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipCon' AND KEYNAM = :NTIPCON ";                                
+
+
+  SQL_CRIAR(CTIPCON);
+  SQL_USARABRANGENCIA(CTIPCON,0);
+  SQL_USARSQLSENIOR2(CTIPCON,0);
+  SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+  SQL_DefinirInteiro(CTIPCON,"NTIPCON",NTIPCON);
+  SQL_ABRIRCURSOR(CTIPCON);
+  SE(SQL_EOF(CTIPCON) = 0)
+  {
+    SQL_RETORNARALFA(CTIPCON,"VALKEY",ADESTIPCON);
+  }
+  SQL_FECHARCURSOR(CTIPCON);
+  SQL_DESTRUIR(CTIPCON);
+  
+  @ Tipo de salário @
+  ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipSal' AND KEYNAM = :NTIPSAL ";                                
+  SQL_CRIAR(CTIPCON);
+  SQL_USARABRANGENCIA(CTIPCON,0);
+  SQL_USARSQLSENIOR2(CTIPCON,0);
+  SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+  SQL_DefinirInteiro(CTIPCON,"NTIPSAL",NTIPSAL);
+  SQL_ABRIRCURSOR(CTIPCON);
+  SE(SQL_EOF(CTIPCON) = 0)
+  {
+    SQL_RETORNARALFA(CTIPCON,"VALKEY",ATIPSAL);
+  }
+  SQL_FECHARCURSOR(CTIPCON);
+  SQL_DESTRUIR(CTIPCON);
+  
+  
+  @ Histórico de salário @
+  ASQL= " SELECT TOP 1 HSA.DATALT, MOT.NOMMOT                                  \
+          FROM R038HSA HSA, R076MOT MOT                                        \
+          WHERE HSA.NUMEMP = :NFNUMEMP                                         \
+            AND HSA.TIPCOL = :NFTIPCOL                                         \
+            AND HSA.NUMCAD = :NFNUMCAD                                         \
+            AND HSA.CODMOT = MOT.CODMOT                                        \
+          ORDER BY HSA.DATALT DESC, HSA.SEQALT DESC";                                
+  SQL_CRIAR(CTIPCON);
+  SQL_USARABRANGENCIA(CTIPCON,0);
+  SQL_USARSQLSENIOR2(CTIPCON,0);
+  SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+  SQL_DefinirInteiro(CTIPCON,"NFNUMEMP",NFNUMEMP);
+  SQL_DefinirInteiro(CTIPCON,"NFTIPCOL",NFTIPCOL);
+  SQL_DefinirInteiro(CTIPCON,"NFNUMCAD",NFNUMCAD);
+  SQL_ABRIRCURSOR(CTIPCON);
+  SE(SQL_EOF(CTIPCON) = 0)
+  {
+    SQL_RETORNARDATA(CTIPCON,"DATALT",DDATALTSAL);
+    SQL_RETORNARALFA(CTIPCON,"NOMMOT",AMOTULTSAL);
+  }
+  SQL_FECHARCURSOR(CTIPCON);
+  SQL_DESTRUIR(CTIPCON);
+  
+  convertemascara(3,DDATALTSAL, ADATULTSAL, "DD/MM/YYYY");
+          
+  getEquipeMov.equipe.CRIARLINHA();
+  getEquipeMov.equipe.numemp = NFNUMEMP;
+  getEquipeMov.equipe.nomemp = ANOMEMP;
+  getEquipeMov.equipe.tipcol = NFTIPCOL;                
+  getEquipeMov.equipe.numcad = NFNUMCAD;                                                            
+  getEquipeMov.equipe.nomfun = AFNOMFUN;
+  getEquipeMov.equipe.titred = ATITRED;
+  getEquipeMov.equipe.nomloc = ANOMLOC;
+  getEquipeMov.equipe.valsal = NVALSAL;
+  getEquipeMov.equipe.codfil = NCODFIL;
+  getEquipeMov.equipe.nomfil = ANOMFIL;
+  getEquipeMov.equipe.tipcon = NTIPCON;
+  getEquipeMov.equipe.destipcon = ADESTIPCON;
+  getEquipeMov.equipe.datadm = adatadm;
+  getEquipeMov.equipe.postra = ADESPOS;
+  getEquipeMov.equipe.codsin = acodsin;
+  getEquipeMov.equipe.nomsin = anomsin;
+  getEquipeMov.equipe.carhor = acarhor;
+  getEquipeMov.equipe.carlid = acarlid;
+  getEquipeMov.equipe.codetb = acodetb;
+  getEquipeMov.equipe.tipsal = ATIPSAL; 
+  getEquipeMov.equipe.datultsal = ADATULTSAL; 
+  getEquipeMov.equipe.motultsal = AMOTULTSAL; 
+  getEquipeMov.equipe.codvin = ACODVIN; 
+  getEquipeMov.equipe.escala = AESCALA;
+  getEquipeMov.equipe.codest = aCodEst;
+  
+   
+  getEquipeMov.equipe.Colaborador =   aNumCad + " - " + AFNOMFUN ;
+  getEquipeMov.equipe.posto =   APOSTRA  + " - " +   ADESPOS ;
+  getEquipeMov.equipe.cargo = aCodCar + " - " + ATITRED ;
+  getEquipeMov.equipe.local =  aCodLoc + " - " + ANOMLOC  ;
+  getEquipeMov.equipe.empresa =  aCodEmp + " - " + ANOMEMP  ;
+  getEquipeMov.equipe.filial =  aCodfil + " - " + ANOMFIL  ;
+  getEquipeMov.equipe.contrato =  aTipCon + " - " + ADESTIPCON  ;
+  
+@ INICIO DO SE FOR DOCENTE@  
+SE(NTIPCON = 10)
+{                                                   
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+ddathoj = datsis;
+ddatatu = datsis;
+ddataux = datsis;
+ultimodia(ddataux);                   
+                  
+  asql_docente = "select r171apf.seqapf, r171apf.codapf,        \
+                       r171apf.hormes, r171apf.valapf,        \              
+                       r171ati.desapf, r171apf.datini         \
+                         from r171apf, r171ati                \
+                         where                                \
+                         r171apf.codapf = r171ati.codapf and  \
+                         numemp = :NFNUMEMP and                \                                                                               
+                         tipcol = :NFTIPCOL and                \
+                         numcad = :NFNUMCAD and                \
+                         ((datfim = :ddatzer) or              \
+                         (datfim > :ddathoj))";
+  
+  SQL_Criar(cur_docente); 
+  SQL_UsarSQLSenior2(cur_docente, 0); 
+  SQL_UsarAbrangencia(cur_docente, 0);
+  SQL_DEFINIRCOMANDO(cur_docente, asql_docente);
+  
+  SQL_DEFINIRDATA(cur_docente, "ddatzer", ddatzer);
+  SQL_DEFINIRDATA(cur_docente, "ddathoj", ddathoj);
+  SQL_DEFINIRINTEIRO(cur_docente, "NFNUMEMP", NFNUMEMP);
+  SQL_DEFINIRINTEIRO(cur_docente, "NFTIPCOL", NFTIPCOL); 
+  SQL_DEFINIRINTEIRO(cur_docente, "NFNUMCAD", NFNUMCAD);
+  
+  SQL_AbrirCursor(cur_docente); 
+  ENQUANTO (SQL_EOF(cur_docente) = 0) @Se cursor posição final retorna 1@                             
+  { 
+    SQL_RetornarInteiro(cur_docente, "seqapf", nseqapf);
+    SQL_RetornarInteiro(cur_docente, "codapf", ncodapf);
+    SQL_RetornarInteiro(cur_docente, "hormes", nhormes);
+    SQL_RetornarFlutuante(cur_docente, "valapf", nvalapf);
+    SQL_RetornarAlfa(cur_docente, "desapf", adesapf);
+    SQL_RetornarData(cur_docente, "datini", ddatini);
+   
+    intparaalfa(nseqapf, aseqapf);
+    intparaalfa(nhormes, ahormes);
+    Definir Alfa aCodApf ;
+    IntParaAlfa(ncodapf,aCodApf);
+
+    convertemascara(1, nvalapf, avalapf,"zzz.zzz.zzz.zz9,99");
+    convertemascara(3, ddatini, adatini, "DD/MM/YYYY");
+    TiraEspacos (avalapf, avalapf);                                                   
+    
+  
+     getEquipeMov.equipe.atividades.criarLinha(); 
+     getEquipeMov.equipe.atividades.codati = aCodApf ;
+     getEquipeMov.equipe.atividades.desati = adesapf;               
+   
+    @nhormes = nhormes/60;@
+    nhorsem = nhormes /4.5;                    
+                                                                                                                       
+    ntotsem = ntotsem + nhorsem;
+    ntotmes = ntotmes + nhormes;
+    
+    
+                                                                                                                                   
+    convertemascara(4,nhormes, ahormes,"hh:mm");
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    
+    
+    infocom = infocom + "> Atividade: "+adesapf+" | Início: "+adatini+" Hora(s) Semanal: "+ahorsem+" | Hora(s) Mensal:"+ahormes+" | Salário hora: R$"+avalapf+aenter+
+                        "---------------------------------------------------------------------------------------------------------------------------------------------------------"+aenter;
+    
+    nhorsem = 0;
+    nhormes = 0;
+    
+      
+    SQL_PROXIMO(cur_docente);
+    }
+  SQL_FECHARCURSOR(cur_docente);
+  SQL_DESTRUIR(cur_docente);
+    
+  convertemascara(4,ntotmes, atotmes,"hh:mm");
+  TiraEspacos(atotmes,atotmes);
+  convertemascara(4,ntotsem, atotsem,"hh:mm");
+  TiraEspacos(atotsem,atotsem);
+  
+  getEquipeMov.equipe.horsem = atotsem; 
+  getEquipeMov.equipe.infocom = infocom;   
+}
+ @FIM DO SE FOR DOCENTE@
+ @INICIO SENAO FOR DOCENTE@
+SE(NTIPCON <> 10)
+{
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+ddathoj = datsis;
+ddatatu = datsis;
+ddataux = datsis;
+ultimodia(ddataux);                   
+                  
+  asql_naodocente = "select r034fun.ValSal, r034fun.EstPos, r034fun.PosTra, r034fun.CodCcu, r018ccu.NomCcu \ 
+                    from   r034fun, r017car, r018ccu                                                       \
+                    where  r034fun.NumEmp = :NFNUMEMP and                                                   \
+                           r034fun.TipCol = :NFTIPCOL and                                                   \
+                           r034fun.NumCad = :NFNUMCAD and                                                   \
+                           r017car.EstPos = r034fun.EstPos and                                             \
+                           r017car.PosTra = r034fun.PosTra and                                             \
+                           r018ccu.NumEmp = :NFNUMEMP and                                                   \
+                           r018ccu.CodCcu = r034fun.CodCcu";
+  
+  SQL_Criar(cur_naodocente); 
+  SQL_UsarSQLSenior2(cur_naodocente, 0); 
+  SQL_UsarAbrangencia(cur_naodocente, 0);
+  SQL_DEFINIRCOMANDO(cur_naodocente, asql_naodocente);
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFNUMEMP", NFNUMEMP);
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFTIPCOL", NFTIPCOL); 
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFNUMCAD", NFNUMCAD);
+  
+  SQL_AbrirCursor(cur_naodocente); 
+  ENQUANTO (SQL_EOF(cur_naodocente) = 0) @Se cursor posição final retorna 1@
+  { 
+    SQL_RETORNARALFA(cur_naodocente, "codccu", acodccu);
+    SQL_RETORNARALFA(cur_naodocente, "nomccu", anomccu);
+    SQL_RetornarFlutuante(cur_naodocente, "valsal", nvalapf);
+   
+    intparaalfa(nseqapf, aseqapf);
+    intparaalfa(nhormes, ahormes);                                                                                           
+
+    convertemascara(1, nvalsal, avalsal,"zzz.zzz.zzz.zz9,99");
+    convertemascara(3, ddatini, adatini, "DD/MM/YYYY");
+    TiraEspacos(avalsal, avalsal);
+    
+  
+                    
+   
+    @nhormes = nhormes/60;@
+    nhorsem = nhormes /4.5;                    
+                                                                                                                       
+    ntotsem = ntotsem + nhorsem;
+    ntotmes = ntotmes + nhormes;
+  
+    convertemascara(4,nhormes, ahormes,"hh:mm");
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    
+    
+    infocom = infocom + "Centro de Custo: "+anomccu+" | Código Centro de Custo: "+acodccu+" | Hora(s) Mensal: Ainda não buscando | Valor Salário: R$"+avalsal+aenter+
+                        "---------------------------------------------------------------------------------------------------------------------------------------------------------"+aenter;  
+    
+    
+    nhorsem = 0;
+    nhormes = 0;
+    
+      
+    SQL_PROXIMO(cur_naodocente);
+    }
+  SQL_FECHARCURSOR(cur_naodocente);
+  SQL_DESTRUIR(cur_naodocente);
+  
+    convertemascara(4,ntotmes, atotmes,"hh:mm");
+  TiraEspacos(atotmes,atotmes);
+  convertemascara(4,ntotsem, atotsem,"hh:mm");
+  TiraEspacos(atotsem,atotsem);
+
+  getEquipeMov.equipe.infocom = infocom; 
+ 
+ }
+ @FIM DO SENAO FOR DOCENTE@
+
+                 
+  SQL_PROXIMO(CEQUIPE);
+}
+SQL_FECHARCURSOR(CEQUIPE);
+SQL_DESTRUIR(CEQUIPE);
+
+SE((AVERIF = "") ou (AVERIF = " "))
+{
+  ASQL= "SELECT FUN.NUMEMP, FUN.TIPCOL, FUN.NUMCAD, FUN.NOMFUN, CAR.TITRED,   \
+       ORN.NOMLOC, FUN.VALSAL, FUN.CODFIL, FUN.DATADM, FIL.NOMFIL,            \
+       FUN.POSTRA, POS.DESPOS, HIS.CODSIN, FUN.CODETB, EMP.NOMEMP,            \
+       FUN.TIPCON, USU_CARHOR, SN.NOMSIN, SN.USU_CARHOR, FUN.TIPSAL,          \
+       FUN.CODVIN, VIN.DESVIN, ESC.USU_NomCom  ,FUN.numloc,fun.codcar                               \
+       FROM                                                                   \
+       R034FUN FUN, R024CAR CAR, R016ORN ORN, R030EMP EMP, R006ESC ESC,       \
+       R038HSI HIS, R030FIL FIL, R014SIN SN, R017POS POS, R022VIN VIN         \
+       WHERE FUN.NUMEMP = :NUMEMP                                             \
+       AND FUN.TIPCOL = :TIPCOL                                               \ 
+       AND FUN.NUMCAD = :NUMCAD                                               \
+       AND FUN.CODFIL = FIL.CODFIL                                            \
+       AND FUN.NUMEMP = FIL.NUMEMP                                            \
+       AND EMP.NUMEMP = FUN.NUMEMP                                            \
+       AND FUN.ESTPOS = POS.ESTPOS                                            \
+       AND FUN.POSTRA = POS.POSTRA                                            \
+       AND FUN.NUMEMP = HIS.NUMEMP                                            \
+       AND FUN.TIPCOL = HIS.TIPCOL                                            \
+       AND FUN.NUMCAD = HIS.NUMCAD                                            \ 
+       AND FUN.ESTCAR = CAR.ESTCAR                                            \
+       AND FUN.CODCAR = CAR.CODCAR                                            \
+       AND FUN.TABORG = ORN.TABORG                                            \
+       AND FUN.NUMLOC = ORN.NUMLOC                                            \
+       AND SN.CODSIN  = HIS.CODSIN                                            \
+       AND VIN.CODVIN = FUN.CODVIN                                            \
+       AND ESC.CODESC = FUN.CODESC                                            \
+       AND HIS.DATALT = (SELECT MAX(DAT.DATALT) FROM R038HSI DAT              \
+                        WHERE DAT.NUMEMP = FUN.NUMEMP AND                     \
+                              DAT.TIPCOL = FUN.TIPCOL AND                     \
+                              DAT.NUMCAD = FUN.NUMCAD)"; 
+                              
+  SQL_CRIAR(CEQUIPE);                                                    
+  SQL_USARABRANGENCIA(CEQUIPE,0);
+  SQL_USARSQLSENIOR2(CEQUIPE,0);                        
+  SQL_DEFINIRCOMANDO(CEQUIPE,ASQL);
+  SQL_DEFINIRINTEIRO(CEQUIPE,"NUMEMP",NNUMEMP);
+  SQL_DEFINIRINTEIRO(CEQUIPE,"TIPCOL",NTIPCOL);
+  SQL_DEFINIRINTEIRO(CEQUIPE,"NUMCAD",NNUMCAD);
+  SQL_ABRIRCURSOR(CEQUIPE);                                                        
+  SE(SQL_EOF(CEQUIPE) = 0)
+  {
+    SQL_RETORNARINTEIRO(CEQUIPE,"NUMEMP",NNUMEMP);
+    SQL_RETORNARINTEIRO(CEQUIPE,"TIPCOL",NTIPCOL);
+    SQL_RETORNARINTEIRO(CEQUIPE,"NUMCAD",NNUMCAD);
+    SQL_RETORNARINTEIRO(CEQUIPE,"CODFIL",NCODFIL);
+    SQL_RETORNARINTEIRO(CEQUIPE,"TIPCON",NTIPCON);
+    SQL_RETORNARINTEIRO(CEQUIPE,"TIPSAL",NTIPSAL);
+    SQL_RETORNARALFA(CEQUIPE,"NOMEMP",ANOMEMP);
+    SQL_RETORNARALFA(CEQUIPE,"NOMFIL",ANOMFIL);
+    SQL_RETORNARALFA(CEQUIPE,"NOMFUN",AFNOMFUN);
+    SQL_RETORNARALFA(CEQUIPE,"TITRED",ATITRED);    
+    SQL_RETORNARALFA(CEQUIPE,"NOMLOC",ANOMLOC); 
+    SQL_RETORNARFLUTUANTE(CEQUIPE,"VALSAL",NVALSAL);
+    SQL_RETORNARALFA(CEQUIPE,"DESPOS",ADESPOS);
+    SQL_RETORNARALFA(CEQUIPE,"DESVIN",ACODVIN);
+    SQL_RETORNARDATA(CEQUIPE,"DATADM",DDATADM);
+    SQL_RETORNARINTEIRO(CEQUIPE,"USU_CARHOR",HCARHOR);
+    SQL_RETORNARINTEIRO(CEQUIPE,"CODSIN",NCODSIN);
+    SQL_RETORNARALFA(CEQUIPE,"NOMSIN",ANOMSIN);
+    SQL_RETORNARINTEIRO(CEQUIPE,"CODETB",NCODETB);
+    SQL_RETORNARALFA(CEQUIPE,"USU_NomCom",AESCALA);
+     SQL_RETORNARALFA(CEQUIPE,"CodCar",aCodCar);
+    SQL_RETORNARINTEIRO(CEQUIPE,"NumLoc",nNumLoc);
+    
+    convertemascara(3,ddatadm, adatadm, "DD/MM/YYYY");
+    convertemascara(4,hcarhor, acarhor,"hh:mm");
+    
+    @RENAN 25/07@
+  RetornaCodLoc (nNumLoc,aCodLoc);
+  intParaAlfa(NFNUMCAD,aNumCad); 
+  IntParaAlfa(NNUMEMP,aCodEmp);
+  IntParaAlfa(NCODFIL,aCodFil);
+  IntParaAlfa(nTipCon,aTipCon);
+  
+    
+    intparaalfa(ncodsim,acodsin);  
+    
+    @ Tipo de contrato @    
+    ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipCon' AND KEYNAM = :NTIPCON ";                                
+
+    SQL_CRIAR(CTIPCON);
+    SQL_USARABRANGENCIA(CTIPCON,0);
+    SQL_USARSQLSENIOR2(CTIPCON,0);
+    SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+    SQL_DefinirInteiro(CTIPCON,"NTIPCON",NTIPCON);
+    SQL_ABRIRCURSOR(CTIPCON);
+    SE(SQL_EOF(CTIPCON) = 0)
+    {
+      SQL_RETORNARALFA(CTIPCON,"VALKEY",ADESTIPCON);
+    }
+    SQL_FECHARCURSOR(CTIPCON);
+    SQL_DESTRUIR(CTIPCON);
+    
+    @ Tipo de salário @
+    ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipSal' AND KEYNAM = :NTIPSAL ";                                
+  
+  
+    SQL_CRIAR(CTIPCON);
+    SQL_USARABRANGENCIA(CTIPCON,0);
+    SQL_USARSQLSENIOR2(CTIPCON,0);
+    SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+    SQL_DefinirInteiro(CTIPCON,"NTIPSAL",NTIPSAL);
+    SQL_ABRIRCURSOR(CTIPCON);
+    SE(SQL_EOF(CTIPCON) = 0)
+    {
+      SQL_RETORNARALFA(CTIPCON,"VALKEY",ATIPSAL);
+    }
+    SQL_FECHARCURSOR(CTIPCON);
+    SQL_DESTRUIR(CTIPCON);
+    
+    @ Cargo Liderança @ 
+    RetornaPostoColaborador(NNUMEMP, NTIPCOL, NNUMCAD, DatSis, nEstPos, aPosTra, aDesPos);
+    RetornaChefePosto(2, nEstPos, 1, DatSis, aPosTra, nNumEmpLid, nTipColLid, nNumCadLid);
+    
+    SE(nNumEmpLid = 0)
+    {
+    	ACARLID = "N";
+    }
+    SENAO 
+    {
+    	ACARLID = "S";
+    }
+    
+    @ Estabilidade @
+    SE(NCODETB <> 0)
+    {
+      ACODETB = "S";
+    }
+    SENAO
+    {
+      ACODETB = "N";
+    }
+    
+    @ Histórico de salário @
+    ASQL= " SELECT TOP 1 HSA.DATALT, MOT.NOMMOT                                  \
+            FROM R038HSA HSA, R076MOT MOT                                        \
+            WHERE HSA.NUMEMP = :NNUMEMP                                         \
+              AND HSA.TIPCOL = :NTIPCOL                                         \
+              AND HSA.NUMCAD = :NNUMCAD                                         \
+              AND HSA.CODMOT = MOT.CODMOT                                        \
+            ORDER BY HSA.DATALT DESC, HSA.SEQALT DESC";                                
+    SQL_CRIAR(CTIPCON);
+    SQL_USARABRANGENCIA(CTIPCON,0);
+    SQL_USARSQLSENIOR2(CTIPCON,0);
+    SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+    SQL_DefinirInteiro(CTIPCON,"NNUMEMP",NNUMEMP);
+    SQL_DefinirInteiro(CTIPCON,"NTIPCOL",NTIPCOL);
+    SQL_DefinirInteiro(CTIPCON,"NNUMCAD",NNUMCAD);
+    SQL_ABRIRCURSOR(CTIPCON);
+    SE(SQL_EOF(CTIPCON) = 0)
+    {
+      SQL_RETORNARDATA(CTIPCON,"DATALT",DDATALTSAL);
+      SQL_RETORNARALFA(CTIPCON,"NOMMOT",AMOTULTSAL);
+    }
+    SQL_FECHARCURSOR(CTIPCON);
+    SQL_DESTRUIR(CTIPCON);
+    
+    convertemascara(3,DDATALTSAL, ADATULTSAL, "DD/MM/YYYY");
+
+    getEquipeMov.equipe.CRIARLINHA();
+    getEquipeMov.equipe.numemp = NNUMEMP;
+    getEquipeMov.equipe.nomemp = ANOMEMP;    
+    getEquipeMov.equipe.tipcol = NTIPCOL;                
+    getEquipeMov.equipe.numcad = NNUMCAD;
+    getEquipeMov.equipe.nomfun = AFNOMFUN;
+    getEquipeMov.equipe.postra = ADESPOS;
+    getEquipeMov.equipe.titred = ATITRED;
+    getEquipeMov.equipe.nomloc = ANOMLOC;
+    getEquipeMov.equipe.valsal = NVALSAL;
+    getEquipeMov.equipe.codfil = NCODFIL;
+    getEquipeMov.equipe.nomfil = ANOMFIL;
+    getEquipeMov.equipe.tipcon = NTIPCON;
+    getEquipeMov.equipe.datadm = adatadm;
+    getEquipeMov.equipe.destipcon = ADESTIPCON;
+    getEquipeMov.equipe.codsin = acodsin;
+    getEquipeMov.equipe.nomsin = anomsin;
+    getEquipeMov.equipe.carhor = acarhor;
+    getEquipeMov.equipe.carlid = acarlid;
+    getEquipeMov.equipe.codetb = acodetb;
+    getEquipeMov.equipe.tipsal = ATIPSAL; 
+    getEquipeMov.equipe.datultsal = ADATULTSAL; 
+    getEquipeMov.equipe.motultsal = AMOTULTSAL; 
+    getEquipeMov.equipe.codvin = ACODVIN; 
+    getEquipeMov.equipe.escala = AESCALA;
+    @RENAN 25/07@
+    intParaAlfa(NNUMCAD,aNumCad) ;
+  
+    getEquipeMov.equipe.Colaborador =   aNumCad + " - " + AFNOMFUN ;
+    getEquipeMov.equipe.Colaborador =   aNumCad + " - " + AFNOMFUN ;
+    getEquipeMov.equipe.posto =   APOSTRA  + " - " +   ADESPOS ;
+    getEquipeMov.equipe.cargo = aCodCar + " - " + ATITRED ;
+    getEquipeMov.equipe.local =  aCodLoc + " - " + ANOMLOC  ;    
+    getEquipeMov.equipe.empresa =  aCodEmp + " - " + ANOMEMP  ;
+    getEquipeMov.equipe.filial =  aCodfil + " - " + ANOMFIL  ; 
+    getEquipeMov.equipe.contrato =  aTipCon + " - " + ADESTIPCON  ; 
+   
+    
+    @ INICIO DO SE FOR DOCENTE@  
+SE(NTIPCON = 10)
+{                                                   
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+ddathoj = datsis;
+ddatatu = datsis;
+ddataux = datsis;
+ultimodia(ddataux);                   
+                  
+  asql_docente = "select r171apf.seqapf, r171apf.codapf,        \
+                       r171apf.hormes, r171apf.valapf,        \              
+                       r171ati.desapf, r171apf.datini         \
+                         from r171apf, r171ati                \
+                         where                                \
+                         r171apf.codapf = r171ati.codapf and  \
+                         numemp = :NFNUMEMP and                \
+                         tipcol = :NFTIPCOL and                \
+                         numcad = :NFNUMCAD and                \
+                         ((datfim = :ddatzer) or              \
+                         (datfim > :ddathoj))";
+  
+  SQL_Criar(cur_docente); 
+  SQL_UsarSQLSenior2(cur_docente, 0); 
+  SQL_UsarAbrangencia(cur_docente, 0);
+  SQL_DEFINIRCOMANDO(cur_docente, asql_docente);
+  SQL_DEFINIRDATA(cur_docente, "ddatzer", ddatzer);
+  SQL_DEFINIRDATA(cur_docente, "ddathoj", ddathoj);
+  SQL_DEFINIRINTEIRO(cur_docente, "NFNUMEMP", NFNUMEMP);                                                           
+  SQL_DEFINIRINTEIRO(cur_docente, "NFTIPCOL", NFTIPCOL); 
+  SQL_DEFINIRINTEIRO(cur_docente, "NFNUMCAD", NFNUMCAD);
+  
+  SQL_AbrirCursor(cur_docente); 
+  ENQUANTO (SQL_EOF(cur_docente) = 0) @Se cursor posição final retorna 1@
+  { 
+    SQL_RetornarInteiro(cur_docente, "seqapf", nseqapf);
+    SQL_RetornarInteiro(cur_docente, "codapf", ncodapf);
+    SQL_RetornarInteiro(cur_docente, "hormes", nhormes);
+    SQL_RetornarFlutuante(cur_docente, "valapf", nvalapf);
+    SQL_RetornarAlfa(cur_docente, "desapf", adesapf);
+    SQL_RetornarData(cur_docente, "datini", ddatini);
+   
+    intparaalfa(nseqapf, aseqapf);
+    intparaalfa(nhormes, ahormes);
+
+    convertemascara(1, nvalapf, avalapf,"zzz.zzz.zzz.zz9,99");
+    convertemascara(3, ddatini, adatini, "DD/MM/YYYY");                                                    
+    TiraEspacos (avalapf, avalapf);
+    
+  
+                    
+   
+    @nhormes = nhormes/60;@                                                                             
+    nhorsem = nhormes /4.5;                                                                                 
+                                                                                                                       
+    ntotsem = ntotsem + nhorsem;
+    ntotmes = ntotmes + nhormes;
+  
+    convertemascara(4,nhormes, ahormes,"hh:mm");
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    
+    
+    infocom = infocom + "> Atividade: "+adesapf+" | Início: "+adatini+" Hora(s) Semanal: "+ahorsem+" | Hora(s) Mensal:"+ahormes+" | Salário hora: R$"+avalapf+aenter+
+                        "---------------------------------------------------------------------------------------------------------------------------------------------------------"+aenter;
+    
+    
+    nhorsem = 0;
+    nhormes = 0;
+    
+      
+    SQL_PROXIMO(cur_docente);
+    }
+  SQL_FECHARCURSOR(cur_docente);
+  SQL_DESTRUIR(cur_docente);
+    
+  convertemascara(4,ntotmes, atotmes,"hh:mm");
+  TiraEspacos(atotmes,atotmes);
+  convertemascara(4,ntotsem, atotsem,"hh:mm");
+  TiraEspacos(atotsem,atotsem);
+
+  getEquipeMov.equipe.infocom = infocom;   
+}                                                                                                                                       
+ @FIM DO SE FOR DOCENTE@
+ @INICIO SENAO FOR DOCENTE@
+SE(NTIPCON <> 10)
+{
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+ddathoj = datsis;
+ddatatu = datsis;
+ddataux = datsis;
+ultimodia(ddataux);                   
+                  
+  asql_naodocente = "select r034fun.ValSal, r034fun.EstPos, r034fun.PosTra, r034fun.CodCcu, r018ccu.NomCcu \ 
+                    from   r034fun, r017car, r018ccu                                                       \
+                    where  r034fun.NumEmp = :NFNUMEMP and                                                   \
+                           r034fun.TipCol = :NFTIPCOL and                                                   \
+                           r034fun.NumCad = :NFNUMCAD and                                                   \
+                           r017car.EstPos = r034fun.EstPos and                                             \
+                           r017car.PosTra = r034fun.PosTra and                                             \
+                           r018ccu.NumEmp = :NFNUMEMP and                                                   \
+                           r018ccu.CodCcu = r034fun.CodCcu";
+  
+  SQL_Criar(cur_naodocente); 
+  SQL_UsarSQLSenior2(cur_naodocente, 0); 
+  SQL_UsarAbrangencia(cur_naodocente, 0);
+  SQL_DEFINIRCOMANDO(cur_naodocente, asql_naodocente);
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFNUMEMP", NFNUMEMP);
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFTIPCOL", NFTIPCOL);                                                                              
+  SQL_DEFINIRINTEIRO(cur_naodocente, "NFNUMCAD", NFNUMCAD);
+  
+  SQL_AbrirCursor(cur_naodocente); 
+  ENQUANTO (SQL_EOF(cur_naodocente) = 0) @Se cursor posição final retorna 1@
+  { 
+    SQL_RETORNARALFA(cur_naodocente, "codccu", acodccu);
+    SQL_RETORNARALFA(cur_naodocente, "nomccu", anomccu);
+    SQL_RetornarFlutuante(cur_naodocente, "valsal", nvalsal);
+   
+    intparaalfa(nseqapf, aseqapf);
+    intparaalfa(nhormes, ahormes);
+
+    convertemascara(1, nvalsal, avalsal,"zzz.zzz.zzz.zz9,99");
+    convertemascara(3, ddatini, adatini, "DD/MM/YYYY");
+    TiraEspacos(avalsal, avalsal);
+    
+  
+                                                                                             
+   
+    @nhormes = nhormes/60;@
+    nhorsem = nhormes /4.5;                    
+                                                                                                                       
+    ntotsem = ntotsem + nhorsem;
+    ntotmes = ntotmes + nhormes;
+  
+    convertemascara(4,nhormes, ahormes,"hh:mm");
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    
+    
+    infocom = infocom + "Centro de Custo: "+anomccu+" | Código Centro de Custo: "+acodccu+" | Hora(s) Mensal: Ainda não buscando | Valor Salário: R$"+avalsal+aenter+
+                        "---------------------------------------------------------------------------------------------------------------------------------------------------------"+aenter;
+    
+    
+    nhorsem = 0;
+    nhormes = 0;
+    
+      
+    SQL_PROXIMO(cur_naodocente);
+    }
+  SQL_FECHARCURSOR(cur_naodocente);
+  SQL_DESTRUIR(cur_naodocente);
+                                                                                                                      
+  
+    convertemascara(4,ntotmes, atotmes,"hh:mm");
+  TiraEspacos(atotmes,atotmes);
+  convertemascara(4,ntotsem, atotsem,"hh:mm");
+  TiraEspacos(atotsem,atotsem);
+
+  getEquipeMov.equipe.infocom = infocom;  
+ 
+ }
+ @FIM DO SENAO FOR DOCENTE@
+      
+  }
+  SQL_FECHARCURSOR(CEQUIPE);
+  SQL_DESTRUIR(CEQUIPE);
+}
+
+
+
+
+
+
+    
+     

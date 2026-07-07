@@ -1,0 +1,241 @@
+DEFINIR ALFA   CEQUIPE;
+DEFINIR ALFA   CTIPCON;
+DEFINIR ALFA   ASQL;                                  
+DEFINIR ALFA   ALISTALIDER;    
+DEFINIR ALFA   ANOMFUN;
+DEFINIR ALFA   AFNOMFUN;
+DEFINIR ALFA   ASINAL;
+DEFINIR ALFA   ATITRED;
+DEFINIR ALFA   ANOMLOC;
+DEFINIR ALFA   ANOMFIL;
+DEFINIR ALFA   ATIPCON;
+DEFINIR ALFA   ADESTIPCON;
+DEFINIR ALFA   AVERIF;
+DEFINIR ALFA   APOSTRA;
+DEFINIR ALFA   ACODSIN;
+DEFINIR ALFA   ANOMSIN;
+DEFINIR ALFA   ADATADM;
+DEFINIR ALFA   ACARHOR;
+DEFINIR ALFA   ADESPOS;
+
+DEFINIR NUMERO NFNUMEMP;
+DEFINIR NUMERO NFTIPCOL;
+DEFINIR NUMERO NFNUMCAD;                                        
+DEFINIR NUMERO NVALSAL;
+DEFINIR NUMERO NTIPCON;
+DEFINIR NUMERO NNUMEMP;
+DEFINIR NUMERO NTIPCOL;
+DEFINIR NUMERO NNUMCAD;
+DEFINIR NUMERO HCARHOR;
+DEFINIR NUMERO NCODSIN;
+
+DEFINIR DATA DDATADM;
+
+NNUMEMP =getEquipeCh.enumemp;
+NTIPCOL =getEquipeCh.etipcol;
+NNUMCAD =getEquipeCh.enumcad;
+AFNOMFUN =getEquipeCh.enomfun; 
+AVERIF = getEquipeCh.enomfun; 
+ 
+
+ASQL= "SELECT NF.NUMEMP, NF.TIPCOL, NF.NUMCAD, NF.NOMFUN, C.TITRED,           \
+       O.NOMLOC, NF.VALSAL, NF.CODFIL, NF.DATADM, FI.NOMFIL, HI.CODSIN,       \
+       NF.TIPCON, NF.POSTRA, SN.CODSIN, SN.NOMSIN, SN.USU_CARHOR,             \
+       POS.DESPOS                                                             \
+       FROM                                                                   \
+       R034FUN NC, R017HIE HC, R017HIE HF, R034FUN NF, R024CAR C, R016ORN O,  \
+       R038HSI HI, R030FIL FI, R014SIN SN, R017POS POS                        \
+       WHERE NC.NUMEMP = :NUMEMP                                              \
+       AND NC.TIPCOL = :TIPCOL                                                \ 
+       AND NC.NUMCAD = :NUMCAD                                                \
+       AND NF.ESTPOS = POS.ESTPOS                                             \
+       AND NF.POSTRA = POS.POSTRA                                             \
+       AND HC.ESTPOS = NC.ESTPOS                                              \
+       AND HC.POSTRA = NC.POSTRA                                              \
+       AND NF.CODFIL = FI.CODFIL                                              \
+       AND NF.NUMEMP = FI.NUMEMP                                              \
+       AND NF.NUMEMP = HI.NUMEMP                                              \
+       AND NF.TIPCOL = HI.TIPCOL                                              \
+       AND NF.NUMCAD = HI.NUMCAD                                              \
+       AND SN.CODSIN = HI.CODSIN                                              \ 
+       AND HI.DATALT = (SELECT MAX(DAT.DATALT) FROM R038HSI DAT               \
+                        WHERE DAT.NUMEMP = NF.NUMEMP AND                      \
+                              DAT.TIPCOL = NF.TIPCOL AND                      \
+                              DAT.NUMCAD = NF.NUMCAD)                         \
+       AND HF.CODTHP   = 1                                                    \
+       AND HC.CODTHP = HF.CODTHP                                              \ 
+       AND SUBSTRING(HF.POSPOS,1,LEN(HC.POSPOS)) = HC.POSPOS                  \ 
+       AND HF.IDEPOS > HC.IDEPOS                                              \
+       AND NF.ESTPOS = HF.ESTPOS                                              \
+       AND NF.POSTRA = HF.POSTRA                                              \
+       AND NF.SITAFA <> 7                                                     \
+       AND NC.SITAFA <> 7                                                     \
+       AND HC.REVHIE =                                                        \
+       (SELECT MAX(HCC.REVHIE) FROM R017HIE HCC WHERE                         \
+               HCC.ESTPOS = HC.ESTPOS AND HCC.CODTHP = HC.CODTHP)             \
+       AND HF.REVHIE = HC.REVHIE                                              \
+       AND C.ESTCAR = NF.ESTCAR                                               \
+       AND C.CODCAR = NF.CODCAR                                               \
+       AND O.TABORG = NF.TABORG                                               \
+       AND O.NUMLOC = NF.NUMLOC ";
+
+
+AFNOMFUN =getEquipeCh.enomfun;                                      
+MINUSCULO(AFNOMFUN,AFNOMFUN,"N");
+ 
+
+
+SE((AFNOMFUN <> "") ou (AFNOMFUN <> " "))
+{
+  ASQL = ASQL + " AND LOWER(NF.NOMFUN) LIKE '%"+AFNOMFUN+"%'"; 
+}
+
+ASQL = ASQL + " ORDER BY NF.NOMFUN ";
+
+SQL_CRIAR(CEQUIPE);                                                    
+SQL_USARABRANGENCIA(CEQUIPE,0);
+SQL_USARSQLSENIOR2(CEQUIPE,0);                        
+SQL_DEFINIRCOMANDO(CEQUIPE,ASQL);
+SQL_DEFINIRINTEIRO(CEQUIPE,"NUMEMP",NNUMEMP);
+SQL_DEFINIRINTEIRO(CEQUIPE,"TIPCOL",NTIPCOL);
+SQL_DEFINIRINTEIRO(CEQUIPE,"NUMCAD",NNUMCAD);
+SQL_ABRIRCURSOR(CEQUIPE);                                                        
+ENQUANTO(SQL_EOF(CEQUIPE) = 0)
+{
+  SQL_RETORNARINTEIRO(CEQUIPE,"USU_CARHOR",HCARHOR);
+  SQL_RETORNARINTEIRO(CEQUIPE,"NUMEMP",NFNUMEMP);
+  SQL_RETORNARINTEIRO(CEQUIPE,"TIPCOL",NFTIPCOL);
+  SQL_RETORNARINTEIRO(CEQUIPE,"NUMCAD",NFNUMCAD);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODFIL",NCODFIL);
+  SQL_RETORNARINTEIRO(CEQUIPE,"TIPCON",NTIPCON);
+  SQL_RETORNARINTEIRO(CEQUIPE,"CODSIN",NCODSIN);
+  SQL_RETORNARALFA(CEQUIPE,"NOMFIL",ANOMFIL);
+  SQL_RETORNARALFA(CEQUIPE,"NOMFUN",AFNOMFUN);
+  SQL_RETORNARALFA(CEQUIPE,"TITRED",ATITRED);    
+  SQL_RETORNARALFA(CEQUIPE,"NOMLOC",ANOMLOC);
+  SQL_RETORNARALFA(CEQUIPE,"POSTRA",APOSTRA);
+  SQL_RETORNARALFA(CEQUIPE,"NOMSIN",ANOMSIN);
+  SQL_RETORNARALFA(CEQUIPE,"DESPOS",ADESPOS);
+  SQL_RETORNARDATA(CEQUIPE,"DATADM",DDATADM);
+   
+  SQL_RETORNARFLUTUANTE(CEQUIPE,"VALSAL",NVALSAL);
+  
+  convertemascara(3,ddatadm, adatadm, "DD/MM/YYYY");
+  convertemascara(4,hcarhor, acarhor,"hh:mm");
+  
+  intparaalfa(ncodsim,acodsin);  
+  
+  
+  ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipCon' AND KEYNAM = :NTIPCON ";                                
+
+
+  SQL_CRIAR(CTIPCON);
+  SQL_USARABRANGENCIA(CTIPCON,0);
+  SQL_USARSQLSENIOR2(CTIPCON,0);
+  SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+  SQL_DefinirInteiro(CTIPCON,"NTIPCON",NTIPCON);
+  SQL_ABRIRCURSOR(CTIPCON);
+  SE(SQL_EOF(CTIPCON) = 0)
+  {
+    SQL_RETORNARALFA(CTIPCON,"VALKEY",ADESTIPCON);
+  }
+  SQL_FECHARCURSOR(CTIPCON);
+  SQL_DESTRUIR(CTIPCON);
+          
+  getEquipeCh.equipe.CRIARLINHA();
+  getEquipeCh.equipe.numemp = NFNUMEMP;
+  getEquipeCh.equipe.tipcol = NFTIPCOL;                
+  getEquipeCh.equipe.numcad = NFNUMCAD;
+  getEquipeCh.equipe.nomfun = AFNOMFUN;
+  getEquipeCh.equipe.titred = ATITRED;
+  getEquipeCh.equipe.nomloc = ANOMLOC;
+  getEquipeCh.equipe.valsal = NVALSAL;
+  getEquipeCh.equipe.codfil = NCODFIL;
+  getEquipeCh.equipe.tipcon = NTIPCON;
+  getEquipeCh.equipe.destipcon = ADESTIPCON;
+  getEquipeCh.equipe.datadm = adatadm;
+  getEquipeCh.equipe.postra = ADESPOS;
+  getEquipeCh.equipe.codsin = acodsin;
+  getEquipeCh.equipe.nomsin = anomsin;
+  getEquipeCh.equipe.carhor = acarhor;              
+  SQL_PROXIMO(CEQUIPE);
+}
+SQL_FECHARCURSOR(CEQUIPE);
+SQL_DESTRUIR(CEQUIPE);
+
+SE((AVERIF = "") ou (AVERIF = " "))
+{
+  ASQL= "SELECT FUN.NUMEMP, FUN.TIPCOL, FUN.NUMCAD, FUN.NOMFUN, CAR.TITRED,   \
+       ORN.NOMLOC, FUN.VALSAL, FUN.CODFIL, FUN.DATADM, FIL.NOMFIL, HIS.CODSIN,\
+       FUN.TIPCON                                                             \
+       FROM                                                                   \
+       R034FUN FUN, R024CAR CAR, R016ORN ORN,                                 \
+       R038HSI HIS, R030FIL FIL                                               \
+       WHERE FUN.NUMEMP = :NUMEMP                                              \
+       AND FUN.TIPCOL = :TIPCOL                                               \ 
+       AND FUN.NUMCAD = :NUMCAD                                               \
+       AND FUN.CODFIL = FIL.CODFIL                                            \
+       AND FUN.NUMEMP = FIL.NUMEMP                                            \
+       AND FUN.NUMEMP = HIS.NUMEMP                                            \
+       AND FUN.TIPCOL = HIS.TIPCOL                                            \
+       AND FUN.NUMCAD = HIS.NUMCAD                                            \ 
+       AND FUN.ESTCAR = CAR.ESTCAR                                            \
+       AND FUN.CODCAR = CAR.CODCAR                                            \
+       AND FUN.TABORG = ORN.TABORG                                            \
+       AND FUN.NUMLOC = ORN.NUMLOC                                            \
+       AND HIS.DATALT = (SELECT MAX(DAT.DATALT) FROM R038HSI DAT              \
+                        WHERE DAT.NUMEMP = FUN.NUMEMP AND                     \
+                              DAT.TIPCOL = FUN.TIPCOL AND                     \
+                              DAT.NUMCAD = FUN.NUMCAD)"; 
+                              
+  SQL_CRIAR(CEQUIPE);                                                    
+  SQL_USARABRANGENCIA(CEQUIPE,0);
+  SQL_USARSQLSENIOR2(CEQUIPE,0);                        
+  SQL_DEFINIRCOMANDO(CEQUIPE,ASQL);
+  SQL_DEFINIRINTEIRO(CEQUIPE,"NUMEMP",NNUMEMP);
+  SQL_DEFINIRINTEIRO(CEQUIPE,"TIPCOL",NTIPCOL);
+  SQL_DEFINIRINTEIRO(CEQUIPE,"NUMCAD",NNUMCAD);
+  SQL_ABRIRCURSOR(CEQUIPE);                                                        
+  SE(SQL_EOF(CEQUIPE) = 0)
+  {
+    SQL_RETORNARINTEIRO(CEQUIPE,"NUMEMP",NNUMEMP);
+    SQL_RETORNARINTEIRO(CEQUIPE,"TIPCOL",NTIPCOL);
+    SQL_RETORNARINTEIRO(CEQUIPE,"NUMCAD",NNUMCAD);
+    SQL_RETORNARINTEIRO(CEQUIPE,"CODFIL",NCODFIL);
+    SQL_RETORNARINTEIRO(CEQUIPE,"TIPCON",NTIPCON);
+    SQL_RETORNARALFA(CEQUIPE,"NOMFIL",ANOMFIL);
+    SQL_RETORNARALFA(CEQUIPE,"NOMFUN",AFNOMFUN);
+    SQL_RETORNARALFA(CEQUIPE,"TITRED",ATITRED);    
+    SQL_RETORNARALFA(CEQUIPE,"NOMLOC",ANOMLOC); 
+    SQL_RETORNARFLUTUANTE(CEQUIPE,"VALSAL",NVALSAL);
+        
+    ASQL= "SELECT KEYNAM,VALKEY FROM R996LSF WHERE lstnam = 'LTipCon' AND KEYNAM = :NTIPCON ";                                
+
+    SQL_CRIAR(CTIPCON);
+    SQL_USARABRANGENCIA(CTIPCON,0);
+    SQL_USARSQLSENIOR2(CTIPCON,0);
+    SQL_DEFINIRCOMANDO(CTIPCON,ASQL);
+    SQL_DefinirInteiro(CTIPCON,"NTIPCON",NTIPCON);
+    SQL_ABRIRCURSOR(CTIPCON);
+    SE(SQL_EOF(CTIPCON) = 0)
+    {
+      SQL_RETORNARALFA(CTIPCON,"VALKEY",ADESTIPCON);
+    }
+    SQL_FECHARCURSOR(CTIPCON);
+    SQL_DESTRUIR(CTIPCON);
+
+    getEquipeCh.equipe.CRIARLINHA();
+    getEquipeCh.equipe.numemp = NFNUMEMP;
+    getEquipeCh.equipe.tipcol = NFTIPCOL;                
+    getEquipeCh.equipe.numcad = NFNUMCAD;
+    getEquipeCh.equipe.nomfun = AFNOMFUN;
+    getEquipeCh.equipe.titred = ATITRED;
+    getEquipeCh.equipe.nomloc = ANOMLOC;
+    getEquipeCh.equipe.valsal = NVALSAL;
+    getEquipeCh.equipe.codfil = NCODFIL;
+    getEquipeCh.equipe.tipcon = NTIPCON;
+    getEquipeCh.equipe.destipcon = ADESTIPCON;
+  }
+SQL_FECHARCURSOR(CEQUIPE);
+SQL_DESTRUIR(CEQUIPE);
+}
