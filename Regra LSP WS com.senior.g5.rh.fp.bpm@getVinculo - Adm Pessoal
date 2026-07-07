@@ -1,0 +1,59 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 11/12/2024
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aCodVin;
+Definir Alfa aDesVin;
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+
+aNumEmp = getVinculo.enumemp;
+aCodFil = getVinculo.ecodfil;
+aDesVin = getVinculo.edesvin;
+
+Se((aNumEmp <> "") e (aCodFil <> " "))
+{
+  aSQL = "SELECT DISTINCT CAR.CODVIN, VIN.DESVIN                               \
+          FROM R017CAR CAR, R022VIN VIN                                        \
+            WHERE CAR.CODVIN = VIN.CODVIN";
+
+  Se((aNumEmp <> "") e (aNumEmp <> " "))
+  aSQL = aSQL + " AND CAR.NUMEMP = " + aNumEmp;
+                  
+  Se((aCodFil <> "") e (aCodFil <> " "))
+  aSQL = aSQL + " AND CAR.CODFIL = " + aCodFil;
+  
+  aSQL = aSQL + " AND VIN.DESVIN LIKE '%" + aDesVin + "%'";
+}
+Senao
+{
+  aSQL = "SELECT VIN.CODVIN, VIN.DESVIN FROM R022VIN VIN WHERE VIN.USU_MOSBPM = 'S'";
+  Se((aDesVin <> "") e (aDesVin <> " "))
+  aSQL = aSQL + " AND VIN.DESVIN LIKE '%" + aDesVin + "%'";
+}
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,aSQL);
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarInteiro(cBusca, "CODVIN", nCodVin);
+  SQL_RetornarAlfa(cBusca, "DESVIN", aDesVin);
+  
+  IntParaAlfa(nCodVin, aCodVin);
+  
+  getVinculo.vinculos.CriarLinha();  
+  getVinculo.vinculos.scodvin = aCodVin;
+  getVinculo.vinculos.sdesvin = aDesVin;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

@@ -1,0 +1,39 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 11/12/2024
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aValKey;
+Definir Alfa aKeyNam;
+
+aValKey = getTipoContrato.evalkey;
+
+aSQL = "SELECT * FROM R996LSF WHERE LSTNAM = 'LTipCon'";
+
+Se((aValKey <> "") e (aValKey <> " "))
+aSQL = aSQL + " AND VALKEY LIKE '%" + aValKey + "%'";
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,aSQL);
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarInteiro(cBusca, "KEYNAM", nKeyNam);
+  SQL_RetornarAlfa(cBusca, "VALKEY", aValKey);
+  
+  IntParaAlfa(nKeyNam, aKeyNam);
+  
+  getTipoContrato.tipcon.CriarLinha();  
+  getTipoContrato.tipcon.skeynam = aKeyNam;
+  getTipoContrato.tipcon.svalkey = aValKey;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

@@ -1,0 +1,158 @@
+DEFINIR NUMERO NCODFIL;
+DEFINIR NUMERO NNUMEMP;
+DEFINIR NUMERO NTIPCOL;
+DEFINIR NUMERO NNUMCAD;
+DEFINIR NUMERO nnumcpf;
+
+DEFINIR ALFA ANOMFUN;
+DEFINIR ALFA ANOMUSU;
+DEFINIR ALFA ANOMFIL;      
+DEFINIR ALFA AEMACOM;
+DEFINIR ALFA CUSU;
+DEFINIR ALFA ASQL;
+DEFINIR ALFA APOSTRA;
+DEFINIR ALFA ADESRED;
+DEFINIR ALFA ACODCCU;
+DEFINIR ALFA ACODCAR;
+DEFINIR ALFA ATITRED;
+DEFINIR ALFA ANOMCCU;
+DEFINIR ALFA ANUMLOC;
+DEFINIR ALFA ANOMLOC;
+DEFINIR ALFA APAPEL;
+DEFINIR ALFA ADIRETOR;
+DEFINIR ALFA ANOMCHEFE;
+DEFINIR ALFA ACODFIL;
+DEFINIR ALFA ANUMEMP;
+DEFINIR ALFA ANOMFIL;
+DEFINIR ALFA AGERENTE;
+DEFINIR ALFA ANUMEMP;
+DEFINIR ALFA ATIPCOL;
+DEFINIR ALFA ANUMCAD;
+DEFINIR ALFA ADATHOJE;
+Definir Alfa aNomEmp;
+Definir Alfa aTipCon;
+DEFINIR ALFA anumcpf;
+
+anomusu = getUsuario.enomusu;
+
+ASQL= "SELECT                                                                   \
+    n.numemp,                                                                   \
+    n.tipcol,                                                                   \
+    n.numcad,                                                                   \
+    n.nomfun,                                                                   \
+    LOWER(e.noment) AS nomusu,                                                  \
+    l.nomfil,                                                                   \
+    c.emacom,                                                                   \
+    n.codfil,                                                                   \
+    emp.nomemp,                                                                 \
+    n.tipcon,                                                                   \
+    n.postra,                                                                   \
+    n.codcar,                                                                   \
+    n.codccu,                                                                   \
+    n.numloc,                                                                   \
+    n.numcpf,                                                                   \
+    pos.desred,                                                                 \
+    car.titred,                                                                 \
+    ccu.nomccu,                                                                 \
+    loc.nomloc                                                                  \
+FROM r034fun n                                                                  \
+INNER JOIN r034usu u                                                            \
+    ON n.numemp = u.numemp                                                      \
+    AND n.tipcol = u.tipcol                                                     \
+    AND n.numcad = u.numcad                                                     \
+INNER JOIN r910ent e                                                            \
+    ON e.codent = u.codusu                                                      \
+    AND e.tipent = 'U'                                                          \
+INNER JOIN r030fil l                                                            \
+    ON l.numemp = n.numemp                                                      \
+    AND l.codfil = n.codfil                                                     \
+INNER JOIN r017pos pos                                                          \
+    ON n.postra = pos.postra                                                    \
+    AND n.estpos = pos.estpos                                                   \
+INNER JOIN r024car car                                                          \
+    ON n.codcar = car.codcar                                                    \
+    AND n.estcar = car.estcar                                                   \
+INNER JOIN r018ccu ccu                                                          \
+    ON n.codccu = ccu.codccu                                                    \
+    AND n.numemp = ccu.numemp                                                   \
+INNER JOIN r016orn loc                                                          \
+    ON n.numloc = loc.numloc                                                    \
+    AND n.taborg = loc.taborg                                                   \
+INNER JOIN r030emp emp                                                         \
+    ON n.numemp = emp.numemp                                                   \
+LEFT JOIN r034cpl c                                                            \
+    ON n.numemp = c.numemp                                                     \
+    AND n.tipcol = c.tipcol                                                    \
+    AND n.numcad = c.numcad                                                    \
+WHERE UPPER(e.noment) = :NOMUSU                                                \      
+    AND n.sitafa <> 7;";   
+
+
+SQL_CRIAR(CUSU);
+SQL_USARABRANGENCIA(CUSU,0);
+SQL_USARSQLSENIOR2(CUSU,0);
+SQL_DEFINIRCOMANDO(CUSU,ASQL);
+SQL_DefinirAlfa(CUSU,"NOMUSU",aNomusu);
+SQL_ABRIRCURSOR(CUSU);
+SE(SQL_EOF(CUSU) = 0)
+{
+  SQL_RETORNARINTEIRO(CUSU,"NUMEMP",NNUMEMP);
+  SQL_RETORNARINTEIRO(CUSU,"TIPCOL",NTIPCOL);
+  SQL_RETORNARINTEIRO(CUSU,"NUMCAD",NNUMCAD); 
+  SQL_RETORNARINTEIRO(CUSU,"CODFIL",NCODFIL);  
+  SQL_RETORNARINTEIRO(CUSU,"TIPCON",nTipCon);
+  SQL_RETORNARALFA(CUSU,"NOMFUN",ANOMFUN);
+  SQL_RETORNARALFA(CUSU,"NOMUSU",ANOMUSU);
+  SQL_RETORNARALFA(CUSU,"NOMFIL",ANOMFIL);
+  SQL_RETORNARALFA(CUSU,"EMACOM",AEMACOM);
+  SQL_RETORNARALFA(CUSU,"POSTRA",APOSTRA);
+  SQL_RETORNARALFA(CUSU,"DESRED",ADESRED);
+  SQL_RETORNARALFA(CUSU,"CODCAR",ACODCAR);
+  SQL_RETORNARALFA(CUSU,"TITRED",ATITRED);
+  SQL_RETORNARALFA(CUSU,"CODCCU",ACODCCU);
+  SQL_RETORNARALFA(CUSU,"NOMCCU",ANOMCCU);
+  SQL_RETORNARALFA(CUSU,"NUMLOC",ANUMLOC);
+  SQL_RETORNARALFA(CUSU,"NOMLOC",ANOMLOC);
+  SQL_RETORNARALFA(CUSU,"NOMEMP",aNomEmp);
+  SQL_RETORNARINTEIRO(CUSU,"NUMCPF",nnumcpf); @Alteração 13/06/2025@
+  
+  INTPARAALFA(NNUMEMP,ANUMEMP);
+  INTPARAALFA(NTIPCOL,ATIPCOL);
+  INTPARAALFA(NNUMCAD,ANUMCAD);
+  INTPARAALFA(NCODFIL,ACODFIL);
+  INTPARAALFA(nTipCon,aTipCon);
+            
+  getUsuario.snumemp = ANUMEMP;
+  getUsuario.stipcol = ATIPCOL;
+  getUsuario.snumcad = ANUMCAD;
+  getUsuario.snomfun = ANOMFUN;
+  getUsuario.scodfil = ACODFIL;
+  getUsuario.snomusu = ANOMUSU;
+  getUsuario.semacom = AEMACOM;
+  getUsuario.spostra = APOSTRA;
+  getUsuario.sdesred = ADESRED;
+  getUsuario.scodcar = ACODCAR;
+  getUsuario.stitred = ATITRED;
+  getUsuario.scodccu = ACODCCU;
+  getUsuario.snomccu = ANOMCCU;
+  getUsuario.snumloc = ANUMLOC;        
+  getUsuario.snomloc = ANOMLOC; 
+  getUsuario.snomemp = aNomEmp; 
+  getUsuario.stipcon = aTipCon;
+  
+  
+  convertemascara(1, nnumcpf, anumcpf, "99999999999");
+  
+  getUsuario.snumcpf = anumcpf;     
+  
+    
+  TIRAESPACOS(ANOMFIL,ANOMFIL);
+  getUsuario.snomfil = ANOMFIL; 
+  
+  DEFINIR DATA DDATHOJE;
+  DATAHOJE(DDATHOJE);
+  CONVERTEMASCARA(3,DDATHOJE,ADATHOJE,"DD/MM/YYYY");
+  getUsuario.sdata = ADATHOJE;               
+}
+SQL_FECHARCURSOR(CUSU);
+SQL_DESTRUIR(CUSU);

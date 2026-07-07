@@ -1,0 +1,33 @@
+DEFINIR ALFA ASQL;
+DEFINIR ALFA CUR_R042CAU;
+DEFINIR NUMERO NCAUDEM;
+DEFINIR ALFA ADESDEM;
+DEFINIR ALFA ARESVOL;
+
+ASQL = "select caudem, desdem, usu_resvol from R042CAU WHERE usu_bpmres = 'S'";
+      
+SQL_CRIAR(CUR_R042CAU);
+SQL_USARSQLSENIOR2(CUR_R042CAU, 0);
+SQL_USARABRANGENCIA(CUR_R042CAU, 0);
+SQL_DEFINIRCOMANDO(CUR_R042CAU, ASQL);
+SQL_ABRIRCURSOR(CUR_R042CAU);
+
+@ Percorrendo resultados obtidos da busca @
+ENQUANTO(SQL_EOF(CUR_R042CAU) = 0)
+{
+  @ Armazenando valores retornados nas variáveis @
+  SQL_RETORNARINTEIRO(CUR_R042CAU, "CAUDEM", NCAUDEM); 
+  SQL_RETORNARALFA(CUR_R042CAU, "DESDEM", ADESDEM);
+  SQL_RETORNARALFA(CUR_R042CAU, "USU_RESVOL", ARESVOL); 
+  
+  @ Retornando para o webservice @
+  getTipoDemissao.motivos.CriarLinha();
+  getTipoDemissao.motivos.caudem = NCAUDEM;
+  getTipoDemissao.motivos.desdem = ADESDEM;
+  getTipoDemissao.motivos.resvol = ARESVOL;
+
+  @ Proximo registro encontrado @
+  SQL_PROXIMO(CUR_R042CAU);
+}
+@ Fechando o cursor @
+SQL_FECHARCURSOR(CUR_R042CAU);
