@@ -1,0 +1,118 @@
+/* Regra Especial desenvolvida para atender o cálculo de apropriação dos 
+eventos transitados no cálculo de resilição;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 29/08/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@===================== definição das variáveis padrões ========================@
+Definir Cursor cur_rev150;
+
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+Definir Data dFimPro;
+
+@================== somente ao cálculo mensal e complementar qdo existir ======@
+Se ((TipCal = 11) ou (TipCal = 12) ou (TipCal = 62))
+  {
+@=====se cálculo complementar, não calcula se não existir valor lançado =======@
+    Se ((TipCal = 12) e (ValMov = 0))
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final150;
+      }
+
+@================== não calcula se não for professor ==========================@
+    Se ((R034FUN.TipCon <> 10) e (R034FUN.TipCon <> 13))
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final150;
+      }
+
+@==================== variáveis do colaborador no cálculo =====================@    
+    nNumEmp = R034FUN.NumEmp;
+    nTipCol = R034FUN.TipCol;
+    nNumCad = R034FUN.NumCad;
+    
+@====================== período vigente no cálculo ============================@    
+    Se (TipCal = 62)
+      {
+        dFimCmp = R042RCM.DatDem;
+        DesmontaData(dFimCmp,xDia,xMes,xAno);
+        MontaData(01,xMes,xAno,dIniCmp);
+      }
+      Senao
+        {
+          dIniCmp = IniCmp;
+          dFimCmp = FimCmp;
+        }
+    
+@======================== evento sendo calculado ==============================@    
+    nCodEve = CodEvt;
+    xRefEvt = 0;
+    xValEvt = 0;
+
+@= curos p/ busca do evento transitado no cálculo de resilição conforme período vigente =@    
+    cur_rev150.sql "select tabeve,numemp,dathag from r030emp where numemp = 0 union \
+                    select sum(usu_tr042rev.usu_refeve),\
+                           sum(usu_tr042rev.usu_valeve),\
+                           usu_tr042res.usu_fimpro \
+                      from usu_tr042rev,\
+                           r030emp,\
+                           usu_tr042res \
+                     where usu_tr042rev.usu_numemp = r030emp.numemp \
+                       and usu_tr042rev.usu_tabeve = r030emp.tabeve \
+                       and usu_tr042rev.usu_numemp = usu_tr042res.usu_numemp \
+                       and usu_tr042rev.usu_tipcol = usu_tr042res.usu_tipcol \
+                       and usu_tr042rev.usu_numcad = usu_tr042res.usu_numcad \
+                       and usu_tr042rev.usu_datini = usu_tr042res.usu_datini \
+                       and usu_tr042rev.usu_seqapf = usu_tr042res.usu_seqapf \
+                       and (usu_tr042res.usu_datfim between :dIniCmp and :dFimCmp \
+                        or usu_tr042res.usu_fimpro between :dIniCmp and :dFimCmp) \
+                       and usu_tr042rev.usu_numemp = :nNumEmp \
+                       and usu_tr042rev.usu_tipcol = :nTipCol \
+                       and usu_tr042rev.usu_numcad = :nNumCad \
+                       and usu_tr042rev.usu_codeve = :nCodEve \
+                       and usu_tr042rev.usu_valeve > 0 \
+                  group by usu_tr042res.usu_fimpro";
+      cur_rev150.AbrirCursor();
+      Enquanto (cur_rev150.Achou)
+        {
+          dFimPro = cur_rev150.dathag;
+          
+          Se ((dFimPro > 0) e ((dFimPro < dIniCmp) ou (dFimPro > dFimCmp)))
+          VaPara Prox150;
+          Senao
+            {
+@=========== busca e calcula evento se o mesmo possuir valor transitado =======@
+              xRefEvt = xRefEvt + cur_rev150.tabeve;
+              xValEvt = xValEvt + cur_rev150.numemp;
+            }
+
+          Prox150:
+          
+          cur_rev150.Proximo();
+        }
+      cur_rev150.FecharCursor();
+
+@================================= cálculo do evento ==========================@  
+    Se (xValEvt > 0)
+      {
+        RefEvt = xRefEvt;
+        ValEvt = xValEvt;
+      }
+      Senao @======== não calcula se não existir valor de resilição ===========@
+        {
+          RefEvt = 0;
+          ValEvt = 0;
+        }
+  }
+  Senao @= não calcula se não for cálculo mensal e ou complementar =@
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+
+Final150:    

@@ -1,0 +1,20 @@
+/* Regra especial para limitar o cálculo do evento somente no mês de Setembro de cada ano;
+Cliente: Marista Brasil;
+Autor: Bruno Martins;
+Data(s): 29/09/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@ Definindo e zerando variáveis @
+dFimCmp = FimCmp;
+nDia = 0;
+nMes = 0;
+nAno = 0;
+
+@ Função para buscar o sindicato do colaborador @
+DesMontaData (dFimCmp, nDia, nMes, nAno);
+
+Se (nMes <> 9)
+  {
+  RefEvt = 0;
+  ValEvt = 0;
+  }

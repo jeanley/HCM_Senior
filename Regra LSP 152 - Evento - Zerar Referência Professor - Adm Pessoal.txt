@@ -1,0 +1,19 @@
+/* Regra Especial desenvolvida para atender a solicitação em trazer a 
+   referência do evento zerada para docentes";
+Cliente: Marista Brasil;
+Autor: Bruno Martins;
+Data(s): 26/09/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+
+@================== somente ao cálculo mensal e complementar qdo existir ======@
+Se ((TipCal = 11) ou (TipCal = 62))
+  {
+@================== não calcula se não for professor ==========================@
+    Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+      {
+        ValEvt = ValEvt;
+        RefEvt = 0;
+        Cancel(1);
+      }
+  }

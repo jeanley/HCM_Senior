@@ -1,0 +1,136 @@
+/* Regra Especial desenvolvida para atender a apropriação de rateio desconto 
+colaborador e subsídio empresa da Taxa Inscrição UNIMED, 50%;
+Vinculada no Evento "2726 - UNIMED - TAXA INSCRIÇÃO";
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 26/09/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definição das Variáveis Padrões =======================@
+
+Definir Alfa aErro;
+
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+
+Definir Cursor cur_ass153;
+Definir Cursor cur_sac153;
+
+@==== somente quando vier valor integrado e o lançado de Taxa de Inscrição ====@
+Se (ValMov > 0)
+  {
+@======================== variáveis do colaborador ============================@
+    nNumEmp = R034FUN.NumEmp;
+    nTipCol = R034FUN.TipCol;
+    nNumCad = R034FUN.NumCad;
+
+@================== variáveis do período vigente de cálculo ===================@    
+    dIniCmp = IniCmp;
+    dFimCmp = FimCmp;
+
+@======================= código do evento vigente =============================@    
+    nCodEvt = CodEvt;   
+
+@========================= cálculo da idade do colaborador ====================@     
+    nFaiPla = CalIdaEmp(nNumEmp, nTipCol, nNumCad, dFimCmp);
+
+@======== zera variável da taxa de inscrição/ operadora plano saúde ===========@    
+    xValIns = 0;
+    nCodOem = 0;
+
+@===== cursor p/ busca se colaborador fez adesão no mês vigente de cálculo ====@    
+    cur_ass153.sql "select r164pre.vlrins,r164ass.codoem \
+                      from r164pre,\
+                           r164ass \
+                     where r164ass.codoem = r164pre.codoem \
+                       and r164ass.codpla = r164pre.codpla \
+                       and r164ass.numemp = :nNumEmp \
+                       and r164ass.tipcol = :nTipCol \
+                       and r164ass.numcad = :nNumCad \
+                       and r164ass.mesinc between :dIniCmp and :dFimCmp \
+                       and r164pre.eveins = :nCodEvt \
+                       and r164pre.vlrins > 0 \
+                       and PerRef = (SELECT MAX(PerRef) \
+                                       FROM R164PRE pre \
+                                      where pre.codoem = r164pre.codoem  \
+                                        and pre.codpla = r164pre.codpla  \
+                                        and pre.perref <= :dFimCmp) \
+                                        and faisal = (select MIN(faisal) \
+                                                        from r164pre pre \
+                                                       Where pre.codoem = r164pre.codoem \
+                                                         and pre.codpla = r164pre.codpla \
+                                                         and pre.perref = r164pre.perref \
+                                                         and pre.faisal >= :nFaiPla)";
+    cur_ass153.AbrirCursor();
+    Se (cur_ass153.Achou)
+      {
+        xValIns = cur_ass153.vlrins * 0.5; @ valor apurado já com as partes colab/empresa =@
+        nCodOem = cur_ass153.codoem;
+      }
+    cur_ass153.FecharCursor();
+
+@================== aproprição quando for valor titular encontrado ============@    
+    Se (xValIns > 0)
+     {
+       CodEvt = 2541;
+       ValEvt = xValIns;
+       MudEvt = 1;
+       ValEvt = ValMov - xValIns;
+
+@=================== tratamento p/ DIRF e eSocial Beneficiário ================@       
+       Se (nCodOem > 0)
+         {
+           nCodCal = CodCal;
+           xValDes = 0;
+           
+           cur_sac153.sql "select valdes \
+                             from r051sac \
+                            where numemp = :nNumEmp \
+                              and tipcol = :nTipCol \
+                              and numcad = :nNumCad \
+                              and codoem = :nCodOem \
+                              and codcal = :nCodCal";
+           cur_sac153.AbrirCursor(); 
+           Se (cur_sac153.Achou)
+             {
+               CodEvt = 2717; BusEvt = 1;
+               xValDes = ValEv2 + xValIns;
+               
+               Se (xValDes < 0)
+               xValDes = 0;
+
+               ExecSqlEx("update r051sac \
+                             set valdes = :xValDes \
+                           where numemp = :nNumEmp \
+                             and tipcol = :nTipCol \
+                             and numcad = :nNumCad \
+                             and codoem = :nCodOem \
+                             and codcal = :nCodCal",xErro,aErro);
+               Se (xErro <> 0)
+                 {
+                   cur_sac153.FecharCursor();
+                   Mensagem(Erro,aErro);
+                   Cancel(1);
+                 }              
+             }
+             Senao
+               {
+                 ExecSqlEx("insert into r051sac (numemp,tipcol,numcad,\
+                                                 codoem,codcal,valdes,\
+                                                 valcop,infdes,infree,\
+                                                 oripla) \
+                             values (:nNumEmp,:nTipCol,:nNumCad,\
+                                     :nCodOem,:nCodCal,:xValIns,\
+                                     0,0,0,\
+                                     'G')",xErro,aErro);
+                 Se (xErro <> 0)
+                   {
+                     cur_sac153.FecharCursor();
+                     Mensagem(Erro,aErro);
+                     Cancel(1);
+                   }              
+               }                             
+           cur_sac153.FecharCursor();
+         }
+     }                                                           
+  }

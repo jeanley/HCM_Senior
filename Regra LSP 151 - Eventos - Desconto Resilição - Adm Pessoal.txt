@@ -1,0 +1,98 @@
+/* Regra Especial desenvolvida para atender o cálculo de apropriação do líquido
+ de resilição quando for exclusividade da forma de pagamento "R - Conforme 
+ Cálculo Resilição";
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 29/08/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@===================== definição das variáveis padrões ========================@
+Definir Cursor cur_rev151;
+
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+Definir Data dFimPro;
+
+@================== somente ao cálculo mensal e complementar qdo existir ======@
+Se ((TipCal = 11) ou (TipCal = 62))
+  {
+@================== não calcula se não for professor ==========================@
+    Se ((R034FUN.TipCon <> 10) e (R034FUN.TipCon <> 13))
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final151;
+      }
+
+@==================== variáveis do colaborador no cálculo =====================@    
+    nNumEmp = R034FUN.NumEmp;
+    nTipCol = R034FUN.TipCol;
+    nNumCad = R034FUN.NumCad;
+    
+@====================== período vigente no cálculo ============================@    
+    Se (TipCal = 62)
+      {
+        dFimCmp = R042RCM.DatDem;
+        DesmontaData(dFimCmp,xDia,xMes,xAno);
+        MontaData(01,xMes,xAno,dIniCmp);
+      }
+      Senao
+        {
+          dIniCmp = IniCmp;
+          dFimCmp = FimCmp;
+        }
+
+    xRefEvt = 0;
+    xValEvt = 0;
+    
+@= curos p/ busca do evento transitado no cálculo de resilição conforme período vigente =@    
+    cur_rev151.sql "select numemp,dathag from r030emp where numemp = 0 union \
+                    select sum(usu_valliq),usu_fimpro \
+                      from usu_tr042res \
+                     where usu_numemp = :nNumEmp \
+                       and usu_tipcol = :nTipCol \
+                       and usu_numcad = :nNumCad \
+                       and (usu_datfim between :dIniCmp and :dFimCmp \
+                         or usu_fimpro between :dIniCmp and :dFimCmp)\
+                       and usu_valliq > 0 \
+                       and usu_forpag = 'R' \
+                  group by usu_fimpro";
+      cur_rev151.AbrirCursor();
+      Enquanto (cur_rev151.Achou)
+        {
+          dFimPro = cur_rev151.dathag;
+          
+          Se ((dFimPro > 0) e ((dFimPro < dIniCmp) ou (dFimPro > dFimCmp)))
+          VaPara Prox151;
+          Senao
+            {
+@=========== busca e calcula evento se o mesmo possuir líquido transitado =====@
+              xRefEvt = 1;
+              xValEvt = xValEvt + cur_rev151.numemp;
+            }
+
+          Prox151:
+          
+          cur_rev151.Proximo();
+        }
+      cur_rev151.FecharCursor();
+      
+@================================= cálculo do evento ==========================@  
+    Se (xValEvt > 0)
+      {
+        RefEvt = xRefEvt;
+        ValEvt = xValEvt;
+      }
+      Senao @======== não calcula se não existir valor de resilição ===========@
+        {
+          RefEvt = 0;
+          ValEvt = 0;
+        }
+  }
+  Senao @= não calcula se não for cálculo mensal =@
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+
+Final151:    

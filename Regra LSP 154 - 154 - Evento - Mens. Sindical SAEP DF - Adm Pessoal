@@ -1,0 +1,66 @@
+/* Regra especial para efetuar o desconto do valor da Mensalidade Sindical do sindicato SINPROEP DF;
+Cliente: Marista Brasil;
+Autor: Bruno Martins;
+Data(s): 21/08/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@ Definindo cursores, alfas e datas @
+Definir Cursor cur_sin154;
+Definir Cursor cur_nor154;
+Definir Data dFimCmp;
+Definir Alfa aSocSin;
+
+
+@ Definindo e zerando variáveis @
+nNumEmp = R034FUN.NumEmp;
+nTipCol = R034FUN.TipCol;
+nNumCad = R034FUN.NumCad;
+dFimCmp = FimCmp;
+nCodSin = 0;
+nMinSoc = 0;
+nTetSoc = 0;
+nSalNor = 0;
+
+@ Função para buscar o sindicato do colaborador @
+RetSinEmp (nNumEmp, nTipCol, nNumCad, FimCmp);
+nCodSin = CodSinEmp;
+aSocSin = SocSinEmp;
+
+Se (ValEvt = 0)
+  {
+  Cancel(1);
+  }
+
+@ Cursor para buscar o valor mínimo e máximo da mensalidade @
+          cur_sin154.sql "select * from r014pds \
+                           where codsin = :nCodSin \
+                             and tippds = 3";
+          cur_sin154.AbrirCursor();
+          Se (cur_sin154.Achou)
+            {
+            nMinSoc = cur_sin154.MinSoc;
+            nTetSic = cur_sin154.TetSoc;
+            }
+          cur_sin154.FecharCursor();
+
+@ Cursor para buscar o salário normativo vigente @
+          cur_nor154.sql "select * from r014nor \
+                            where codsin = :nCodSin \
+                              and cmpnor < :dFimCmp order by cmpnor desc";
+          
+          cur_nor154.AbrirCursor();
+          nSalNor = cur_nor154.SalNor;
+          cur_nor154.FecharCursor();
+
+@ Calcula o valor do evento com base no salário normativo, sendo salário do colaborador até normativo o valor mínimo caso contrário valor máximo. @
+  Se (BasVal <= nSalNor)
+    {
+    ValEvt = nMinSoc;
+    Cancel(1);
+    }
+  Senao
+  Se (BasVal = nSalNor)
+    {
+    ValEvt = nTetSoc;
+    Cancel(1);
+    }
