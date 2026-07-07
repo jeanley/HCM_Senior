@@ -1,0 +1,46 @@
+Definir Alfa aJson ;
+Definir Alfa aConte;
+
+Definir Alfa aListaCol ;
+Definir Alfa aNuMCad;
+
+Definir Alfa aListaEvt ;
+Definir Alfa aJsonEvt;
+Definir Alfa aCodEtv ;
+Definir Alfa aTipEvt;
+
+
+aJson = setVariaveis.jsoncolevt ;
+getJSONArrayLength(aJson, nTotCol);
+nQtdLin = 0 ; 
+
+
+@Corre o JSON de Colaborares@ 
+Para (nLinCol = 0; nLinCol < nTotCol; nLinCol++) {
+
+  getItemJSONArrayStringByTag(aJson,"colaborador",nLinCol,aNumCad);
+      
+  getItemJSONArrayStringByTag(aJson,"eventos",nLinCol,aJsonEvt);
+  getJSONArrayLength(aJsonEvt, nTotEtv);
+  
+  @eventos do colaborador@
+  Para (nLinEvt = 0; nLinEvt < nTotEtv; nLinEvt++) {       
+  
+     getItemJSONArrayStringByTag(aJsonEvt,"codigo",nLinEvt,aCodEtv);
+     getItemJSONArrayStringByTag(aJsonEvt,"tipo",nLinEvt,aTipEvt); 
+     getItemJSONArrayDecimalByTag(aJsonEvt, "referencia", nLinEvt,nRefEvt);
+     getItemJSONArrayDecimalByTag(aJsonEvt, "valor", nLinEvt,nVlrEtv);
+     
+  
+  
+  }
+  
+  
+     
+  
+
+
+}
+
+
+x=x;
