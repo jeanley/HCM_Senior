@@ -1,0 +1,53 @@
+definir alfa acomp;
+definir alfa anumemp;
+definir alfa ACURSOR;
+definir alfa ASQL;
+definir alfa adatcomp;                                      
+
+definir data ddathoj;
+definir data ddatzer;
+
+ddathoj = datsis;                                                                  
+@ddathoj = datsis + 6; @     
+@MontaData(21,1,2025,ddathoj); @                   
+                                                                   
+acomp = getPeriodoAprovacao.ecomp;
+anumemp = getPeriodoAprovacao.enumemp;                                                 
+
+acomp = "01/"+acomp;                                                               
+
+                                                                              
+MONTADATA(31,12,1900,DDATZER);                                                               
+ddatzer = 0;
+
+   
+    @ Data é permitida ? @
+    ASQL= "SELECT *                                                            \
+            FROM USU_TBPM_PER                                                  \             
+            WHERE :ddathoj >= usu_efechd_ini AND                               \
+            :ddathoj <= usu_efechd_fim AND                                     \
+            usu_numemp = :anumemp";  @ Só existe a numEmp 1, 2 e 3 @                                                                        
+ 
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRDATA(ACURSOR,"ddathoj",ddathoj);
+    SQL_DEFINIRALFA(ACURSOR,"anumemp",anumemp);                                                            
+    SQL_ABRIRCURSOR(ACURSOR);
+    SE(SQL_EOF(ACURSOR) = 0)
+    {
+        getPeriodoAprovacao.smensagem = "Efetivação no período permitido.";        
+        getPeriodoAprovacao.sretorno = "1";
+        
+    }
+    SENAO
+    {    
+      getPeriodoAprovacao.smensagem = "Não é possível realizar efetivação no período atual.";
+      getPeriodoAprovacao.sretorno = "0";
+
+     /*-----Caso precise de um retorno de Erro do webservice, está aqui------*/
+
+
+       @Mensagem(Erro,"Não é possível realizar aprovação no atual período");@
+    }

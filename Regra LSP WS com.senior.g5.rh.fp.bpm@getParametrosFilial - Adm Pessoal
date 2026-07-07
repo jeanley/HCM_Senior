@@ -1,0 +1,158 @@
+Definir Alfa aSqlAux;
+Definir alfa aCurAux;
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil; 
+Definir Alfa awheAux;
+Definir Alfa aIdStep;
+Definir Alfa aCodFlx;
+Definir Alfa aidStep;
+Definir Alfa aNomPap;
+
+
+z=z;
+
+Definir Alfa aDatIso;
+Definir Alfa aDatFso; 
+Definir Alfa aDatIef;
+Definir Alfa aDatFef;
+
+Definir Data dDatIso;
+Definir Data dDatFso;
+Definir Data dDatIef;
+Definir Data dDatFef;
+Definir Alfa aTipUni;
+Definir Alfa aEmpSub;
+Definir Alfa aFilSub;
+
+aNumEmp = getParametrosFilial.numemp ;
+aCodFil = getParametrosFilial.codfil;
+aCodFlx =  getParametrosFilial.codflx;
+
+aidStep =   getParametrosFilial.idStep;
+
+aEmpSub  = getParametrosFilial.empsub ;
+aFilSub =   getParametrosFilial.filsub;
+
+EstaNulo (aEmpSub,nEmpNull);
+EstaNulo (aFilSub,nFilNull);
+
+
+
+
+Se ((nEmpNull = 0) e (nFilNull = 0)) {
+ 
+  ListaItem(aEmpSub, "-", 1, aNumEmp);
+  ListaItem(aFilSub, "-", 1, aCodFil);
+  
+}
+
+
+  
+  
+AlfaParaInt(aCodFlx,nCodFlx);
+AlfaParaInt(aidStep,nIdStep);
+AlfaParaInt(aNumEmp,nNumEmp);
+AlfaParaInt(aCodFil,nCodFil);
+
+
+Se ((nCodFlx = 5) e (nIdStep = 9))   {
+  nIdStep = 3 ;
+  aidStep = "3";
+
+}
+ 
+ 
+Se ((nCodFlx = 5) e (nIdStep = 3))   {
+  nIdStep = 3 ;
+  aidStep = "3";
+
+ }
+
+
+awheAux = "";
+
+Se ((nIdStep > 0)  e (nIdStep <> 999)) 
+  awheAux =  "AND BSP.USU_CODFLX = :CODFLX AND  BSP.USU_IDSEP = " +aidStep ;
+  
+  
+aSqlAux =   "SELECT FIL.USU_TIPUNI,                               \
+                                     BSP.usu_nompap,              \
+                                     BPE.USU_DATISO,              \
+                                     BPE.USU_DatFso,              \
+                                     BPE.USU_DatIef,              \
+                                     BPE.USU_DatFef,               \
+                                     FIL.USU_TIPUNI               \
+                              FROM R030FIL FIL                    \
+                              LEFT JOIN usu_t00bsp BSP             \
+                                  ON BSP.USU_NUMEMP = FIL.NUMEMP   \
+                                 AND BSP.USU_CODFIL = FIL.CODFIL   \
+                              LEFT JOIN usu_t00bpe BPE             \
+                                  ON BPE.USU_NUMEMP = FIL.NUMEMP   \
+                                 AND BPE.USU_CODFIL = FIL.CODFIL   \
+                              WHERE FIL.NUMEMP = :NUMEMP           \
+                                AND FIL.CODFIL = :CODFIL           \
+                                ##STEPS##" ;
+                                
+TrocaString(aSqlAux, "##STEPS##",awheAux, aSqlAux);
+
+Sql_Criar(aCurAux);
+Sql_UsarAbrangencia(aCurAux,0);
+Sql_UsarSqlSenior2(aCurAux,0);
+Sql_DefinirComando(aCurAux,aSqlAux);
+Sql_DefinirInteiro(aCurAux, "NUMEMP",nNumEmp);
+Sql_DefinirInteiro(aCurAux, "CODFIL",nCodFil);
+Se ((nIdStep > 0)  e (nIdStep <> 999)) 
+   Sql_DefinirInteiro(aCurAux, "CODFLX",nCodFlx);
+Sql_AbrirCursor(aCurAux);
+Se (SQL_EOF(aCurAux) = 0) {
+   Sql_RetornarAlfa(aCurAux, "usu_nompap", aNomPap) ;
+   Sql_RetornarData(aCurAux, "USU_DATISO", dDatIso);
+   Sql_RetornarData(aCurAux, "USU_DatIef", dDatIef);
+   Sql_RetornarData(aCurAux, "USU_DatFso", dDatFso);
+   Sql_RetornarData(aCurAux, "USU_DatFef", dDatFef);
+   Sql_RetornarAlfa(aCurAux, "USU_TIPUNI", aTipUni) ;
+  
+   Se (nIdStep = 0)
+     aNomPap ="" ;   
+    
+   ConverteMascara (3, dDatIso,aDatIso, "DD/MM/YYYY");
+   ConverteMascara (3, dDatIef,aDatIef, "DD/MM/YYYY");
+   ConverteMascara (3, dDatFso,aDatFso, "DD/MM/YYYY");
+   ConverteMascara (3, dDatFef,aDatFef, "DD/MM/YYYY");
+   
+   
+  /* Se ((nIdStep = 3 ) e (aNomPap = "GESTOR UNIDADE COLEGIO MARISTA ROQUE GONCALVES") e (nCodFlx = 1))
+     aNomPap = "caio.souza";
+   
+    
+   Se ((nIdStep = 3 ) e (aNomPap = "GESTOR UNIDADE COLEGIO MARISTA DE CRICIUMA") e (nCodFlx = 1))
+     aNomPap = "caio.souza";           */
+   
+  
+   getParametrosFilial.datiso =  aDatIso ;
+   getParametrosFilial.DatIef =  aDatIef ;
+   getParametrosFilial.DatFso =  aDatFso ;
+   getParametrosFilial.Datfef =  aDatFef ;
+   getParametrosFilial.nompap = aNompap;
+   
+   Se (nIdStep = 999)
+     getParametrosFilial.tipunides = aTipUni ;
+   Senao    
+      getParametrosFilial.tipuni = aTipUni;
+
+  
+}
+Senao {
+   getParametrosFilial.MsgRet = "Não foram encontrados parâmetros de filiais.!"; 
+
+
+} 
+
+Sql_FecharCursor(aCurAux);
+Sql_Destruir(aCurAux);
+
+
+
+                              
+
+                              

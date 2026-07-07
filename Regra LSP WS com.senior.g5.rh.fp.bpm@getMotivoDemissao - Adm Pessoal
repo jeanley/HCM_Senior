@@ -1,0 +1,30 @@
+DEFINIR ALFA ASQL;
+DEFINIR ALFA CUR_R114RMD;
+DEFINIR NUMERO NCODRMD;
+DEFINIR ALFA ADESRMD;
+
+ASQL = "SELECT CODRMD, DESRMD FROM R114RMD";
+      
+SQL_CRIAR(CUR_R114RMD);
+SQL_USARSQLSENIOR2(CUR_R114RMD, 0);
+SQL_USARABRANGENCIA(CUR_R114RMD, 0);
+SQL_DEFINIRCOMANDO(CUR_R114RMD, ASQL);
+SQL_ABRIRCURSOR(CUR_R114RMD);
+
+@ Percorrendo resultados obtidos da busca @
+ENQUANTO(SQL_EOF(CUR_R114RMD) = 0)
+{
+  @ Armazenando valores retornados nas variáveis @
+  SQL_RETORNARINTEIRO(CUR_R114RMD, "CODRMD", NCODRMD); 
+  SQL_RETORNARALFA(CUR_R114RMD, "DESRMD", ADESRMD); 
+  
+  @ Retornando para o webservice @
+  getMotivoDemissao.motivos.CriarLinha();
+  getMotivoDemissao.motivos.codrmd = NCODRMD;
+  getMotivoDemissao.motivos.desrmd = ADESRMD;
+
+  @ Proximo registro encontrado @
+  SQL_PROXIMO(CUR_R114RMD);
+}
+@ Fechando o cursor @
+SQL_FECHARCURSOR(CUR_R114RMD);

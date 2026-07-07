@@ -1,0 +1,190 @@
+/*
+    Data de Criação: 20/06/2025
+    Consultor: Lucas Ferreira
+    Observação: Este script foi criado para realizar a consulta de niveis salarias baseado na classe salarial
+*/
+
+definir alfa cur_nivsal;
+definir alfa asql_nivsal;
+definir alfa aclasal;
+definir alfa aestsal;
+definir alfa acodapf;
+
+definir data ddataatu;
+
+definir alfa aseqniv;
+definir alfa anivsal;
+definir alfa avalsal;
+Definir Alfa aClaSal;
+
+definir numero nestsal;
+definir numero ncodapf;
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+Definir Alfa aValSal;
+Definir Alfa aMotivo ;
+Definir Alfa aTipCon;
+Definir Alfa aForAtu;
+Definir Cursor cR076DES ;
+
+definir cursor cur_clasal;
+
+ddataatu = datsis;
+
+acodapf = getNivSal.ecodapf;
+aestsal = getNivSal.ecodest;
+aMotivo =   getNivSal.Motivo;
+aTipCon =  getNivSal.tipcon;
+
+aNumEmp =   getNivSal.numemp ;
+aCodFil =   getNivSal.codfil ;
+
+alfaparaint(aestsal, nestsal);
+alfaparaint(acodapf, ncodapf);
+
+AlfaParaint(aNumEmp,nNumEmp);
+AlfaParaint(aCodFil,nCodFil);
+
+nConNum = VerificaNumeroAlfa(aTipCon);
+
+/*Se (nConNum = 1) {
+
+  Se (aTipCon = "10")
+    aForAtu = "D";
+  Senao 
+    aForAtu = "A" ; 
+}
+Senao  {
+   Se (aTipCon = "Professor")
+     aForAtu = "D";
+   Senao
+    aForAtu  = "A"  ;
+}  */
+
+aForAtu = "D";
+
+cur_clasal.sql "select usu_clasal from r171ati where codapf = :ncodapf and usu_clasal <> ' '";
+
+cur_clasal.abrirCursor();
+se(cur_clasal.Achou)
+{
+    aclasal = cur_clasal.usu_clasal;
+}
+cur_clasal.fecharcursor();
+
+
+
+EstaNulo (aclasal,nClaNul);
+Se (nClaNul = 1) {
+  Se (aMotivo = "Substituição") {
+  
+    cR076DES.Sql "SELECT CODEST FROM R076DES \
+                  WHERE USU_NUMEMP = :nNumEmp \
+                    AND USU_CODFIL = :nCodFil \
+                    AND USU_FORATU = :aForAtu" ;
+  
+   cR076DES.AbrirCursor();
+   Se (cR076DES.Achou) {
+      nestsal =  cR076DES.CODEST ;  
+   }
+   cR076DES.FecharCursor();
+  
+  }
+}
+
+ 
+Sql_Criar(cur_nivsal);
+ 
+asql_nivsal = "SELECT                                                             \
+                     r076cla.clasal,r076niv.seqniv, r076niv.nivsal, r076niv.valsal                \
+                FROM                                                              \
+                    r076niv, r076cla  , R076DES                                   \
+                WHERE                                                             \
+                    r076cla.codest = r076niv.codest \
+                AND r076cla.tipest = r076niv.tipest  \
+                AND r076cla.datalt = r076niv.datalt      \
+                AND r076cla.seqcla = r076niv.seqcla \
+                AND r076niv.tipest = 1   \
+                AND r076niv.datalt = (SELECT MAX(niv.datalt) \
+                                        FROM r076niv niv  \ 
+                                        WHERE niv.codest = r076niv.codest \
+                                          AND niv.tipest = r076niv.tipest \
+                                          AND niv.datalt <= :ddataatu \
+                                        ) \
+                AND r076cla.clasal = :aclasal \
+                AND r076cla.codest = :nestsal";
+                
+
+asql_nivsal = "SELECT                                                        \
+              CLA.CLASAL,                                                    \
+              DES.CODEST,                                                    \
+              NIV.SEQNIV,                                                    \
+              NIV.NIVSAL,                                                    \
+              NIV.VALSAL                                                     \
+          FROM R076NIV NIV                                                   \
+          JOIN R076CLA CLA                                                   \
+              ON CLA.CODEST = NIV.CODEST                                     \
+             AND CLA.TIPEST = NIV.TIPEST                                     \
+             AND CLA.DATALT = NIV.DATALT                                     \
+             AND CLA.SEQCLA = NIV.SEQCLA                                     \
+          JOIN R076DES DES                                                   \
+              ON DES.CODEST = CLA.CODEST                                     \
+          WHERE NIV.TIPEST = 1                                               \
+            AND NIV.DATALT = (                                               \
+                  SELECT MAX(NIV2.DATALT)                                    \
+                  FROM R076NIV NIV2                                          \
+                  WHERE NIV2.CODEST = NIV.CODEST                             \
+                    AND NIV2.TIPEST = NIV.TIPEST                             \
+                    AND NIV2.SEQNIV = NIV.SEQNIV                             \
+                    AND NIV2.SEQCLA = NIV.SEQCLA                             \
+                    AND NIV2.DATALT <= :DATALT      \
+              )                                                              \
+            AND NIV.SEQNIV = (                                               \
+                  SELECT MIN(NIV3.SEQNIV)                                    \
+                  FROM R076NIV NIV3                                          \
+                  WHERE NIV3.CODEST = NIV.CODEST                             \
+                    AND NIV3.TIPEST = NIV.TIPEST                             \
+                    AND NIV3.DATALT <= :DATALT      \
+              )                                                              \
+                                                                             \
+            AND DES.USU_NUMEMP = :NUMEMP                                     \
+            AND DES.USU_CODFIL = :CODFIL                                     \
+            AND DES.CODEST = :CODEST                                          \
+            AND DES.USU_FORATU = 'D'                                         \
+          ORDER BY                                                           \
+              CLA.CLASAL,                                                 \
+              NIV.SEQNIV "; 
+ 
+ 
+Sql_usarSqlSenior2(cur_nivsal, 0);
+Sql_usarAbrangencia(cur_nivsal, 0);
+ 
+Sql_DefinirComando(cur_nivsal, asql_nivsal);
+ 
+SQL_DefinirInteiro(cur_nivsal,  "CODEST", nestsal);
+Sql_DefinirData(cur_nivsal,     "DATALT",ddataatu);
+SQL_DefinirInteiro(cur_nivsal, "NUMEMP", nNumEmp);
+ SQL_DefinirInteiro(cur_nivsal, "CODFIL", nCodFil);
+Sql_AbrirCursor(cur_nivsal);
+ 
+ 
+Enquanto(Sql_EOF(cur_nivsal) = 0)
+{
+  Sql_RetornarAlfa(cur_nivsal, "seqniv", aseqniv);
+  Sql_RetornarAlfa(cur_nivsal, "nivsal", anivsal);
+  Sql_RetornarFlutuante(cur_nivsal, "valsal", nValSal);
+  
+     convertemascara(2,nValSal, aValSal, "zzz.zzz.zz9,99");
+     Sql_RetornarAlfa(cur_nivsal, "clasal", aClaSal);
+    TiraEspacos (aValSal, aValSal);
+    getNivSal.stretorno.criarLinha();
+    getNivSal.stretorno.sseqniv = aseqniv;
+    getNivSal.stretorno.snivsal = anivsal;
+      getNivSal.stretorno.svalsal = avalsal;
+   getNivSal.stretorno.clasal =  aClaSal;
+
+  Sql_Proximo(cur_nivsal);
+}
+ 
+Sql_FecharCursor(cur_nivsal);
+Sql_Destruir(cur_nivsal);

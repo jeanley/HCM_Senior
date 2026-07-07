@@ -1,0 +1,65 @@
+Definir Alfa cCursor;
+Definir Alfa aSql;
+
+Definir Numero nNumEmp;
+Definir Numero nCodFil;
+Definir Numero nCodFlu;
+
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+Definir Alfa aCodFlu;
+Definir Alfa aTipUni;
+Definir Alfa aNomPap;
+
+aNumEmp = getPapelBpm.enumemp;
+aCodFil = getPapelBpm.ecodfil;
+aCodFlu = getPapelBpm.ecodflu;
+
+AlfaParaInt(aNumEmp, nNumEmp);
+AlfaParaInt(aCodFil, nCodFil);
+AlfaParaInt(aCodFlu, nCodFlu);    
+
+aSQL = "SELECT PAP.USU_NUMEMP,                                                 \
+               PAP.USU_CODFIL,                                                 \
+               PAP.USU_CODFLU,                                                 \
+               CHV.USU_TIPUNI,                                                 \
+               PAP.USU_NOMPAP                                                  \
+                 FROM USU_TFLUBPM CHV,                                         \
+                      USU_TPAPBPM PAP                                          \
+                        WHERE CHV.USU_NUMEMP = PAP.USU_NUMEMP                  \
+                          AND CHV.USU_CODFIL = PAP.USU_CODFIL                  \
+                          AND CHV.USU_CODFLU = PAP.USU_CODFLU                  \
+                          AND CHV.USU_NUMEMP = :nNumEmp                        \       
+                          AND CHV.USU_CODFIL = :nCodFil                        \
+                          AND CHV.USU_CODFLU = :nCodFlu";    
+SQL_Criar(cCursor);
+SQL_UsarSqlSenior2 (cCursor, 0);
+SQL_UsarAbrangencia(cCursor, 0);
+SQL_DefinirComando (cCursor, aSQL);
+SQL_DefinirInteiro (cCursor, "nNumEmp", nNumEmp);
+SQL_DefinirInteiro (cCursor, "nCodFil", nCodFil);
+SQL_DefinirInteiro (cCursor, "nCodFlu", nCodFlu);
+SQL_AbrirCursor    (cCursor); 
+
+Enquanto(SQL_EOF(cCursor) = 0){
+  SQL_RetornarInteiro(cCursor, "USU_NUMEMP", nNumEmp);
+  SQL_RetornarInteiro(cCursor, "USU_CODFIL", nCodFil);
+  SQL_RetornarInteiro(cCursor, "USU_CODFLU", nCodFlu);
+  SQL_RetornarAlfa   (cCursor, "USU_TIPUNI", aTipUni);
+  SQL_RetornarAlfa   (cCursor, "USU_NOMPAP", aNomPap);
+  
+  IntParaAlfa(nNumEmp, aNumEmp);
+  IntParaAlfa(nCodFil, aCodFil);
+  IntParaAlfa(nCodFlu, aCodFlu);
+  
+       
+  getPapelBpm.papeis.CriarLinha();     
+  getPapelBpm.papeis.snumemp = aNumEmp;
+  getPapelBpm.papeis.scodfil = aCodFil;
+  getPapelBpm.papeis.stipuni = aTipUni;
+  getPapelBpm.papeis.snompap = aNomPap; 
+  
+  SQL_Proximo(cCursor);
+}
+SQL_FecharCursor(cCursor);
+SQL_Destruir(cCursor);

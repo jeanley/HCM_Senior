@@ -1,0 +1,446 @@
+/*
+Desenvolvedor: Maicon Monttozo
+Data: 20/12/2025
+
+Valores de entrada do fluxo:
+- movimentacao
+- chdocente
+- rescisao
+
+*/                                        
+
+@ Declaração de variáveis @
+DEFINIR ALFA ASQL;
+DEFINIR ALFA ACURSOR;
+DEFINIR ALFA AFLUXO;
+DEFINIR ALFA ADTSOLI;
+DEFINIR ALFA ADTEFET;
+DEFINIR ALFA ANUMEMP;
+DEFINIR ALFA ACOMPET;
+DEFINIR ALFA ASOLPER;
+DEFINIR ALFA AEFEPER;
+DEFINIR DATA DDTSOLI;
+
+
+
+@ Atribuição de valores @
+AFLUXO  = getPeriodo.efluxo;
+ADTSOLI = getPeriodo.edatasolicitacao;
+ADTEFET = getPeriodo.edataefetivacao;
+DDTSOLI = datsis;       
+ConverteMascara (3,DDTSOLI,ADTSOLI,"YYYY-MM-DD");  
+ANUMEMP = getPeriodo.enumemp;
+
+@ ############################################################################ @
+@ FLUXO DE MOVIMENTAÇÃO @
+@ ############################################################################ @
+SE (AFLUXO = "movimentacao")                  
+{
+  @ SOLICITAÇÃO @
+  SE(ADTSOLI <> "")
+  {
+    @ Competências @
+    @ 103 - Estilo da data em DD/MM/YYYY @
+    ASQL= "SELECT USU_NUMEMP,                                                     \
+            FORMAT(CONVERT(DATE, USU_COMPET, 103), 'MM/yyyy') AS USU_COMPET       \
+            FROM USU_TBPM_PER                                                     \
+            WHERE                                                                 \
+            USU_NUMEMP = :NUMEMP                                                  \  
+            AND                                                                   \
+                   (                                                              \
+                usu_solmov_ini >= :DTSOLI                                         \
+                OR usu_solmov_fim >= :DTSOLI) ";                                
+
+
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP); 
+    SQL_DEFINIRALFA(ACURSOR,"DTSOLI",ADTSOLI);
+    SQL_ABRIRCURSOR(ACURSOR);
+    ENQUANTO(SQL_EOF(ACURSOR) = 0)
+    {
+      SQL_RETORNARALFA(ACURSOR,"usu_compet",ACOMPET);
+      SQL_RETORNARALFA(ACURSOR,"USU_NUMEMP",ANUMEMP);
+  	
+    	@ CRIANDO LINHA @
+      getPeriodo.solicitacao.CRIARLINHA();
+      getPeriodo.solicitacao.scompetencia = ACOMPET;
+      getPeriodo.solicitacao.sempresa = ANUMEMP;
+    	
+    	SQL_PROXIMO(ACURSOR);
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR); 
+    
+    @ Data é permitida ? @
+    ASQL= "SELECT usu_compet                                                    \
+            FROM USU_TBPM_PER                                                   \
+            WHERE :DTSOLI                                                       \
+              BETWEEN usu_solmov_ini                                            \
+              AND usu_solmov_fim                                                \  
+              AND USU_NUMEMP = :NUMEMP ";                                
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP); 
+    SQL_DEFINIRALFA(ACURSOR,"DTSOLI",ADTSOLI);
+    SQL_ABRIRCURSOR(ACURSOR);
+    SE(SQL_EOF(ACURSOR) = 0)
+    {
+      ASOLPER = "S";      
+    }
+    SENAO
+    {
+      ASOLPER = "N";
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    
+    getPeriodo.ssolicitacaopermitida = ASOLPER;
+  }
+  
+  
+  @ EFETIVAÇÃO @
+  SE(ADTEFET <> "")
+  {
+    ASQL= "SELECT                                                                 \
+            FORMAT(CONVERT(DATE, USU_COMPET, 103), 'MM/yyyy') AS USU_COMPET       \
+            FROM USU_TBPM_PER                                                     \
+            WHERE                                                                \
+            USU_NUMEMP = :NUMEMP                                                  \
+                        AND                                                       \                                                    
+                (usu_efemov_ini >= :DTEFET                                         \
+                OR usu_efemov_fim >= :DTEFET) ";                                
+
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTEFET",ADTEFET);
+    SQL_ABRIRCURSOR(ACURSOR);
+    ENQUANTO(SQL_EOF(ACURSOR) = 0)
+    {
+      SQL_RETORNARALFA(ACURSOR,"usu_compet",ACOMPET);
+  	
+    	@ CRIANDO LINHA @
+      getPeriodo.efetivacao.CRIARLINHA();
+      getPeriodo.efetivacao.scompetencia = ACOMPET;
+    	
+    	SQL_PROXIMO(ACURSOR);
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    
+    @ Data é permitida ? @
+    ASQL= "SELECT usu_compet                                                    \
+            FROM USU_TBPM_PER                                                   \
+            WHERE :DTEFET                                                       \
+              BETWEEN usu_efemov_ini                                            \
+              AND usu_efemov_fim                                                \
+              AND USU_NUMEMP = :NUMEMP ";                                        
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTEFET",ADTEFET);
+    SQL_ABRIRCURSOR(ACURSOR);
+    SE(SQL_EOF(ACURSOR) = 0)
+    {
+      AEFEPER = "S";      
+    }
+    SENAO
+    {
+      AEFEPER = "N";
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    
+    getPeriodo.sefetivacaopermitida = AEFEPER;  
+  }
+}
+
+@ ############################################################################ @
+@ FLUXO DE CARGA HORÁRIA DOCENTE @
+@ ############################################################################ @
+SE (AFLUXO = "chdocente")
+{
+  @ SOLICITAÇÃO @
+  SE(ADTSOLI <> "")
+  {
+    @ Competências @
+    @ 103 - Estilo da data em DD/MM/YYYY @
+    ASQL= "SELECT                                                                 \
+            FORMAT(CONVERT(DATE, USU_COMPET, 103), 'MM/yyyy') AS USU_COMPET       \
+            FROM USU_TBPM_PER                                                     \
+            WHERE USU_NUMEMP = :NUMEMP                                            \
+            AND (                                                                 \
+                usu_solchd_ini >= :DTSOLI                                          \
+                OR usu_solchd_fim >= :DTSOLI) ";                                
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTSOLI",ADTSOLI);
+    SQL_ABRIRCURSOR(ACURSOR);
+    ENQUANTO(SQL_EOF(ACURSOR) = 0)
+    {
+      SQL_RETORNARALFA(ACURSOR,"usu_compet",ACOMPET);
+  	
+    	@ CRIANDO LINHA @
+      getPeriodo.solicitacao.CRIARLINHA();
+      getPeriodo.solicitacao.scompetencia = ACOMPET;
+    	
+    	SQL_PROXIMO(ACURSOR);
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR); 
+    
+    @ Data é permitida ? @
+    ASQL= "SELECT usu_compet                                                    \
+            FROM USU_TBPM_PER                                                   \
+            WHERE :DTSOLI                                                       \
+              BETWEEN usu_solchd_ini                                            \
+              AND usu_solchd_fim                                                \
+            AND USU_NUMEMP = :NUMEMP ";                                
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTSOLI",ADTSOLI);
+    SQL_ABRIRCURSOR(ACURSOR);
+    SE(SQL_EOF(ACURSOR) = 0)
+    {
+      ASOLPER = "S";      
+    }
+    SENAO
+    {
+      ASOLPER = "N";
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    
+    getPeriodo.ssolicitacaopermitida = ASOLPER;
+  }
+  
+  
+  @ EFETIVAÇÃO @
+  SE(ADTEFET <> "")
+  {
+    ASQL= "SELECT                                                                 \
+            FORMAT(CONVERT(DATE, USU_COMPET, 103), 'MM/yyyy') AS USU_COMPET       \
+            FROM USU_TBPM_PER                                                     \
+            WHERE USU_NUMEMP = :NUMEMP                                            \
+            AND (                                                                 \
+                usu_efechd_ini >= :DTEFET                                          \
+                OR usu_efechd_fim >= :DTEFET) ";                                
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTEFET",ADTEFET);
+    SQL_ABRIRCURSOR(ACURSOR);
+    ENQUANTO(SQL_EOF(ACURSOR) = 0)
+    {
+      SQL_RETORNARALFA(ACURSOR,"usu_compet",ACOMPET);
+  	
+    	@ CRIANDO LINHA @
+      getPeriodo.efetivacao.CRIARLINHA();
+      getPeriodo.efetivacao.scompetencia = ACOMPET;
+    	
+    	SQL_PROXIMO(ACURSOR);
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    
+    @ Data é permitida ? @
+    ASQL= "SELECT usu_compet                                                    \
+            FROM USU_TBPM_PER                                                   \
+            WHERE :DTEFET                                                       \
+              BETWEEN usu_efechd_ini                                            \
+              AND usu_efechd_fim                                                \
+            AND USU_NUMEMP = :NUMEMP ";                                
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTEFET",ADTEFET);
+    SQL_ABRIRCURSOR(ACURSOR);
+    SE(SQL_EOF(ACURSOR) = 0)
+    {
+      AEFEPER = "S";      
+    }
+    SENAO
+    {
+      AEFEPER = "N";
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    
+    getPeriodo.sefetivacaopermitida = AEFEPER;  
+  }  
+}
+
+@ ############################################################################ @
+@ FLUXO DE RESCISÃO @
+@ ############################################################################ @
+SE (AFLUXO = "rescisao")
+{
+  @ SOLICITAÇÃO @
+  SE(ADTSOLI <> "")
+  {
+    @ Competências @
+    @ 103 - Estilo da data em DD/MM/YYYY @
+    ASQL= "SELECT                                                                 \
+            FORMAT(CONVERT(DATE, USU_COMPET, 103), 'MM/yyyy') AS USU_COMPET       \
+            FROM USU_TBPM_PER                                                     \
+            WHERE USU_NUMEMP = :NUMEMP                                            \
+            AND (                                                                 \
+                usu_solres_ini >= :DTSOLI                                          \
+                OR usu_solres_fim >= :DTSOLI) ";                                
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTSOLI",ADTSOLI);
+    SQL_ABRIRCURSOR(ACURSOR);
+    ENQUANTO(SQL_EOF(ACURSOR) = 0)
+    {
+      SQL_RETORNARALFA(ACURSOR,"usu_compet",ACOMPET);
+  	
+    	@ CRIANDO LINHA @
+      getPeriodo.solicitacao.CRIARLINHA();
+      getPeriodo.solicitacao.scompetencia = ACOMPET;
+    	
+    	SQL_PROXIMO(ACURSOR);
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR); 
+    
+    @ Data é permitida ? @
+    ASQL= "SELECT usu_compet                                                    \
+            FROM USU_TBPM_PER                                                   \
+            WHERE :DTSOLI                                                       \
+              BETWEEN usu_solres_ini                                            \
+              AND usu_solres_fim                                                \
+            AND USU_NUMEMP = :NUMEMP ";                                
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTSOLI",ADTSOLI);
+    SQL_ABRIRCURSOR(ACURSOR);
+    SE(SQL_EOF(ACURSOR) = 0)
+    {
+      ASOLPER = "S";      
+    }
+    SENAO
+    {
+      ASOLPER = "N";
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    
+    getPeriodo.ssolicitacaopermitida = ASOLPER;
+  }
+  
+  
+  @ EFETIVAÇÃO @
+  SE(ADTEFET <> "")
+  {
+    ASQL= "SELECT                                                                 \
+            FORMAT(CONVERT(DATE, USU_COMPET, 103), 'MM/yyyy') AS USU_COMPET       \
+            FROM USU_TBPM_PER                                                     \
+            WHERE USU_NUMEMP = :NUMEMP                                            \
+            AND (                                                                 \
+                usu_eferes_ini >= :DTEFET                                          \
+                OR usu_eferes_fim >= :DTEFET) ";                                
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTEFET",ADTEFET);
+    SQL_ABRIRCURSOR(ACURSOR);
+    ENQUANTO(SQL_EOF(ACURSOR) = 0)
+    {
+      SQL_RETORNARALFA(ACURSOR,"usu_compet",ACOMPET);
+  	
+    	@ CRIANDO LINHA @
+      getPeriodo.efetivacao.CRIARLINHA();
+      getPeriodo.efetivacao.scompetencia = ACOMPET;
+    	
+    	SQL_PROXIMO(ACURSOR);
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    
+    @ Data é permitida ? @
+    ASQL= "SELECT usu_compet                                                    \
+            FROM USU_TBPM_PER                                                   \
+            WHERE :DTEFET                                                       \
+              BETWEEN usu_eferes_ini                                            \
+              AND usu_eferes_fim                                                \
+            AND USU_NUMEMP = :NUMEMP ";                                
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_DEFINIRALFA(ACURSOR,"NUMEMP",ANUMEMP);
+    SQL_DEFINIRALFA(ACURSOR,"DTEFET",ADTEFET);
+    SQL_ABRIRCURSOR(ACURSOR);
+    SE(SQL_EOF(ACURSOR) = 0)
+    {
+      AEFEPER = "S";      
+    }
+    SENAO
+    {
+      AEFEPER = "N";
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    
+    getPeriodo.sefetivacaopermitida = AEFEPER;  
+  }  
+}
+
+/*
+@ Tratamento das informações e buscas @
+ASOLPER = "N";
+AEFEPER = "N";
+
+@ Saída de valores @
+getPeriodo.efetivacao.CRIARLINHA();
+getPeriodo.efetivacao.scompetencia = "2025-01";
+getPeriodo.efetivacao.CRIARLINHA();
+getPeriodo.efetivacao.scompetencia = "2025-02";
+
+getPeriodo.solicitacao.CRIARLINHA();
+getPeriodo.solicitacao.scompetencia = "2025-01";
+getPeriodo.solicitacao.CRIARLINHA();
+getPeriodo.solicitacao.scompetencia = "2025-02";
+
+getPeriodo.ssolicitacaopermitida = ASOLPER;
+getPeriodo.sefetivacaopermitida = AEFEPER;
+*/
