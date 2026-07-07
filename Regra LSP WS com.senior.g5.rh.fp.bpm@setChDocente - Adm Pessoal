@@ -1,0 +1,160 @@
+
+definir alfa anumemp;
+definir alfa atipcol;
+definir alfa anumcad;  
+definir alfa asql_docente;
+definir alfa cur_docente;                                                      
+definir alfa aretorno;
+definir alfa atexto;
+definir alfa aenter;
+definir alfa aseqapf;
+definir alfa adesapf;
+definir alfa ahormes;                              
+definir alfa avalapf;
+definir alfa avalsem; 
+definir alfa atotmes;
+definir alfa atotsem; 
+definir alfa ahorsem; 
+definir alfa acodapf;  
+definir alfa acarsem;
+definir alfa acarmes; 
+definir alfa adatini; 
+definir alfa amensagem; 
+definir alfa abpm;
+definir alfa aid;                           
+definir alfa asql;    @@
+definir alfa acursor;   @@
+definir data ddatzer;
+definir data ddatini;
+definir data ddatatu;      @@
+
+
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad;
+definir numero nseqapf;
+definir numero ncodapf;
+definir numero nhormes;
+definir numero nhorsem;
+definir numero nvalapf;
+definir numero nvalsem;
+definir numero ntotmes;
+definir numero ntotsem;
+definir numero ntotmes_geral;
+definir numero nqtdlinha;
+definir numero nx;
+definir numero nerro;
+definir numero ncarmes;
+definir numero ncarsem;
+
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+RETORNAASCII(13, AENTER);
+
+@ ddatatu = datsis;@                           
+ 
+
+    
+    @ Data é permitida ? @
+    ASQL= "SELECT usu_numemp                                                   \
+            FROM USU_TBPM_PER                                                  \      
+            WHERE CONVERT(DATETIME, '2025-01-21', 120)                         \
+              BETWEEN usu_efechd_ini                                           \
+              AND usu_efechd_fim ";  @ Só existe a numEmp 1 e 2 @                                                                         
+  
+    SQL_CRIAR(ACURSOR);
+    SQL_USARABRANGENCIA(ACURSOR,0);
+    SQL_USARSQLSENIOR2(ACURSOR,0);
+    SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+    SQL_ABRIRCURSOR(ACURSOR);
+    SE(SQL_EOF(ACURSOR) = 0)
+    {
+   /* nseqapf = 0;
+    abpm = "Atualizado via processo BPM";
+
+    nqtdlinha = setChDocente.lista.QtdLinhas;
+    setChDocente.lista.LinhaAtual = 0;
+    nx = 0;                                               
+    ncont = 1;
+
+    enquanto(nx < nqtdlinha)
+    {
+      nseqapf = nseqapf + 1;
+    
+      setChDocente.lista.LinhaAtual = nx;  
+      acodapf = setChDocente.lista.lista_codapf;
+      acarsem = setChDocente.lista.lista_horsem;
+      acarmes = setChDocente.lista.lista_hormes;
+      avalapf = setChDocente.lista.lista_valapf;
+      adatini = setChDocente.edatini; 
+      anumemp = setChDocente.enumemp; 
+      atipcol = setChDocente.etipcol;      
+      anumcad = setChDocente.enumcad;
+      aid = setChDocente.eid;
+  
+      iniciartransacao();
+  
+      se(ncont = 1)
+      {
+         adatini = "01/"+adatini;  
+         alfaparadata(adatini,"DD/MM/YYYY",ddatini);
+         ddatfim = ddatini - 1;
+          execsqlex("update r171apf set datfim = :ddatfim where        \
+                         numemp = :anumemp and                 \
+                         tipcol = :atipcol and                 \
+                         numcad = :anumcad and                 \
+                         datfim = :ddatzer", nerro, amensagem);
+          ncont = ncont + 1;
+      }
+    
+    ncont = ncont + 1;
+    
+    
+    alfaparaint(acarsem, ncarsem);
+    alfaparaint(acarmes, ncarmes);
+    
+    ntotmes = ntotmes + ncarmes;
+    ntotsem = ntotsem + ncarsem;  
+    
+    execsqlex("insert into r171apf                         \
+    (numemp,    tipcol,   numcad,   codapf,   seqapf,      \ 
+     datini,    hormes,   valapf,   clasal,   nivsal,      \
+     hormno,    horsem,   horsno,   horseg,   horter,      \              
+     horqua,    horqui,   horsex,   horsab,   hordom,      \
+     estsal,    refapf,   oriapf,   obsapf,   datfim,      \
+     codrat,    marpto)                                    \
+     values                                                 \
+    (:anumemp, :atipcol, :anumcad, :acodapf, :nseqapf,     \
+     :ddatini, :acarmes, :avalapf, ' ',       ' ',         \
+     0,        0,        0,        0,        0,           \                             
+     0,        0,        0,        0,        0,           \
+     0,        0,        'A',      :abpm,    :ddatzer,    \
+     0,        ' ')",nerro, amensagem);
+   
+     se(nerro = 0)
+     {
+      finalizartransacao();      
+      }
+    senao
+    {
+      desfazertransacao();
+    }                                                  
+                             
+     nx = nx +1;
+  }
+  intparaalfa(ntotmes, atotmes);
+    intparaalfa(ntotsem, atotsem);
+     
+  setChDocente.stotmes = atotmes;
+  setChDocente.stotsem = atotsem; */
+  
+    Mensagem(Erro, "Data de Aprovação Correta");
+    
+    }
+    SENAO
+    {
+      Mensagem(Erro, "Data de Aprovação Inválida");
+    }
+    SQL_FECHARCURSOR(ACURSOR);
+    SQL_DESTRUIR(ACURSOR);
+    

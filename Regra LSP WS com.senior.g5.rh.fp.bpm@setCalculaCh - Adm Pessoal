@@ -1,0 +1,349 @@
+execsql"delete usu_tempch2";
+
+definir alfa anumemp;
+definir alfa anumcad;
+definir alfa atipcol;
+definir alfa acodapf;             
+definir alfa ahorsem;
+definir alfa ahormes;
+definir alfa ahorsin;
+definir alfa asindicato;
+definir alfa areducao;
+definir alfa atipope; @GENERICO@
+definir alfa atipope1;
+definir alfa atipope2;
+definir alfa atipope3;
+definir alfa atipope4;
+definir alfa atipope5;
+definir alfa atipope6;
+definir alfa atipope7;
+definir alfa atipope8;
+definir alfa atipope9;
+definir alfa atipope10;
+definir alfa ahorsem1;
+definir alfa ahorsem2;
+definir alfa ahorsem3;
+definir alfa ahorsem4;
+definir alfa ahorsem5;
+definir alfa ahorsem6;
+definir alfa ahorsem7;
+definir alfa ahorsem8;
+definir alfa ahorsem9;
+definir alfa ahorsem10;
+definir alfa acodapf1;
+definir alfa acodapf2;
+definir alfa acodapf3;
+definir alfa acodapf4;
+definir alfa acodapf5;
+definir alfa acodapf6;
+definir alfa acodapf7;
+definir alfa acodapf8;
+definir alfa acodapf9;
+definir alfa acodapf10;
+definir alfa aerro;
+definir alfa aminutos1;                                                           
+definir alfa aminutos2;
+definir alfa aminutos3;
+definir alfa aminutos4;
+definir alfa aminutos5;
+definir alfa aminutos6;
+definir alfa aminutos7;
+definir alfa aminutos8;
+definir alfa aminutos9;
+definir alfa aminutos10;
+definir alfa ahora1;
+definir alfa ahora2;
+definir alfa ahora3;
+definir alfa ahora4;
+definir alfa ahora5;                   
+definir alfa ahora6;
+definir alfa ahora7;
+definir alfa ahora8;
+definir alfa ahora9;
+definir alfa ahora10;
+definir alfa atotalsemana;
+definir alfa atotalmes;
+definir alfa atotalizador;
+definir alfa ahoraatu;
+definir alfa aminutosatu; 
+definir alfa ahosematu;
+definir alfa ahormesatu;
+definir alfa ahorasin;
+definir alfa aminutossin; 
+definir alfa ahosemsin;
+definir alfa ahormessin;
+definir alfa acarsem;
+definir alfa acarmes;
+definir alfa atotmes;
+definir alfa atotsem;
+definir alfa asaida;
+definir alfa ahorassem;
+definir alfa aminutossem;
+definir alfa ahorasmes;
+definir alfa aminutosmes;
+definir alfa ahorassematu;
+definir alfa aminutossematu;
+definir alfa ahorasmesatu;
+definir alfa aminutosmesatu;
+definir alfa acarsematu;
+definir alfa acarmesatu;
+
+
+definir numero ncodapf1;
+definir numero ncodapf2;
+definir numero ncodapf3;
+definir numero ncodapf4;
+definir numero ncodapf5;
+definir numero ncodapf6;
+definir numero ncodapf7;
+definir numero ncodapf8;
+definir numero ncodapf9;
+definir numero ncodapf10;
+definir numero nhorsem1;
+definir numero nhorsem2;
+definir numero nhorsem3;
+definir numero nhorsem4;
+definir numero nhorsem5;
+definir numero nhorsem6;
+definir numero nhorsem7;
+definir numero nhorsem8;
+definir numero nhorsem9;
+definir numero nhorsem10;   
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad; 
+definir numero nhorsem;
+definir numero nhormes;
+definir numero ncodapf;
+definir numero nerro;
+definir numero nhora1;
+definir numero nhora2;
+definir numero nhora3;
+definir numero nhora4;
+definir numero nhora5;
+definir numero nhora6;
+definir numero nhora7;
+definir numero nhora8;
+definir numero nhora9;
+definir numero nhora10;
+definir numero nminutos1;
+definir numero nminutos2;
+definir numero nminutos3;
+definir numero nminutos4;
+definir numero nminutos5;
+definir numero nminutos6;
+definir numero nminutos7;
+definir numero nminutos8;
+definir numero nminutos9;
+definir numero nminutos10; 
+definir numero ntotalsemana; 
+definir numero ntotalmes; 
+definir numero nhorsin;
+definir numero ntotalizador;
+definir numero nhoraatu;
+definir numero nminutosatu; 
+definir numero nhosematu;
+definir numero nhormesatu;
+definir numero nhorasin;
+definir numero nminutossin; 
+definir numero nhosemsin;
+definir numero nhormessin;
+definir numero ncont;                                            
+definir numero ntotmes; 
+definir numero ntotsem; 
+definir numero ncarmes;
+definir numero ncarsem; 
+definir numero nhorassem; 
+definir numero nminutossem;
+definir numero nhorassematu; 
+definir numero nminutossematu;
+
+definir cursor cur_insert;
+definir cursor cur_total;                      
+definir cursor cur_totalizador;   
+
+anumemp = setCalculaCh.enumemp;                        
+atipcol = setCalculaCh.etipcol;                                                                                            
+anumcad = setCalculaCh.enumcad; 
+ahorsin = setCalculaCh.ehorsin;
+ahorsem = setCalculaCh.ecarsem; 
+
+ntotmes = 0;
+ntotsem = 0;
+
+@Converte Hora Sindicato  hh:mm em inteiro @
+nhorasin = 0;
+ahorasin = ahorsin; 
+aminutosatu = ahorsin; 
+COPIARALFA(ahorasin,0,2); 
+COPIARALFA(aminutossin,4,2);                                               
+ALFAPARAINT(ahorasin,nhorasin); 
+ALFAPARAINT(aminutossin,nminutossin); 
+NHORSEMSIN = (nhorasin * 60) + nminutossin;
+
+
+@Converte Hora atual  hh:mm em inteiro @
+nhoraatu = 0;
+ahoraatu = ahorsem; 
+aminutosatu = ahorsem; 
+COPIARALFA(ahoraatu,0,2); 
+COPIARALFA(aminutosatu,4,2);        
+ALFAPARAINT(ahoraatu,nhoraatu); 
+ALFAPARAINT(aminutosatu,nminutosatu); 
+NHORSEMATU = (nhoraatu * 60) + nminutosatu;
+    
+NHORMESATU = NHORSEMATU * 4.5;
+                                                                                                             
+
+  
+cur_insert.sql"select * from usu_tempch1                       \
+               where                                           \
+               usu_numemp = :anumemp and                       \
+               usu_tipcol = :atipcol and                       \
+               usu_numcad = :anumcad";
+               
+cur_insert.abrircursor();
+enquanto(cur_insert.achou)
+{
+  ncodapf = cur_insert.usu_codapf;
+  nhorsem = cur_insert.usu_horsem;
+  nhormes = cur_insert.usu_hormes;
+  
+  alfaparaint(anumemp, nnumemp);
+  alfaparaint(atipcol, ntipcol);
+  alfaparaint(anumcad, nnumcad);
+  
+  @Armazenando em tabela auxiliar @ 
+  
+  EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+          (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+          VALUES                                                                  \
+          (:NNUMEMP, :NTIPCOL,:NNUMCAD,:NCODAPF,:NHORSEM,:NHORMES)";
+
+
+  cur_insert.proximo();
+}
+cur_insert.fecharcursor(); 
+
+@Inicio da varredura da lista de entrada @
+
+nqtdlinha = setCalculaCh.lista.QtdLinhas;    
+
+setCalculaCh.lista.LinhaAtual = 0;
+nx = 0;         
+ncont = 1;
+enquanto(nx < nqtdlinha)  
+{ 
+  setCalculaCh.lista.LinhaAtual = nx;  
+  acarsem = setCalculaCh.lista.lista_horsem;
+  acarmes = setCalculaCh.lista.lista_hormes;
+  acodapf = setCalculaCh.lista.lista_codapf;                               
+  atipope = setCalculaCh.lista.lista_tipo_alteracao;
+  
+  nx = nx+1; 
+  alfaparaint(acodapf, ncodapf);
+  
+  @Converte Hora semanal de hh:mm em inteiro@
+  ncarsem = 0;
+  ahorassem = acarsem; 
+  AMINUTOSSEM = acarsem; 
+  COPIARALFA(ahorassem,0,2); 
+  COPIARALFA(aminutossem,4,2);        
+  ALFAPARAINT(ahorassem,nhorassem); 
+  ALFAPARAINT(aminutossem,nminutossem); 
+  ncarsem = (nhorassem * 60) + nminutossem;                        
+  ahorassem = ""; 
+  aminutossem = ""; 
+  
+  @Converte Hora Mensal de hh:mm em inteiro@
+  ncarmes = ncarsem * 4.5;  
+  ahorasmes = ""; 
+  aminutosmes = ""; 
+  
+  ntotmes = ntotmes + ncarmes;
+  ntotsem = ntotsem + ncarsem;     
+
+  
+  se(atipope = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+          (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+          VALUES                                                                  \
+          (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF, :NCARSEM, :NCARMES)";
+  }
+  se(atipope = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE         \                                 
+           USU_NUMEMP = :NNUMEMP AND             \
+           USU_TIPCOL = :NTIPCOL AND             \
+           USU_NUMCAD = :NNUMCAD AND             \
+           USU_CODAPF = :NCODAPF",NERRO, AERRO);
+  }
+  se(atipope = "Alterar")
+  {
+    EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NCARSEM,     \
+                                       USU_HORMES = :NCARMES      \                      
+                    WHERE                                         \
+                    USU_NUMEMP = :NNUMEMP AND                     \
+                    USU_TIPCOL = :NTIPCOL AND                     \
+                    USU_NUMCAD = :NNUMCAD AND                     \
+                    USU_CODAPF = :NCODAPF",NERRO, AERRO);
+   
+    
+  }
+        
+} @Final enquanto da lista de entrada @ 
+
+
+alfaparaint(anumemp, nnumemp);
+alfaparaint(atipcol, ntipcol);
+alfaparaint(anumcad, nnumcad);
+
+
+cur_totalizador.sql"select usu_horsem, usu_hormes              \
+               from usu_tempch2                                \
+               where                                           \
+               usu_numemp = :nnumemp and                       \
+               usu_tipcol = :ntipcol and                       \
+               usu_numcad = :nnumcad";
+               
+cur_totalizador.abrircursor();
+enquanto(cur_totalizador.achou)
+{
+  nhorsem = cur_totalizador.usu_horsem;
+  nhormes = cur_totalizador.usu_hormes;
+    
+  ntotalsemana = ntotalsemana + nhorsem;
+  ntotalmes = ntotalmes + nhormes;
+  cur_totalizador.proximo();
+}
+cur_totalizador.fecharcursor();                                  
+
+@Verifica se teve redução de CH@
+se(ntotalsemana < nhorsematu)
+{
+  setCalculaCh.tabela.saida = "Teve Tedução";
+}
+se(ntotalsemana >= nhorsematu)                                                                        
+{
+  setCalculaCh.tabela.saida = "Não Teve Tedução";
+}
+
+@Verifica se Ultrapassou limite do Sindicato@
+se(ntotalsemana > nhorsemsin)
+{
+  setCalculaCh.tabela.scarsin = "Ultrapassou Limite de Carga Horária";
+}
+se(ntotalsemana <= nhorsemsin)
+{
+  setCalculaCh.tabela.scarsin = "Dentro do Limite de Carga Horária";
+}                                                                                        
+
+
+convertemascara(4, ntotalsemana, atotalsemana, "hh:mm");
+convertemascara(4, ntotalmes, atotalmes, "hh:mm");
+
+setCalculaCh.tabela.stotmes = atotalmes;
+setCalculaCh.tabela.stotsem = atotalsemana;
+setCalculaCh.tabela.carregar = "Carregado";
+     

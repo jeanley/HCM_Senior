@@ -1,0 +1,46 @@
+Definir Numero nNumEmp;
+Definir Numero nCodFil;
+
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+Definir Alfa aEmaCom;
+Definir Alfa aRmtEma;
+Definir Alfa aDstEma;
+Definir Alfa aCcpEma;
+Definir Alfa aAssEma;
+Definir Alfa aTxtEma;
+Definir Alfa aAnxEma;
+Definir Alfa aCcoEma;
+
+Definir Cursor cBusca;
+
+aNumEmp = getVSFocais.enumemp;
+aCodFil = getVSFocais.ecodfil;
+
+AlfaParaInt(aNumEmp,nNumEmp);
+AlfaParaInt(aCodFil, nCodFil);                                                           
+
+cBusca.SQL "SELECT R034CPL.EMACOM FROM USU_TCADFOC,  R034CPL                   \                 
+              WHERE USU_TCADFOC.USU_NUMEMP = R034CPL.NUMEMP                    \            
+                AND USU_TCADFOC.USU_TIPCOL = R034CPL.TIPCOL                    \            
+                AND USU_TCADFOC.USU_NUMCAD = R034CPL.NUMCAD                    \            
+                AND USU_NUMEMP = :nNumEmp                                      \ 
+                AND USU_CODFIL = :nCodFil";
+                
+cBusca.AbrirCursor();
+
+Enquanto(cBusca.Achou){
+  aEmaCom = cBusca.EmaCom;
+    
+  aRmtEma = "naoresponda@maristabrasil.org";                                    @Remetente@
+  aDstEma = aEmaCom;                                                            @Destinatário@
+  aCcpEma = "";                                                                 @Cópia@         
+  aAssEma = "Vagas Sigilosas";                                                  @Assunto@
+  aTxtEma =   "<br>Fluxo de Vagas Sigilosas";                     
+              
+  EnviaEmailHTML (aRmtEma, aDstEma, aCcpEma, aCcoEma, aAssEma, aTxtEma, aAnxEma, 1, 0); 
+  
+  cBusca.Proximo();
+  
+  getVSFocais.sretorno = "E-mails Enviados";
+}

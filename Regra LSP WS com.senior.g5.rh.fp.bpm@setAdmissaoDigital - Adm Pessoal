@@ -1,0 +1,183 @@
+@===============================================@
+@ Desenvolvedor: Luis Gustavo Nardello          @
+@ Data criação: 28/04/2023                      @
+@ Data alteração: 								              @
+@===============================================@       
+
+@Requisição da API@
+Definir Alfa aURLLogin;
+Definir Alfa aURLPreAdmissionSend;
+Definir Alfa aUser;
+Definir Alfa aSenha;
+Definir Alfa aToken;
+Definir Alfa aHTTP; 
+Definir Alfa aBody;
+Definir Alfa aRetorno;
+
+@Mensagens de retorno da requisição@
+Definir Alfa aResult;
+Definir Alfa aMessage;
+Definir Alfa aWhatsapp;
+
+@Parâmetros de entrada@
+Definir Alfa aNomFun;
+Definir Alfa aEmaCom;
+Definir Alfa aEmaPar;
+Definir Alfa aNumTel;
+Definir Alfa aNumCpf;
+Definir Alfa aDatAdm;
+Definir Alfa aObs;
+Definir Alfa aTipNot;
+Definir Alfa aNomEmp;
+Definir Alfa aNomFil;
+Definir Alfa aNomCcu;
+Definir Alfa aDesPos;
+Definir Alfa aTitCar;
+Definir Alfa aOriAdm;
+Definir Alfa aModID;
+
+Definir Data dDatAdm;
+
+
+@URL, usuário e senha para autenticação do login (16 - 18)@
+aURLLogin = "https://platform.senior.com.br/t/senior.com.br/bridge/1.0/rest/platform/authentication/actions/login";
+aUser = "admin@maristabrasil-homolog.org";
+aSenha = "8FAVPL054out!";
+aURLPreAdmissionSend =  "https://platform.senior.com.br/t/senior.com.br/bridge/1.0/rest/hcm/onboardingintegration/actions/preAdmissionSend";
+
+@------------------------------------------------------------------------------@
+@||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||@
+@                Etapa de requisição do token de autenticação                  @
+
+aBody = "";
+
+@Estrutura do body para chamada da API de autenticação@
+aBody = "{\
+            \"username\": \""+ aUser +"\",\
+            \"password\": \""+ aSenha +"\"\
+         }";
+
+@Criação do objeto HTTP e recebimento dos parâmetros@
+HttpObjeto(aHTTP);         
+HttpAlteraCabecalhoRequisicao(aHTTP, "Content-Type", "application/json");
+HttpPost(aHTTP, aURLLogin, aBody, aToken);
+
+@Tratamento do retorno para obter o bearer token@
+PosicaoAlfa("access_token",aToken, nPosIni);
+PosicaoAlfa("refresh_token",aToken, nPosFim);
+
+nPos = nPosFim - nPosIni;
+
+CopiarAlfa(aToken, nPosIni, nPos);
+
+TrocaString(aToken,"access_token", "", aToken);     
+TrocaString(aToken,"\\","", aToken);
+TrocaString(aToken,"\"","", aToken);
+TrocaString(aToken,",","",  aToken);
+TrocaString(aToken,":","",  aToken);  
+
+@Variável com o valor correto do token que será utilizado posteriormente@
+aToken = "Bearer " +aToken;
+
+@||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||@     
+@------------------------------------------------------------------------------@
+
+@------------------------------------------------------------------------------@
+@||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||@
+@       Etapa de coleta e tratamento das informações à serem enviadas          @
+
+@Atribuição de variáveis@
+aNomFun = setAdmissaoDigital.enomfun;
+aEmaCom = setAdmissaoDigital.eemacom;
+aEmaPar = setAdmissaoDigital.eemapar;
+aNumTel = setAdmissaoDigital.enumtel;
+aNumCpf = setAdmissaoDigital.enumcpf;
+dDatAdm = setAdmissaoDigital.edatadm;
+aObs = setAdmissaoDigital.eobs;
+aTipNot = setAdmissaoDigital.etipnot;
+aNomEmp = setAdmissaoDigital.enomemp;
+aNomFil = setAdmissaoDigital.enomfil;
+aNomCcu = setAdmissaoDigital.enomccu;
+aDesPos = setAdmissaoDigital.edespos;
+aTitCar = setAdmissaoDigital.etitcar;
+aOriAdm = setAdmissaoDigital.eoriadm;   
+
+@||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||@
+@------------------------------------------------------------------------------@
+
+@------------------------------------------------------------------------------@
+@||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||@
+@                Etapa de envio do modelo de admissão digital                  @
+Se((aEmaCom = "") Ou (aEmaCom = " "))
+aEmaCom = aEmaPar;
+                                       
+ConverteMascara(3, dDatAdm, aDatAdm, "YYYY-MM-DD");
+
+aModID = "36629917-a825-4b02-8fb1-9c47077e451f";
+
+aBody = "";
+
+Se(aOriAdm = "Interno")
+aOriAdm = "INTERNAL";
+Senao
+aOriAdm = "EXTERNAL";
+
+@Estrutura do body para envio da API de modelo de admissão@
+aBody =          "{";
+aBody = aBody +    "\"employeeName\": \""+aNomFun+"\",";
+aBody = aBody +    "\"employeeEmail\": \""+aEmaCom+"\",";
+aBody = aBody +    "\"employeeMobilePhone\": \""+aNumTel+"\",";
+aBody = aBody +    "\"key\": \""+aNumCpf+"\",";
+aBody = aBody +    "\"admissionDate\": \""+aDatAdm+"\",";
+aBody = aBody +    "\"modelId\": \""+aModID+"\",";
+aBody = aBody +    "\"additionalInfo\": \""+aObs+"\",";
+aBody = aBody +    "\"jobPosition\": \"\",";
+aBody = aBody +    "\"branchOffice\": \"\",";
+aBody = aBody +    "\"company\": \"\",";
+aBody = aBody +    "\"employeeMobilePhoneOption\": \""+aTipNot+"\",";      
+aBody = aBody +    "\"companyName\": \""+aNomEmp+"\",";
+aBody = aBody +    "\"branchOfficeName\": \""+aNomFil+"\",";
+aBody = aBody +    "\"costCenterName\": \""+aNomCcu+"\",";
+aBody = aBody +    "\"workstationGroupName\": \""+aDesPos+"\",";
+aBody = aBody +    "\"jobPositionName\": \""+aTitCar+"\",";       
+aBody = aBody +    "\"origin\": \""+aOriAdm+"\"";
+aBody = aBody +  "}";
+
+@Criação do objeito HTTP e recebimento dos parâmetros@
+HttpObjeto(aHTTP);         
+HttpAlteraCabecalhoRequisicao(aHTTP, "Content-Type", "application/json");  
+HttpAlteraCabecalhoRequisicao(aHTTP, "Authorization", aToken);                    
+HttpAlteraCodifCaracPadrao(aHTTP, "utf-8");
+HttpDesabilitaErroResposta(aHTTP);
+HttpPost(aHTTP, aURLPreAdmissionSend, aBody, aRetorno);
+HttpLeCodigoResposta(aHTTP, nCodigo);
+
+Se((nCodigo = 200) Ou (nCodigo = 201))
+{
+ 
+  getJSONString(aRetorno, "result", aResult);
+  getJSONString(aResult, "message", aMessage);
+  
+  aMessage = "Sucesso";
+  setAdmissaoDigital.sretorno = aMessage;
+}
+Senao
+Se(nCodigo = 400){
+  PosicaoAlfa ("message", aRetorno, nPosIni);
+  PosicaoAlfa ("errorCode", aRetorno, nPosFim);         
+  
+  nPosIni = nPosIni + 10;
+  nPosFim = nPosFim - 16;
+  
+  CopiarAlfa (aRetorno, nPosIni, nPosFim);
+  
+  setAdmissaoDigital.sretorno = aRetorno;
+}
+Senao
+setAdmissaoDigital.sretorno = "Erro ao enviar o convite";
+
+
+
+
+@||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||@
+@------------------------------------------------------------------------------@

@@ -1,0 +1,24 @@
+definir alfa acargaatual;
+definir alfa acargaproposta;
+definir alfa asaida;
+
+definir numero ncargaatual;
+definir numero ncargaproposta;
+
+acargaatual = setDireciona.ecargaatual;                       
+acargaproposta = setDireciona.ecargaproposta;
+trocastring(acargaatual,".",",",acargaatual);
+trocastring(acargaproposta,".",",",acargaproposta);
+alfaparaint(acargaatual,ncargaatual);
+alfaparaint(acargaproposta,ncargaproposta);                        
+
+se(ncargaatual > ncargaproposta)
+{
+  asaida = "Houve redução de Carga";
+} 
+senao
+{
+  asaida = "Não Houve redução de Carga";
+}  
+
+setDireciona.saida = asaida;
