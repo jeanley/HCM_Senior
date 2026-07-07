@@ -1,0 +1,130 @@
+/* Regra Especial desenvolvida para atender o cálculo da Rescisão Imotivada no 
+Transcurso do Ano Letivo de alguns Sindicatos ainda prevalece por direito aos 
+colaboradores;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data: 21/03/2025, 24/03/2025 e 25/03/2025;
+Senior Sistemas - Noroeste Paulista. */
+
+@===================== Definição das variáveis padrões ========================@
+Definir Cursor cur_sin123;
+Definir Cursor cur_hfi123;
+Definir Cursor cur_cad123;
+
+Definir Data dDatDem;
+Definir Data dDatIni;
+Definir Data dDatFim;
+
+@=============== Somente a cálculos rescisórios - saldo de salários =@
+Se (TipCal = 62)
+  {
+@================= somente p/ colaborador tipo contrato professor =============@
+    Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+      {
+@=========================== Busca sindicato do colaborador ===================@
+        RetSinEmp(R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,R042RCM.DatDem);
+        nCodSin = CodSinEmp;
+    
+@======= Cursor p/ buscar se do sindicato possui direito na resc.imotivada ====@  
+        cur_sin123.sql "select usu_perrit,usu_resimo \
+                          from r014sin \
+                         where codsin = :nCodSin \
+                           and usu_perrit > 0 \
+                           and usu_resimo in ('M','U')";
+         cur_sin123.AbrirCursor();
+         Se (cur_sin123.Achou)
+           {
+              nNumEmp = R042RCM.NumEmp;
+              nTipCol = R042RCM.TipCol;
+              nNumCad = R042RCM.NumCad;
+              dDatDem = R042RCM.DatDem + R042RCM.QtdInd;
+              nCodFil = 0;
+    
+@=================== Cursor p/ busca da filial atual do colaborador ===========@          
+              cur_hfi123.sql "select codfil \
+                                from r038hfi \
+                               where numemp = :nNumEmp \
+                                 and tipcol = :nTipCol \
+                                 and numcad = :nNumCad \
+                                 and datalt = (select max(hfi.datalt) \
+                                                 from r038hfi hfi \
+                                                where r038hfi.numemp = hfi.numemp \
+                                                  and r038hfi.tipcol = hfi.tipcol \
+                                                  and r038hfi.numcad = hfi.numcad \
+                                                  and hfi.datalt <= :dDatDem)";
+              cur_hfi123.AbrirCursor();
+              Se (cur_hfi123.Achou)
+              nCodFil = cur_hfi123.codfil;
+              
+              cur_hfi123.FecharCursor();                                                 
+
+@=================== Cursor p/ busca no calendário escolar ====================@    
+              cur_cad123.sql "select usu_datini,usu_datfim \
+                                from usu_tr002cad \ 
+                               where usu_numemp = :nNumEmp \
+                                 and usu_codfil = :nCodFil \
+                                 and usu_datini <= :dDatDem \
+                                 and usu_datfim >= :dDatDem";
+              cur_cad123.AbrirCursor();
+              Se (cur_cad123.Achou)
+                {
+@= Cálculo qdo for por qtde de meses trabalhados no respectivo semente letivo =@
+                   Se (cur_sin123.usu_resimo = "M")
+                     {
+                       dDatIni = cur_cad123.usu_datini;
+                       
+                       Se (R034FUN.DatAdm > dDatIni)
+                       dDatIni = R034FUN.DatAdm;
+                       
+                       dDatFim = cur_cad123.usu_datfim;
+                       
+                       Se (dDatFim > dDatDem)
+                       dDatFim = dDatDem;
+                       
+                       nQtdMes = 0;
+                       
+                       TempoTrabFun (nNumEmp,nTipCol,nNumCad,dDatIni,dDatFim,3,nQtdMes);
+                       
+                       Se (nQtdMes > 0)
+                         {
+                           RefEvt = nQtdMes;
+                           ValEvt = (BasEvt * nQtdMes) * (cur_sin123.usu_perrit / 100);
+                         }
+                         Senao
+                           {
+                             RefEvt = 0;
+                             ValEvt = 0;
+                           }  
+                     }
+@========================== Cálculo qdo for por verba única ===================@
+                     Senao
+                       {
+                         RefEvt = 1;
+                         ValEvt = BasEvt * (cur_sin123.usu_perrit / 100);
+                       }
+                }
+                Senao
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                  }
+              cur_cad123.FecharCursor();                                   
+           }
+           Senao
+             {
+               RefEvt = 0;
+               ValEvt = 0;
+             }
+         cur_sin123.FecharCursor();                         
+      }
+      Senao
+        {
+          RefEvt = 0;
+          ValEvt = 0;
+        }
+  }
+  Senao
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }

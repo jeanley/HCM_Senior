@@ -1,0 +1,115 @@
+/* Regra Especial desenvolvida para atender o cálculo da antiga Súmula 10 que 
+alguns Sindicatos ainda prevalece por direito aos colaboradores;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data: 11/03/2025, 12/03/2025, 14/03/2025 e 17/03/2025;
+Senior Sistemas - Noroeste Paulista. */
+
+Definir Cursor cur_cau121;
+Definir Cursor cur_hfi121;
+Definir Cursor cur_cad121;
+Definir Cursor cur_sin121;
+
+Definir Data dDatDem;
+
+Se (TipCal = 62)
+  {
+    Se ((OriMov = "X") ou (OriMov = "D"))
+      {
+        RefEvt = RefMov;
+        ValEvt = ValMov;
+        VaPara Final121;
+      }
+    
+    Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+      {
+        nCauDem = R042RCM.CauDem;
+        
+        cur_cau121.sql "select indrcs \
+                          from r042cau \
+                         where caudem = :nCauDem \
+                           and indrcs = 'S'";
+        cur_cau121.AbrirCursor();
+        Se (cur_cau121.Achou)
+          {
+            nNumEmp = R042RCM.NumEmp;
+            nTipCol = R042RCM.TipCol;
+            nNumCad = R042RCM.NumCad;
+            dDatDem = R042RCM.DatDem + R042RCM.QtdInd;
+            
+            RetSinEmp (nNumEmp,nTipCol,nNumCad,dDatDem);
+            nCodSin = CodSinEmp;
+            
+            cur_sin121.sql "select codsin \
+                              from r014sin \
+                             where codsin = :nCodSin \
+                               and usu_sumula = 'S'";
+            cur_sin121.AbrirCursor();
+            Se (cur_sin121.Achou)
+              {
+                nCodFil = 0;
+                
+                cur_hfi121.sql "select codfil \
+                                  from r038hfi \
+                                 where numemp = :nNumEmp \
+                                   and tipcol = :nTipCol \
+                                   and numcad = :nNumCad \
+                                   and datalt = (select max(hfi.datalt) \
+                                                   from r038hfi hfi \
+                                                  where r038hfi.numemp = hfi.numemp \
+                                                    and r038hfi.tipcol = hfi.tipcol \
+                                                    and r038hfi.numcad = hfi.numcad \
+                                                    and hfi.datalt <= :dDatDem)";
+                cur_hfi121.AbrirCursor();
+                Se (cur_hfi121.Achou)
+                nCodFil = cur_hfi121.codfil;
+                
+                cur_hfi121.FecharCursor();                                                 
+              
+                cur_cad121.sql "select usu_datini,usu_datfim \
+                                  from usu_tr014cad \ 
+                                 where usu_codsin = :nCodSin \
+                                   and usu_numemp = :nNumEmp \
+                                   and usu_codfil = :nCodFil \
+                                   and usu_datini <= :dDatDem \
+                                   and usu_datfim >= :dDatDem";
+                cur_cad121.AbrirCursor();
+                Se (cur_cad121.Achou)
+                  {
+                    RefEvt = 1;
+                    ValEvt = BasEvt;
+                  }
+                  Senao
+                    {
+                      RefEvt = 0;
+                      ValEvt = 0;
+                    }
+                cur_cad121.FecharCursor();                                   
+              }
+              Senao
+                {
+                  RefEvt = 0;
+                  ValEvt = 0;
+                }
+            cur_sin121.FecharCursor();                                 
+          }
+          Senao
+            {
+              RefEvt = 0;
+              ValEvt = 0;
+            }
+         cur_cau121.FecharCursor();                           
+      }
+      Senao
+        {
+          RefEvt = 0;
+          ValEvt = 0;
+        }
+  }
+  Senao
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+
+Final121:  

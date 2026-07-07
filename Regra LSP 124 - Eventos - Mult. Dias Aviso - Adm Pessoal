@@ -1,0 +1,79 @@
+Definir Cursor cur_avp124;
+Definir Cursor cur_hfi124;
+Definir Cursor cur_cad124;
+
+Definir Data dDatDem;
+
+Se (TipCal = 63)
+  {
+    Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+      {
+        RetSinEmp(R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,R042RCM.DatDem);
+        nCodSin = CodSinEmp;
+        
+        dDatDem = R042RCM.DatDem;
+    
+@======= Cursor p/ buscar se do sindicato possui direito na resc.imotivada ====@  
+        cur_avp124.sql "select diaavi \
+                          from r014avp \
+                         where codsin = :nCodSin \
+                           and usu_profer = 'S' \
+                           and diaavi > 0 \
+                           and datalt = (select max(avp.datalt) \
+                                           from r014avp avp \
+                                          where r014avp.codsin = avp.codsin \
+                                            and avp.datalt <= :dDatDem)";
+        cur_avp124.AbrirCursor();
+        Se (cur_avp124.Achou)
+          {
+            nNumEmp = R042RCM.NumEmp;
+            nTipCol = R042RCM.TipCol;
+            nNumCad = R042RCM.NumCad;
+            dDatDem = R042RCM.DatDem;
+            nCodFil = 0;
+  
+@=================== Cursor p/ busca da filial atual do colaborador ===========@          
+            cur_hfi124.sql "select codfil \
+                              from r038hfi \
+                             where numemp = :nNumEmp \
+                               and tipcol = :nTipCol \
+                               and numcad = :nNumCad \
+                               and datalt = (select max(hfi.datalt) \
+                                               from r038hfi hfi \
+                                              where r038hfi.numemp = hfi.numemp \
+                                                and r038hfi.tipcol = hfi.tipcol \
+                                                and r038hfi.numcad = hfi.numcad \
+                                                and hfi.datalt <= :dDatDem)";
+            cur_hfi124.AbrirCursor();
+            Se (cur_hfi124.Achou)
+            nCodFil = cur_hfi124.codfil;
+            
+            cur_hfi124.FecharCursor();                                                 
+          
+@=================== Cursor p/ busca no calendário escolar ====================@    
+              cur_cad124.sql "select usu_datini,usu_datfim \
+                                from usu_tr002cad \ 
+                               where usu_numemp = :nNumEmp \
+                                 and usu_codfil = :nCodFil \
+                                 and usu_datini <= :dDatDem \
+                                 and usu_datfim >= :dDatDem";
+              cur_cad124.AbrirCursor();
+              Se (cur_cad124.Achou)
+                {
+                  nAnoAvi = 0;
+                  RetDifDat (5,R034FUN.DatAdm,cur_cad124.usu_datfim,nAnoAvi);
+                  
+                  Se (nAnoAvi > 0)
+                  nAnoAvi = nAnoAvi * cur_avp124.diaavi;
+                  
+                  Se (nAnoAvi > 90)
+                  nAnoAvi = 90;
+                  
+                  RefEvt = nAnoAvi;
+                  ValEvt = (BasEvt / 30) * nAnoAvi; 
+                }
+              cur_cad124.FecharCursor();  
+          }
+        cur_avp124.FecharCursor();  
+      }                         
+  }

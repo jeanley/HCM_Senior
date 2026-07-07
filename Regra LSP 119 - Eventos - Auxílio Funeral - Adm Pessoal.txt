@@ -1,0 +1,70 @@
+/* Regra Especial desenvolvida para atender o cálulo de Auxílio Funeral de 
+acordo com critério do parâmetro do Sindicato do colaborador;
+Deve ser vinculada ao Evento "780 - Auxílio Funeral";
+Cliente: Marista Brasil;
+Data: 22/01/2025 e 25/02/2025;
+Autor: Murilo Fenerick;
+Senior Sistemas - Noroeste Paulista */
+
+@====================== Definição das variáveis padrões =======================@
+Definir Cursor cur_cau607;
+Definir Cursor cur_sin607;
+
+@======== Somente quando for cálculo de Saldo de Salários em Rescisão =========@
+Se (TipCal = 62)
+  {
+    nCauDem = R042RCM.CauDem; @ causa da demissão =@
+
+@======== Cursor para busca se a causa de demissão é por Falecimento ==========@    
+    cur_cau607.sql "select caudem \
+                      from r042cau \
+                     where caudem = :nCauDem \
+                       and caurai in (60,62,63,64)";
+    cur_cau607.AbrirCursor();
+    Se (cur_cau607.Achou)
+      {
+@======= Retorna o Sindicato vigente do colaborador no cálculo rescisório =====@
+        RetSinEmp (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,R042RCM.DatDem);
+        nCodSin = CodSinEmp;
+
+@= Cursor p/ busca se o sindicato do colaborador possui direito ao Aux.Funeral =@        
+        cur_sin607.sql "select usu_auxfun,usu_valfun,usu_tetfun \
+                          from r014sin \
+                         where codsin = :nCodSin \
+                           and usu_auxfun in ('P','V')";
+        cur_sin607.AbrirCursor();
+        Se (cur_sin607.Achou)
+          {
+            Se (cur_sin607.usu_auxfun = "P")
+              {
+                RefEvt = cur_sin607.usu_valfun;
+                ValEvt = BasEvt * (cur_sin607.usu_valfun / 100);
+                
+                Se (ValEvt > cur_sin607.usu_tetfun)
+                ValEvt = cur_sin607.usu_tetfun;
+              }
+              Senao
+                {
+                  RefEvt = 1;
+                  ValEvt = cur_sin607.usu_valfun;
+                }
+          }
+          Senao @ não calcula se o sindicato não possuir Aux.Funeral =@
+            {
+              RefEvt = 0;
+              ValEvt = 0;
+            }
+        cur_sin607.FecharCursor();                           
+      }
+      Senao @ não calcula se a causa não for falecimento =@
+        {
+          RefEvt = 0;
+          ValEvt = 0;
+        }
+    cur_cau607.FecharCursor();                       
+  }
+  Senao @ não calcula se o cálculo não for saldo de salários rescisório @
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }

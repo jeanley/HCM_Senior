@@ -1,0 +1,145 @@
+/* Regra Especial desenvolvida para atender o cálculo de reflexo DSR de Horas
+Extras do mês anterior. Vinculada no Evento "3353 - DSR REFLEXO MES ANTERIOR";
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data: 10/02/2025;
+Senior Sistemas - Noroeste Paulista. */
+
+@================================ Definição das variãveis =====================@
+Definir Cursor cur_mov120;
+Definir Cursor cur_cal120;
+
+Definir Data dIniAnt;
+Definir Data dFimAnt;
+Definir Data dRef;
+
+@=== Específica para os cálculos de folha e saldo de salários em rescisão =====@
+Se ((TipCal = 11) ou (TipCal = 12) ou (TipCal = 13) ou (TipCal = 62))
+  {
+@============== Considera se existir valor lançamento em variáveis ============@
+    Se (ValMov > 0)
+      {
+        RefEvt = RefMov;
+        ValEvt = ValMov;
+        VaPara Final120;
+      }
+
+@== Inicia cálculo desde que exista base de um evento de hora extra calculado =@
+    Se (BasEvt > 0)
+      {
+@= Apropriação qdo saldo de salários =@
+        Se (TipCal = 62)
+          {
+            DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+            MontaData(01,xMes,xAno,dFimAnt);
+            dFimAnt--;
+            DesmontaData(dFimAnt,xDia,xMes,xAno);
+            MontaData(01,xMes,xAno,dIniAnt);
+            
+            Se (dFimAnt > R042RCM.DatDem)
+            dFimAnt = R042RCM.DatDem;
+          }
+@= Apropriação qdo folha =@
+          Senao
+            {
+              dFimAnt = IniCmp - 1;
+              DesmontaData(dFimAnt,xDia,xMes,xAno);
+              MontaData(01,xMes,xAno,dIniAnt);
+            }
+        
+@= Assume início se admissão for superior =@        
+        Se (R034FUN.DatAdm > dIniAnt)
+        dIniAnt = R034FUN.DatAdm;
+        
+        nDia = 0;
+        nDsr = 0;
+        dRef = dIniAnt;
+
+@===== Apropriação dos dias úteis e dsr conforme escala do colaborador ========@        
+        Enquanto (dRef <= dFimAnt)
+          {
+            nCodHor = 0;
+            RetornaHorario(R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dRef,"S",nCodHor);
+            Se ((nCodHor = 9997) ou (nCodHor = 9999))
+            nDsr++;
+            Senao
+            nDia++; 
+            
+            dRef++;
+            
+            Se (dRef > dFimAnt)
+            VaPara Pula120;
+          }
+          
+        Pula120: 
+
+@= Não calcula se não existir DSR =@        
+        Se (nDsr = 0)
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final120;
+          }
+@= Cálculo do evento =@
+          Senao
+            {
+              Se (nDia = 0)
+              nDia = 1;
+              
+              ValEvt = (BasEvt / nDia) * nDsr; 
+            
+              nNumEmp = R034FUN.NumEmp;
+              nTipCol = R034FUN.TipCol;
+              nNumCad = R034FUN.NumCad;
+              
+              Se (TipCal = 62)
+                {
+                  DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+                  MontaData(01,xMes,xAno,dRef);
+                  cur_cal120.sql "select codcal \
+                                    from r044cal \
+                                   where numemp = :nNumEmp \
+                                     and perref = :dRef \
+                                     and tipcal = 11";
+                  cur_cal120.AbrirCursor();
+                  Se (cur_cal120.Achou)
+                  nCodCal = cur_cal120.codcal;
+                  
+                  cur_cal120.FecharCursor();
+                }
+                Senao
+                nCodCal = CodCal;
+                
+                nCodEvt  = CodEvt;
+
+@= Cursor para busca dos eventos de horas extras mês anterior =@                
+                cur_mov120.sql "select numemp from r030emp where numemp = 0 union \
+                                select sum(r044mov.refeve * (1 + (r008evc.valcal / 100))) / 60 \
+                                  from r044mov,\
+                                       r008evc \
+                                 where r044mov.tabeve = r008evc.codtab \
+                                   and r044mov.codeve = r008evc.codeve \
+                                   and r044mov.numemp = :nNumEmp \
+                                   and r044mov.tipcol = :nTipCol \ 
+                                   and r044mov.numcad = :nNumCad \
+                                   and r044mov.codcal = :nCodCal \
+                                   and exists (select 1 \
+                                                 from r008evb \
+                                                where r044mov.tabeve = r008evb.codtab \
+                                                  and r008evb.codeve = :nCodEvt \
+                                                  and r044mov.codeve = r008evb.evebas)";
+                cur_mov120.AbrirCursor();
+                Se (cur_mov120.Achou)
+                RefEvt = (cur_mov120.numemp / nDia) * nDsr;
+                
+                cur_mov120.FecharCursor();
+            }
+      }
+      Senao
+        {
+          RefEvt = 0;
+          ValEvt = 0;
+        }
+  }
+  
+Final120:  
