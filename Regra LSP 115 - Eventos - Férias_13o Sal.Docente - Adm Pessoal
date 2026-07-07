@@ -1,0 +1,405 @@
+/* Regra Especial desenvolvida para atender o cálculo de férias e 13o Salário
+dos colaboradores professores (docente);
+Deve ser vinculada aos Eventos de férias, abono pecuniário, 13o adto, 13o integral
+ e 13o complementar;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data: 07/11/2024;
+Senior Sistemas - Noroeste Paulista */
+
+@=================== Definição das variáveis padrões ==========================@
+Definir Cursor cur_apf115;
+Definir Cursor cur_evc115;
+Definir Cursor cur_sin115;
+Definir Cursor cur_esc115;
+Definir Cursor cur_d13115;
+Definir Cursor cur_evc115;
+Definir Cursor cur_ver115;
+Definir Cursor cur_dge115;
+
+Definir Data dDatRef;
+Definir Data dDatZer;
+Definir Data dIni13;
+Definir Data dFim13;
+
+Definir Alfa aCrtEve;
+
+@======================= Somente Tipo Contrato Professor ======================@
+Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+  {
+@============================= Variáveis do colaborador =======================@
+    nNumEmp = R034FUN.NumEmp;
+    nTipCol = R034FUN.TipCol;
+    nNumCad = R034FUN.NumCad; 
+    nFatDsr = 0;  
+    
+@================== cursor p/ busca do parâmetro DSR professor ================@
+    cur_dge115.sql "select mulmes,muldsr \
+                     from r171dge \
+                    where numemp = :nNumEmp \
+                      and mulmes > 0 \
+                      and muldsr > 0";
+    cur_dge115.AbrirCursor();
+    Se (cur_dge115.Achou)
+    nFatDsr = 1 + (cur_dge115.muldsr / cur_dge115.mulmes);
+    Senao
+    nFatDsr = 1.16666666666667;
+    
+    cur_dge115.FecharCursor();                                
+  
+@===================== Quando cálculos de férias ==============================@
+    Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 55) ou (TipCal = 54))
+      {
+@========================== Referència do início de férias ====================@
+        Se ((TipCal <> 55) e (TipCal <> 54))
+        dDatRef = R040FEM.IniFer;
+        Senao
+        dDatRef = FimCmp; @ qdo provisão busca final da competência @
+
+@============================= Zera variáveis de lógica =======================@        
+        xValEvt = 0;
+        dDatZer = 0;
+        nHorMes = 0;
+
+@= Cursor para busca dos valores de atividades e disciplinas da grade do docente =@        
+        cur_apf115.sql "select numemp,tabeve from r030emp where numemp is null \
+                        union \
+                       select sum((hormes*valapf)/60),sum(hormes) \
+                         from r171apf \ 
+                        where numemp = :nNumEmp \
+                          and tipcol = :nTipCol \
+                          and numcad = :nNumCad \
+                          and datini <= :dDatRef \
+                          and (datfim is null \
+                            or datfim = :dDatZer \
+                            or datfim >= :dDatRef) \
+                          and hormes > 0 \
+                          and valapf > 0";
+        cur_apf115.AbrirCursor();
+        Se (cur_apf115.Achou)
+          {
+            xValEvt = cur_apf115.numemp;
+            nHorMes = cur_apf115.tabeve / 60;
+            
+            cur_apf115.Proximo();
+          }
+        cur_apf115.FecharCursor();
+
+@== Não calcula evento se não existir informações de atividades/disciplinas ===@        
+        Se (xValEvt = 0)
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+          }
+          Senao
+            {
+@============================== retorna escala do docente =====================@                        
+             /* RetEscEmp(nNumEmp,nTipCol,nNumCad,dDatRef);
+              nCodEsc = EscEmp;
+              nHorMes = 0;
+
+@======== cursor para busca da qtde de horas mensais da escala do docente =====@                        
+              cur_esc115.sql "select hormes \
+                             from r006esc \
+                            where codesc = :nCodEsc";
+              cur_esc115.AbrirCursor();
+              Se (cur_esc115.Achou)
+              nHorMes = (cur_esc115.hormes / 60) / 30;
+              
+              cur_esc115.FecharCursor();  */            
+
+              nCodEvt = CodEvt;
+
+@================= Cursor p/ busca da característica do evento ================@                    
+              cur_evc115.sql "select r008evc.crteve \
+                                from r008evc,\    
+                                     r030emp \ 
+                               where r008evc.codtab = r030emp.tabeve \
+                                 and r030emp.numemp = :nNumEmp \
+                                 and r008evc.codeve = :nCodEvt";
+              cur_evc115.AbrirCursor();
+              Se (cur_evc115.Achou)
+                {
+                  aCrtEve = cur_evc115.crteve;
+                  CopiarAlfa(aCrtEve,1,2);
+                  AlfaParaInt(aCrtEve,nCrtEve);
+
+@=================================== qdo for férias ===========================@                        
+                  Se ((nCrtEve >= 1) e (nCrtEve <= 3))
+                    {
+                      Se (TipCal <> 55)
+                        {
+                          RefEvt = (nHorMes / 30) * R040FEM.DiaFer;
+                          ValEvt = (((xValEvt / 30) * R040FEM.DiaFer) + ((xValEvt / 30) * R040FEM.DiaFer) / 6);
+                        }
+                        Senao
+                          {
+                            RefEvt = nHorMes;
+                            ValEvt = xValEvt * nFatDsr;
+                          }
+                    }
+                  Senao Se (nCrtEve = 12)  @= qdo for abono pecuniário =@
+                    {
+                      RefEvt = (nHorMes / 30) * R040FEM.DiaAbo;
+                      ValEvt = (((xValEvt / 30) * R040FEM.DiaAbo) + ((xValEvt / 30) * R040FEM.DiaAbo) / 6);
+                    }
+                  Senao Se (nCrtEve = 15)  @= qdo for adto 13o nas férias =@
+                    {
+@======================= acumula o DSR ao colaborador docente =================@
+                      xValEvt = xValEvt + (xValEvt / 6);
+
+                      DesmontaData(R040FEM.IniFer,xDia,xMes,xAno);
+                      MontaData(16,01,xAno,dIni13);
+                      MontaData(31,12,xAno,dFim13);
+                      
+                      Se (R034FUN.DatAdm > dIni13)
+                      dIni13 = R034FUN.DatAdm;
+                      
+                      nAvo13 = 0;
+
+@=================== apura direitos de avos do docente ========================@                
+                      TempoTrabFun (nNumEmp,nTipCol,nNumCad,dIni13,dFim13,
+                      3,nAvo13);
+          
+                      RefEvt = nAvo13;
+
+@======================= retorna sindicato do(a) docente ======================@
+                      RetSinEmp(nNumEmp,nTipCol,nNumCad,dFim13);
+                      nCodSin = CodSinEmp;
+
+@====================== cursor para busca do % do Adto 13o salário ============@                    
+                      cur_sin115.sql "select per13s \
+                                        from r014sin \
+                                       where codsin = :nCodSin \
+                                         and per13s > 0";
+                      cur_sin115.AbrirCursor();
+                      Se (cur_sin115.Achou)
+                      ValEvt = ((xValEvt * (cur_sin115.per13s/100)) / 12 * nAvo13) * nFatDsr;
+                      Senao
+                       {
+                         RefEvt = 0;
+                         ValEvt = 0;
+                       }
+                      cur_sin115.FecharCursor();                   
+                    }   
+                }
+                Senao @= não calcula se não encontrar caract.evento =@
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                  }
+              cur_evc115.FecharCursor();                   
+            }
+      }
+@= para qdo for cálculos de 13o salário =@
+      Senao Se ((TipCal = 31) ou (TipCal = 32) ou (TipCal = 35) ou (TipCal = 33))
+        {
+          dDatRef = FimCmp;
+
+@============================= Zera variáveis de lógica =======================@
+          xValEvt = 0;
+          dDatZer = 0;
+          nHorMes = 0;
+
+@= Cursor para busca dos valores de atividades e disciplinas da grade do docente =@        
+          cur_apf115.sql "select numemp,tabeve from r030emp where numemp is null \
+                          union \
+                         select sum((hormes*valapf)/60),sum(hormes) \
+                           from r171apf \ 
+                          where numemp = :nNumEmp \
+                            and tipcol = :nTipCol \
+                            and numcad = :nNumCad \
+                            and datini <= :dDatRef \
+                            and (datfim is null \
+                              or datfim = :dDatZer \
+                              or datfim >= :dDatRef) \
+                            and hormes > 0 \
+                            and valapf > 0";
+          cur_apf115.AbrirCursor();
+          Se (cur_apf115.Achou)
+            {
+              xValEvt = cur_apf115.numemp;
+              nHorMes = cur_apf115.tabeve / 60;
+              
+              cur_apf115.Proximo();
+            }
+          cur_apf115.FecharCursor();
+
+@== Não calcula evento se não existir informações de atividades/disciplinas ===@          
+          Se (xValEvt = 0)
+            {
+              RefEvt = 0;
+              ValEvt = 0;
+            }
+            Senao @= cálculo 13o salário =@
+              {
+@======================= acumula o DSR ao colaborador docente =================@
+                xValEvt = xValEvt + (xValEvt / 6);
+
+                DesmontaData(FimCmp,xDia,xMes,xAno);
+                MontaData(16,01,xAno,dIni13);
+                MontaData(31,12,xAno,dFim13);
+                
+                Se (R034FUN.DatAdm > dIni13)
+                dIni13 = R034FUN.DatAdm;
+                
+                nAvo13 = 0;
+
+@=================== apura direitos de avos do docente ========================@                
+                TempoTrabFun (nNumEmp,nTipCol,nNumCad,dIni13,dFim13,3,nAvo13);
+                
+                RefEvt = nAvo13;
+
+@=========== Cálculos de 13o (integral, provisão e complementar) ==============@                
+                Se ((TipCal = 32) ou (TipCal = 33) ou (TipCal = 35))
+                ValEvt = ((xValEvt / 12) * nAvo13) * nFatDsr;  
+                Senao
+                  {
+@======================= retorna sindicato do(a) docente ======================@
+                    RetSinEmp(nNumEmp,nTipCol,nNumCad,dFim13);
+                    nCodSin = CodSinEmp;
+
+@====================== cursor para busca do % do Adto 13o salário ============@                    
+                    cur_sin115.sql "select per13s \
+                                      from r014sin \
+                                     where codsin = :nCodSin \
+                                       and per13s > 0";
+                    cur_sin115.AbrirCursor();
+                    Se (cur_sin115.Achou)
+                    ValEvt = ((xValEvt * (cur_sin115.per13s/100)) / 12 * nAvo13) * nFatDsr;
+                    Senao
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                     }
+                    cur_sin115.FecharCursor();
+                    
+                    nCodEvt = CodEvt;
+                    nCodCal = CodCal;
+                    DesmontaData(FimCmp,xDia,xMes,xAno);
+                    MontaData(01,01,xAno,dIni13);
+                    MontaData(31,12,xAno,dFim13);
+                    
+                    cur_ver115.sql "select numemp from r030emp where numemp = 0 union \
+                                    select sum(r046ver.valeve) \
+                                      from r046ver,\
+                                           r044cal \
+                                     where r046ver.numemp = r044cal.numemp \
+                                       and r046ver.codcal = r044cal.codcal \
+                                       and r046ver.numemp = :nNumEmp \
+                                       and r046ver.tipcol = :nTipCol \
+                                       and r046ver.numcad = :nNumCad \
+                                       and r044cal.tipcal in (11,12,31) \
+                                       and r046ver.codcal <> :nCodCal \
+                                       and r044cal.perref between :dIni13 and :dFim13 \
+                                       and r046ver.codeve = :nCodEvt \
+                                       and r046ver.valeve > 0";
+                   cur_ver115.AbrirCursor();
+                   Se (cur_ver115.Achou)
+                   ValEvt = ValEvt - cur_ver115.numemp;
+                   
+                   cur_ver115.FecharCursor();                    
+                  
+                   Se (ValEvt <= 0)
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final115;
+                     }
+                  }
+              }
+        }
+@= para qdo existir solicitação de 13o na folha =@
+      Senao Se ((TipCal = 11) e (CodEvt <> 12))
+        {
+          dDatRef = PerRef;
+          nCodEve = CodEvt;
+          aCrtEve = "";
+          
+          cur_evc115.sql "select r008evc.crteve \
+                            from r008evc,\
+                                 r030emp \
+                           where r008evc.codtab = r030emp.tabeve \
+                             and r030emp.numemp = :nNumEmp \
+                             and codeve = :nCodEve";
+          cur_evc115.AbrirCursor();
+          Se (cur_evc115.Achou)
+          aCrtEve = cur_evc115.crteve;
+          
+          cur_evc115.FecharCursor();
+          
+          CopiarAlfa(aCrtEve,1,2);
+          
+          Se (aCrtEve <> "15")
+            {
+              RefEvt = 0;
+              ValEvt = 0;
+              VaPara Final115;
+            }                   
+
+@============================= Zera variáveis de lógica =======================@
+          xValEvt = 0;
+          dDatZer = 0;
+          nHorMes = 0;
+          pPerPag = 0;
+          
+          cur_d13115.sql "select perpag \
+                            from r044d13 \
+                           where numemp = :nNumEmp \
+                             and tipcol = :nTipCol \
+                             and numcad = :nNumCad \
+                             and cmp13s = :dDatRef \
+                             and perpag > 0";
+          cur_d13115.AbrirCursor();
+          Se (cur_d13115.Achou)
+          pPerPag = cur_d13115.perpag / 100;
+          
+          cur_d13115.FecharCursor();
+          
+          Se (pPerPag = 0)
+            {
+              RefEvt = 0;
+              ValEvt = 0;
+              VaPara Final115;
+            }                   
+
+@= Cursor para busca dos valores de atividades e disciplinas da grade do docente =@        
+          cur_apf115.sql "select numemp,tabeve from r030emp where numemp is null \
+                          union \
+                         select sum((hormes*valapf)/60),sum(hormes) \
+                           from r171apf \ 
+                          where numemp = :nNumEmp \
+                            and tipcol = :nTipCol \
+                            and numcad = :nNumCad \
+                            and datini <= :dDatRef \
+                            and (datfim is null \
+                              or datfim = :dDatZer \
+                              or datfim >= :dDatRef) \
+                            and hormes > 0 \
+                            and valapf > 0";
+          cur_apf115.AbrirCursor();
+          Se (cur_apf115.Achou)
+            {
+              xValEvt = cur_apf115.numemp;
+              nHorMes = cur_apf115.tabeve / 60;
+              
+              cur_apf115.Proximo();
+            }
+          cur_apf115.FecharCursor();
+
+@== Não calcula evento se não existir informações de atividades/disciplinas ===@          
+          Se (xValEvt = 0)
+            {
+              RefEvt = 0;
+              ValEvt = 0;
+              VaPara Final115;
+            }
+            Senao @= cálculo 13o salário avulso solicitado =@
+              {
+                RefEvt = pPerPag * 100;
+                ValEvt = (xValEvt * pPerPag) * nFatDsr; 
+              }
+        }
+  }
+  
+Final115:  

@@ -1,0 +1,58 @@
+/* Regra Especial desenvolvida para atender o cálculo de integração de férias na
+folha quando de colaboradores professores (docente);
+Deve ser vinculada aos Eventos Horas Normais (salário);
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data: 07/11/2024;
+Senior Sistemas - Noroeste Paulista */
+
+@=================== Definição das variáveis padrões ==========================@
+Definir Cursor cur_sit114;
+
+Se ((TipCal = 11) ou (TipCal = 13) ou (TipCal = 14))
+  {
+@======================= Somente Tipo Contrato Professor ======================@
+    Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+      {
+@============================= Zera variáveis de lógica =======================@
+        nQtdFer = 0;
+        nFer = 0;
+
+@=============== cursor para busca das situações de férias ====================@        
+        cur_sit114.sql "select codsit \
+                          from r010sit \
+                         where tipsit in (2,12) \
+                      order by codsit";
+        cur_sit114.AbrirCursor();
+        Enquanto (cur_sit114.Achou)
+          {
+@=================== qtde de dias de férias no mês do docente =================@
+            BuscaDiaSit (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,IniCmp,
+            FimCmp,cur_sit114.codsit,nFer);
+            
+@====================== soma qtde de dias de férias do docente ================@
+            Se (nFer > 0)
+            nQtdFer = nQtdFer + nFer;
+
+            cur_sit114.Proximo();
+          }
+        cur_sit114.FecharCursor(); 
+
+@=========== apropriação de dias de salário deduzido dias de férias ===========@        
+        Se (nQtdFer > 0)
+          {
+            nQtdDia = (30 - nQtdFer);
+            
+            Se (nQtdDia <= 0)
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+              }
+              Senao
+                {
+                  RefEvt = (RefEvt / 30) * nQtdDia;
+                  ValEvt = (ValEvt / 30) * nQtdDia;
+                }
+          }             
+      }
+  }

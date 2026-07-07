@@ -1,0 +1,234 @@
+/*
+   Regra especial para calculo de evento da folha
+   Evento de seguro de vida
+   Para os colaboradores que possuem o seguro indicado na ficha básica é feito
+   um calculo com base no multiplicador encontrado no sindicato ou cargo 
+   e verificando o teto na tabela do seguro com a base de calculo do evento
+   Carlos Domingues 01/2025
+*/
+
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+Definir Data dDatZer;
+Definir Alfa aCodCar;
+Definir Alfa aCurAtv;
+Definir Alfa aSql;
+Definir Cursor Cur_R014SIN;
+Definir Cursor Cur_R024CAR;
+Definir Cursor Cur_R166SED;
+Definir Cursor Cur_R166SEF;
+Definir Cursor Cur_R006ESC;
+Definir Cursor Cur_R034SEG;
+nNumEmp = R034FUN.NumEmp;
+nTipCol = R034FUN.TipCol;
+nNumCad = R034FUN.NumCad;
+nTipCon = R034FUN.TipCon;
+dIniCmp = IniCmp;
+dFimCmp = FimCmp;
+dDatZer = 0;
+nBasVal = BasVal; @ Base de Calculo do Evento @
+nCodSeg = ValCal; @ Valor do Evento, informado o código do seguro @
+nMulSeg = 0;
+nTetMax = 0;
+nRefFai = 0;
+nValEve = 0;
+nRefEve = 0;
+nCodEsc = 0;
+nHorSem = 0;
+nHorMes = 0;
+nSalEmp = 0;
+nTipSal = 0;
+nSalHor = 0;
+nFatorHorSem = 5.25;
+/* Retorna o sindicato */
+RetSinEmp(nNumEmp,nTipCol,nNumCad,dFimCmp);
+nCodSin = CodSinEmp;
+/* Retorna o Cargo */
+RetCarEmp(nNumEmp,nTipCol,nNumCad,dFimCmp);
+nEstCar = EstCarEmp;
+aCodCar = CarEmp;
+/* Retorna a Escala*/
+RetEscEmp (nNumEmp, nTipCol, nNumCad, dFimCmp);
+nCodEsc = EscEmp;
+/* Retorna o Salario */
+RetSalEmp (nNumEmp, nTipCol, nNumCad, dFimCmp);
+nSalEmp = SalEmp + CplSalEmp;
+nTipSal = TipSalEmp;
+
+
+/*
+  Verifica se o código do Seguro assinalado no evento está na ficha de 
+  seguro do Colaborador, se não estiver, zera o evento e vai para o final da regra
+*/
+
+Cur_R034SEG.SQL "Select CodSeg From R034SEG Where NumEmp = :nNumEmp And \
+                                                  TipCol = :nTipCol And \
+                                                  NumCad = :nNumCad And \
+                                                  CodSeg = :nCodSeg";
+
+Cur_R034SEG.AbrirCursor();
+
+Se   (Cur_R034SEG.NaoAchou)
+     Inicio
+       ValEvt = 0;
+       RefEvt = 0;
+       Cur_R034SEG.FecharCursor();
+       Vapara Final;     
+     Fim;
+     
+Cur_R034SEG.FecharCursor();
+
+
+/*
+  Busca o multiplicador no Sindicato
+*/
+
+Cur_R014SIN.SQL "Select USU_MulSeg From R014SIN Where CodSin = :nCodSin And USU_MulSeg > 0";
+
+Cur_R014SIN.AbrirCursor();
+
+Se   (Cur_R014SIN.Achou)
+     Inicio
+       nMulSeg = Cur_R014SIN.USU_MulSeg;
+     Fim;
+
+Cur_R014SIN.FecharCursor();
+
+
+/*
+  Busca o multiplicador no Cargo
+*/
+
+Cur_R024CAR.SQL "Select USU_MulSeg From R024CAR Where EstCar = :nEstCar And CodCar = :aCodCar And USU_MulSeg > 0";
+
+Cur_R024CAR.AbrirCursor();
+
+Se   (Cur_R024CAR.Achou)
+     Inicio
+       nMulSeg = Cur_R024CAR.USU_MulSeg;
+     Fim;
+
+Cur_R024CAR.FecharCursor();
+
+
+/*
+  Busca o teto máximo na tabela do seguro
+*/
+
+Cur_R166SED.SQL "Select TetMax,PerRef From R166SED Where CodSeg = :nCodSeg Order By PerRef DESC";
+
+Cur_R166SED.AbrirCursor();
+
+Se   (Cur_R166SED.Achou)
+     Inicio
+       nTetMax = Cur_R166SED.TetMax;
+     Fim;
+
+Cur_R166SED.FecharCursor();
+
+
+/*
+  Busca o referencial da faixa na tabela do seguro
+*/
+
+Cur_R166SEF.SQL "Select RefFai,PerRef From R166SEF Where CodSeg = :nCodSeg Order By PerRef DESC";
+
+Cur_R166SEF.AbrirCursor();
+
+Se   (Cur_R166SEF.Achou)
+     Inicio
+       nRefFai = Cur_R166SEF.RefFai;
+     Fim;
+
+Cur_R166SEF.FecharCursor();
+
+
+/*
+  Buscando o salario do horista ou docente 
+*/
+
+Se ((nTipCon <> 10) e (nTipCon <> 13) e (nTipSal = 2))
+   Inicio
+     
+     Cur_R006ESC.SQL "SELECT HORSEM,HORMES FROM R006ESC WHERE CODESC = :NCODESC";
+     
+     Cur_R006ESC.AbrirCursor();
+     
+     Se   (Cur_R006ESC.Achou)
+          Inicio
+            nHorSem = Cur_R006ESC.HorSem;
+            nHorMes = Cur_R006ESC.HorMes;
+          Fim;
+     
+     Cur_R006ESC.FecharCursor();
+     
+     nSalEmp = nSalEmp * nHorMes;
+   
+   Fim;
+
+Senao
+Se ((nTipCon = 10) ou (nTipCon = 13))
+   Inicio
+   
+     SQL_Criar(aCurAtv);
+     
+     @Cursor para buscar total de horas mensais e valor hora das atividades dos professores @
+     aSql="select sum(HorMes) as HorMes, sum(ValApf) as ValApf From R171Apf  \
+                                                               Where NumEmp = :nNumEmp \
+                                                               And   TipCol = :nTipCol \ 
+                                                               And   NumCad = :nNumCad \ 
+                                                               And   DatIni <= :dIniCmp \ 
+                                                               And   (DatFim >= :dFimCmp or DatFim = :dDatZer)";
+                                
+     SQL_DefinirComando(aCurAtv,aSQL);
+     SQL_DefinirInteiro(aCurAtv,"nNumEmp",nNumEmp);
+     SQL_DefinirInteiro(aCurAtv,"nTipCol",nTipCol);
+     SQL_DefinirInteiro(aCurAtv,"nNumCad",nNumCad);
+     SQL_DefinirData(aCurAtv,"dIniCmp",dIniCmp);
+     SQL_DefinirData(aCurAtv,"dFimCmp",dFimCmp);
+     SQL_DefinirData(aCurAtv,"dDatZer",dDatZer);                
+     SQL_AbrirCursor(aCurAtv);
+     
+     Se   (SQL_EOF(aCurAtv) = 0)
+          Inicio 
+            SQL_RetornarFlutuante(aCurAtv,"HorMes",nHorMes);
+            SQL_RetornarFlutuante(aCurAtv,"ValApf",nSalHor);
+          Fim;
+          
+     nHorSem = nHorMes / nFatorHorSem;
+     nSalEmp = nHorMes * nSalHor;
+     
+     SQL_FecharCursor(aCurAtv);
+     SQL_Destruir(aCurAtv);
+
+   Fim;
+
+
+/*
+  Calculo do Evento
+*/
+
+nValEve = (nBasVal * nMulSeg) / 100;
+nRefEve = nBasVal * nMulSeg;
+                  
+Se   ((nValEve > 0) e (nValEve > nTetMax))
+     Inicio
+       nValEve = nTetMax;
+     Fim;
+     
+nValEve = nValEve * nRefFai;
+
+
+/*
+   Atribuindo o fechamento nas variáveis de Valor e Referencia do Evento
+*/
+
+ValEvt = nValEve;
+RefEvt = nRefEve;
+
+
+/*
+   Label de final da Regra
+*/
+       
+Final:;

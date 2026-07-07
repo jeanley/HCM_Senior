@@ -1,0 +1,97 @@
+Definir Data dDatRef;
+
+Definir Alfa aCodCar;
+
+Definir Cursor cur_car118;
+Definir Cursor cur_sin118;
+Definir Cursor cur_sed118;
+
+Se ((TipCal = 11) ou (TipCal = 62))
+  {
+    Se (TipCal = 11)
+    dDatRef = FimCmp;
+    Senao
+    dDatRef = R042RCM.DatDem;
+    
+    RetCarEmp(R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dDatRef);
+    nEstCar = EstCarEmp;
+    aCodCar = CarEmp; 
+    nMulSeg = 0;
+    xTetMax = 0;
+    
+    cur_car118.sql "select usu_mulseg \
+                      from r024car \
+                     where estcar = :nEstCar \
+                       and codcar = :aCodCar \
+                       and usu_mulseg > 0";
+    cur_car118.AbrirCursor();
+    Se (cur_car118.Achou)
+    nMulSeg = cur_car118.usu_mulseg;
+    
+    cur_car118.FecharCursor();
+    
+    Se (nMulSeg = 0)
+      {
+        RetSinEmp(R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dDatRef);
+        nCodSin = CodSinEmp;
+        
+        cur_sin118.sql "select usu_mulseg \
+                          from r014sin \
+                         where codsin = :nCodSin \
+                           and usu_mulseg > 0";
+        cur_sin118.AbrirCursor();
+        Se (cur_sin118.Achou)
+        nMulSeg = cur_sin118.usu_mulseg;
+        
+        cur_sin118.FecharCursor();                   
+      }
+      
+    Se (nMulSeg = 0)
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final118;
+      } 
+      
+    nCodSeg = ValCal;
+    xBasEvt = AcuCal[9033] + AcuCal[9026];
+    pRefFai = 0;
+    
+    cur_sed118.sql "select r166sed.tetmax,r166sef.reffai \
+                      from r166sed,\
+                           r166sef \
+                     where r166sed.codseg = r166sef.codseg \
+                       and r166sed.perref = r166sef.perref \
+                       and r166sed.codseg = :nCodSeg \
+                       and r166sed.perref = (select max(sed.perref) \
+                                               from r166sed sed \
+                                              where r166sed.codseg = sed.codseg \
+                                                and sed.perref <= :dDatRef) \
+                       and r166sef.vallim = (select min(sef.vallim) \
+                                               from r166sef sef \
+                                              where r166sef.codseg = sef.codseg \
+                                                and r166sef.perref = sef.perref \
+                                                and sef.vallim >= :xBasEvt)"; 
+    cur_sed118.AbrirCursor();
+    Se (cur_sed118.Achou)
+      {
+        xTetMax = cur_sed118.tetmax;
+        pRefFai = (cur_sed118.reffai / 100);
+      }
+    cur_sed118.FecharCursor();
+    
+    ValEvt = (xBasEvt * nMulSeg);
+    
+    Se (ValEvt < xTetMax)
+      {
+        RefEvt = xTetMax * pRefFai;
+        ValEvt = xTetMax * pRefFai;
+      }  
+      Senao
+        {
+          RefEvt = ValEvt * pRefFai;
+          ValEvt = ValEvt * pRefFai;
+        }                                                        
+  }
+  
+Final118:  

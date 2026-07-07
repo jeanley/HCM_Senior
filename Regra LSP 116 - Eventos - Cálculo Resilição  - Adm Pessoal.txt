@@ -1,0 +1,458 @@
+/* Regra especial desenvolvida para atender o cálculo de resilição aos 
+colaboradores docentes (professores);
+Vinculada aos Eventos: 
+430 - Férias Resilição; 
+431 - 1/3 Férias Resilição;
+432 - 13º Salário Resilição;
+500 - Indenização Resilição;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Datas: 20/11/2024, 21/11/2024, 27/11/2024, 24/12/2024, 26/12/2024, 27/12/2024 e 
+09/06/2025;
+Senior Sistemas - Noroeste Paulista */
+
+@====================== Definição das variáveis padrões =======================@
+Definir Cursor cur_sin116;
+Definir Cursor cur_apf116;
+Definir Cursor cur_ati116;
+Definir Cursor cur_afa116;
+Definir Cursor cur_avp116;
+Definir Cursor cur_esc116;
+Definir Cursor cur_heb116;
+Definir Cursor cur_per116;
+
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+Definir Data dDatIni;
+Definir Data dDatDis;
+Definir Data dDatFim;
+Definir Data dDatZer;
+Definir Data dIniEst;
+Definir Data dFimEst;
+Definir Data dFim13ii;
+Definir Data dIni13r;
+Definir Data dCmpSin;
+
+@================= Apenas cálculos mensal e complementar dissídio =============@
+Se ((TipCal = 11) ou (TipCal = 13))
+  {
+@========= Prevalece se o evento for lançado em fixos e ou variáveis ==========@
+    Se ((OriMov = "D") ou (OriMov = "X"))
+      {
+        RefEvt = RefMov;
+        ValEvt = ValMov;
+        VaPara Final116;
+      }
+
+@========= Exclusivo apenas para colaboradores Tipo Contratos Professor =======@
+    Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+      {
+@======================== Variáveis do(a) colaborador(a) ======================@
+        nNumEmp = R034FUN.NumEmp;
+        nTipCol = R034FUN.TipCol;
+        nNumCad = R034FUN.NumCad;
+
+@=================== Variáveis das datas vigentes do cálculo ==================@
+        dIniCmp = IniCmp;
+        dFimCmp = FimCmp;
+        nTipSit = 0;
+
+@============== Verifica se colaborador(a) esteja demitido(a) =================@        
+        cur_afa116.sql "select r010sit.tipsit \
+                          from r010sit,\
+                               r038afa \
+                         where r038afa.sitafa = r010sit.codsit \
+                           and r010sit.tipsit = 7 \
+                           and r038afa.numemp = :nNumEmp \
+                           and r038afa.tipcol = :nTipCol \
+                           and r038afa.numcad = :nNumCad \
+                           and r038afa.datafa <= :dFimCmp";
+        cur_afa116.AbrirCursor(); 
+        Se (cur_afa116.Achou)
+        nTipSit = cur_afa116.tipsit;
+        
+        cur_afa116.FecharCursor();
+
+@============== Não calcula se colaborador(a) for demitido(a) =================@        
+        Se (nTipSit = 7)
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final116;
+          }
+
+@=============== Identifica o sindicato do(a) colaborador(a) ==================@
+        RetSinEmp (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dFimCmp);
+        nCodSin = CodSinEmp;
+        
+        dDatZer = 0;
+
+@===== Cursor p/ busca se o sindicato do(a) colaborador(a) paga resilição =====@    
+        cur_sin116.sql "select usu_tr014res.usu_pag13r,\
+                               usu_tr014res.usu_pagfer,\
+                               usu_tr014res.usu_pagter,\
+                               r014sin.adifer,\
+                               usu_tr014res.usu_cmpsin,\
+                               usu_tr014res.usu_pagind,\
+                               usu_tr014res.usu_acrind,\
+                               usu_tr014res.usu_mesres \
+                          from usu_tr014res,\
+                               r014sin \
+                         where usu_tr014res.usu_codsin = r014sin.codsin \
+                           and usu_tr014res.usu_codsin = :nCodSin \
+                           and usu_tr014res.usu_cmpsin = (select max(res.usu_cmpsin) \
+                                               from usu_tr014res res \
+                                              where usu_tr014res.usu_codsin = res.usu_codsin \
+                                                and res.usu_cmpsin <= :dFimCmp) \
+                           and (usu_tr014res.usu_cmpter = :dDatZer \
+                             or usu_tr014res.usu_cmpter is null \
+                             or usu_tr014res.usu_cmpter >= :dFimCmp)";
+        cur_sin116.AbrirCursor();
+        Se (cur_sin116.Achou)
+          {
+@================================ zera variáveis de lógica ====================@
+            dDatIni = 0;
+            xRefEvt = 0;
+            xValEvt = 0;
+            xRefInd = 0;
+            xValInd = 0;
+            dDatZer = 0;
+            xRefFer = 0;
+            xValFer = 0;
+            xRefTer = 0;
+            xValTer = 0;
+            xRef13p = 0;
+            xVal13p = 0;
+            nAdiFer = 0;
+            nAcrInd = 0;
+
+@===== Atribuição em 09/06/2025: qdo existir qtde de meses p/ pagto ===========@            
+            Se (cur_sin116.usu_mesres > 0)
+              {
+                dIniCmp = IniCmp - (cur_sin116.usu_mesres * 30.25);
+                DesmontaData(dIniCmp,xDia,xMes,xAno);
+                MontaData(01,xMes,xAno,dIniCmp);
+                dFimCmp = dIniCmp;
+                UltimoDia(dFimCmp);
+              }
+              Senao
+                {
+                  dIniCmp = IniCmp;
+                  dFimCmp = FimCmp;
+                }
+
+@= Cursor p/ busca da(s) atividade(s) ou disciplina(s) encerrada(s) no mês de cálculo =@            
+            cur_apf116.sql "select datini,\
+                                   datfim,\
+                                   hormes,\
+                                   valapf,\
+                                   usu_motres,\
+                                   codapf \
+                              from r171apf \
+                             where usu_pagres = 'S' \
+                               and usu_motres in ('D','R') \
+                               and numemp = :nNumEmp \
+                               and tipcol = :nTipCol \
+                               and numcad = :nNumCad \
+                               and datfim between :dIniCmp and :dFimCmp";
+            cur_apf116.AbrirCursor();
+            Enquanto (cur_apf116.Achou)
+              {
+@============== identifica a escala vigente do(a) colaborador(a) ==============@
+                RetEscEmp(nNumEmp,nTipCol,nNumCad,cur_apf116.datfim);
+                nCodEsc = EscEmp;
+                nHorDsr = 0;
+                nHorMes = 0;
+
+@=== cursor p/ busca das qtdes de horas mensal e semanal da escala do docente =@                
+                cur_esc116.sql "select hormes \
+                                  from r006esc \
+                                 where codesc = :nCodEsc";
+                cur_esc116.AbrirCursor();
+                Se (cur_esc116.Achou)
+                  {
+                    nHorDsr = (cur_esc116.hormes / 60) / 30;
+                    nHorMes = cur_esc116.hormes / 60;
+                  }
+                cur_esc116.FecharCursor(); 
+
+                dDatIni = cur_apf116.datini;
+                
+                Se (dDatIni < dIniCmp)
+                dDatIni = dIniCmp;
+                
+                Se (R034FUN.DatAdm > dDatIni)
+                dDatIni = R034FUN.DatAdm;
+                
+                nQtdDia = (cur_apf116.datfim - dDatIni) + 1;
+
+                xRef = (cur_apf116.hormes / 30) * nQtdDia;
+
+@===================== qdo for resilição por distrato =========================@                
+                Se (cur_apf116.usu_motres = "D")
+                  {
+                    Se (cur_apf116.hormes > 0)
+                    xRefEvt = cur_apf116.hormes / 60;
+                    Senao
+                    xRefEvt = 0;
+                  }
+                  Senao @===== qdo for resilição por redução de jornada =======@
+                    {
+                      nCodApf = cur_apf116.codapf;
+                      dDatFim = cur_apf116.datfim; 
+                      
+                      cur_ati116.sql "select hormes \
+                                        from r171apf \
+                                       where numemp = :nNumEmp \
+                                         and tipcol = :nTipCol \
+                                         and numcad = :nNumCad \
+                                         and codapf = :nCodApf \
+                                         and datini = (select min(apf.datini) \
+                                                         from r171apf apf \
+                                                        where r171apf.numemp = apf.numemp \
+                                                          and r171apf.tipcol = apf.tipcol \
+                                                          and r171apf.numcad = apf.numcad \
+                                                          and r171apf.codapf = apf.codapf \
+                                                          and apf.datini >= :dDatFim)";
+                      cur_ati116.AbrirCursor();
+                      Se (cur_ati116.Achou)
+                        {
+                          Se (cur_apf116.hormes < cur_ati116.hormes)
+                          xRefEvt = (cur_ati116.hormes - cur_apf116.hormes) / 60;
+                          
+                          Senao Se (cur_apf116.hormes > cur_ati116.hormes)
+                          xRefEvt = (cur_apf116.hormes - cur_ati116.hormes) / 60;
+                        }
+                      cur_ati116.FecharCursor();                                      
+                    }                
+
+                xVal = cur_apf116.valapf * xRefEvt;
+                
+                Se (xVal > 0)
+                xValEvt = xVal;
+                Senao
+                xValEvt = 0;
+
+@======================= apropriação 13o proporcinal resilição ================@                
+                Se (CodEvt = 432)
+                  {
+                    Se (cur_sin116.usu_pag13r = "S")
+                      {
+                        nAvo13 = 0;
+                         
+                        DesmontaData(cur_apf116.datfim,xDia,xMes,xAno);
+                        MontaData(16,01,xAno,dIni13r);  
+                        
+                        Se (R034FUN.DatAdm > dIni13r)
+                        dIni13r = R034FUN.DatAdm;
+    
+                        TempoTrabFun(nNumEmp,nTipCol,nNumCad,dIni13r,cur_apf116.datfim,
+                        3,nAvo13);
+                        
+                        xRef13p = nAvo13;
+                        
+                        xVal13p = xVal13p + ((xValEvt / 12) * nAvo13); 
+                        
+                        dCmpSin = cur_sin116.usu_cmpsin;
+                      }
+                      Senao
+                        {
+                          xRef13p = 0;
+                          xVal13p = 0; 
+                        }
+                  }
+
+@=========================== apropriação das férias resilição =================@                
+                Se ((CodEvt = 430) ou (CodEvt = 431))
+                  {
+                    Se ((cur_sin116.usu_pagfer = "S"))
+                      {
+                        nAvoFer = 0;
+                        nFer = 0;
+                        
+                        dDatFim = cur_apf116.datfim;
+
+@============= cursor p/ busca dos períodos aquisitivos em aberto =============@                        
+                        cur_per116.sql "select iniper,fimper \
+                                          from r040per \
+                                         where numemp = :nNumEmp \
+                                           and tipcol = :nTipCol \
+                                           and numcad = :nNumCad \
+                                           and iniper <= :dDatFim \
+                                           and sitper = 0 \
+                                      order by iniper";
+                        cur_per116.AbrirCursor();
+                        Se (cur_per116.Achou)
+                          {
+                            Se (cur_per116.fimper > dDatFim)
+                              {
+                                TempoTrabFun(nNumEmp,nTipCol,nNumCad,cur_per116.iniper,
+                                dDatFim,1,nFer);
+                              }
+                              Senao
+                                {
+                                  TempoTrabFun(nNumEmp,nTipCol,nNumCad,cur_per116.iniper,
+                                  cur_per116.fimper,1,nFer);
+                                }
+                            
+                            nAvoFer = nAvoFer + nFer;
+                            
+                            cur_per116.Proximo();
+                          }
+                        cur_per116.FecharCursor();
+                        
+                        xRefFer = xRefFer + (nAvoFer * 2.5);
+                        
+                        Se (CodEvt = 430)
+                        xValFer = xValFer + ((xValEvt / 12) * nAvoFer); 
+                        
+                        Se ((CodEvt = 431) e (cur_sin116.usu_pagter = "S"))
+                        xValTer = xValTer + ((xValEvt / 12) * nAvoFer); 
+
+                        dCmpSin = cur_sin116.usu_cmpsin;
+                        
+@========== apropriação específica qdo for 1/3 das férias resilição ===========@                    
+                        Se (CodEvt = 431)
+                          {
+                            Se (cur_sin116.usu_pagter = "S")
+                              {
+@===================== busca parâmetros de direito no sindicato ===============@
+                                Se (cur_sin116.adifer > 0)
+                                nAdiFer = cur_sin116.adifer;
+                                Senao
+                                nAdiFer = 100 / 3;
+
+                                xRefTer = nAdiFer;
+                                xValTer = xValTer * (nAdiFer / 100);
+                              }
+                              Senao
+                                {
+                                  xRefTer = 0;
+                                  xValTer = 0;
+                                }
+                          }                 
+                      }
+                  }  
+
+@======================== apropriação indenização resilição ===================@                
+                Se (CodEvt = 500)
+                  {
+                    Se (cur_sin116.usu_pagind = "S")
+                      {
+                        xRefInd = 1;
+                        nAcrInd = cur_sin116.usu_acrind;
+                        
+                        xValInd = xValInd + xValEvt; 
+                      }
+                  }
+
+                cur_apf116.Proximo();
+              }
+            cur_apf116.FecharCursor(); 
+
+@======================== cálculo 13o salário resilição =======================@
+            Se (CodEvt = 432)
+              {
+                Se (xVal13p <= 0)
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                    cur_sin116.FecharCursor();
+                    VaPara Final116;
+                  }
+                  Senao
+                    {
+                      RefEvt = xRef13p;
+                      ValEvt = xVal13p;
+                      cur_sin116.FecharCursor();
+                      VaPara Final116; 
+                    }
+              }
+
+@======================== cálculo das férias resilição ========================@
+            Se (CodEvt = 430)
+              {
+                Se (xValFer = 0)
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                    cur_sin116.FecharCursor();
+                    VaPara Final116;
+                  }
+                  Senao
+                    {
+                      RefEvt = xRefFer;
+                      ValEvt = xValFer;
+                      cur_sin116.FecharCursor();
+                      VaPara Final116; 
+                    }
+              }
+
+@==================== cálculo do 1/3 das férias resilição =====================@
+            Se (CodEvt = 431)
+              {
+                Se (xValTer = 0)
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                    cur_sin116.FecharCursor();
+                    VaPara Final116;
+                  }
+                  Senao
+                    {
+                      RefEvt = xRefTer;
+                      ValEvt = xValTer;
+                      cur_sin116.FecharCursor();
+                      VaPara Final116; 
+                    }
+              }
+
+@====================== cálculo da indenização resilição ======================@            
+            Se (CodEvt = 500)
+              {
+                Se (xValInd <= 0) 
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                    cur_sin116.FecharCursor();
+                    VaPara Final116; 
+                  }
+                  Senao
+                    {
+                      RefEvt = xRefInd;
+                      
+                      Se (nAcrInd > 0)
+                      ValEvt = xValInd * (1 + (nAcrInd / 100));   
+                      Senao                      
+                      ValEvt = xValInd;
+                      
+                      cur_sin116.FecharCursor();
+                      VaPara Final116; 
+                    }
+              }
+          }
+          Senao
+            {
+              RefEvt = 0;
+              ValEvt = 0;
+            }
+        cur_sin116.FecharCursor();  
+        
+        Se (ValEvt <= 0)
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+          }
+      }
+      Senao
+        {
+          RefEvt = 0;
+          ValEvt = 0;
+        }
+  }
+  Senao
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+Final116:  
