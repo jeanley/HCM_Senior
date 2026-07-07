@@ -1,0 +1,305 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 15/05/2025         
+*/
+
+Definir Cursor cEmp;
+Definir Alfa cBusca;      
+Definir Alfa cCursor;
+Definir Alfa aSQL;    
+Definir Alfa aNumEmp;
+Definir Alfa aTipCol;
+Definir Alfa aNumCad;
+Definir Alfa aEstPos;
+Definir Alfa aPosTra;
+Definir Alfa aDesPos;
+Definir Alfa aCodCar;
+Definir Alfa aTitCar;
+Definir Alfa aCodCcu;
+Definir Alfa aNomCcu;
+Definir Alfa aCodEsc;
+Definir Alfa aNomEsc;
+Definir Alfa aCodVin;
+Definir Alfa aDesVin;
+Definir Alfa aPerPne;
+Definir Alfa aQtdQpo;
+Definir Alfa aFaiIni;
+Definir Alfa aFaiFim;
+Definir Alfa aNomEmp;
+Definir Alfa aNomFil;
+Definir Alfa aEvCorp;
+Definir Alfa aPapel;
+               
+Definir Numero nEstPos; 
+Definir Numero nCodEsc;
+Definir Numero nCodVin;
+Definir Numero nPerPne;
+Definir Numero nQtdQpo;
+Definir Numero nFaiIni;
+Definir Numero nFaiFim;
+
+aNumEmp = getPostosAbaixo.enumemp;
+aTipCol = getPostosAbaixo.etipcol; 
+aNumCad = getPostosAbaixo.enumcad; 
+aDesPos = getPostosAbaixo.edespos; 
+            
+aSQL = "SELECT                                                                            \
+          A.ESTPOS,                                                                       \
+          A.POSTRA,                                                                       \
+          A.DESPOS,                                                                       \
+          A.NUMEMP,                                                                       \
+          A.CODFIL,                                                                       \        
+          A.QTDQPO,                                                                       \
+          A.CODPLV,                                                                       \
+          A.DATQPO,                                                                       \
+          B.DESRED,                                                                       \
+          B.DATINI,                                                                       \
+          B.ESTCAR,                                                                       \
+          B.CODCAR,                                                                       \
+          B.NOMLOC,                                                                       \
+          B.TITCAR,                                                                       \
+          B.CODCCU,                                                                       \
+          B.CODESC,                                                                       \
+          B.NOMCCU,                                                                       \
+          B.NOMESC,                                                                       \             
+          B.CODVIN,                                                                       \
+          B.DESVIN,                                                                       \
+          B.PERPNE,                                                                       \
+          B.TABORG,                                                                       \
+          B.NUMLOC                                                                        \
+          FROM(SELECT                                                                     \
+                 CAR.ESTPOS,                                                              \
+                 CAR.POSTRA,                                                              \
+                 POS.DESPOS,                                                              \
+                 CAR.NUMEMP,                                                              \
+                 CAR.CODFIL,                                                              \
+                 COALESCE(QPO.QTDQPO, 0) AS QTDQPO,                                       \
+                 PLV.CODPLV,                                                              \
+                 COALESCE(QPO.DATQPO, GETDATE())AS DATQPO                                 \
+                 FROM R017CAR CAR                                                         \
+                   INNER JOIN R017POS POS ON                                              \
+                         CAR.ESTPOS = POS.ESTPOS                                          \
+                     AND CAR.POSTRA = POS.POSTRA                                          \
+                   INNER JOIN R017PLV PLV ON                                              \
+                         PLV.ESTPOS = POS.ESTPOS                                          \
+                   LEFT JOIN (SELECT ESTPOS,                                              \
+                                     POSTRA,                                              \
+                                     CODPLV,                                              \
+                                     MAX(DATQPO) AS DATQPO,                               \
+                                     MAX(QTDQPO) AS QTDQPO                                \
+                                       FROM R092QPO                                       \
+                                         GROUP BY ESTPOS, POSTRA, CODPLV)                 \
+                                      QPO ON                                              \
+                         QPO.ESTPOS = POS.ESTPOS                                          \
+                     AND QPO.POSTRA = POS.POSTRA                                          \
+                     AND QPO.CODPLV = PLV.CODPLV)                                         \
+          A                                                                               \
+          JOIN (SELECT                                                                    \
+                  HIF.POSTRA AS POSTRA,                                                   \
+                    POS.DESRED,                                                           \
+                    CAR.DATINI,                                                           \
+                    CAR.ESTCAR,                                                           \
+                    CAR.CODCAR,                                                           \
+                    CRG.TITCAR,                                                           \
+                    CAR.CODCCU,                                                           \
+                    CCU.NOMCCU,                                                           \
+                    CAR.CODESC,                                                           \
+                    ESC.NOMESC,                                                           \
+                    CAR.CODVIN,                                                           \
+                    VIN.DESVIN,                                                           \
+                    CAR.PERPNE,                                                           \
+                    ORN.TABORG,                                                           \
+                    ORN.NUMLOC,                                                           \
+                    ORN.NOMLOC                                                            \
+                    FROM                                                                  \
+                      R017HIE HIE                                                         \
+                        JOIN R017HIE HIF ON                                               \
+                        HIF.ESTPOS = HIE.ESTPOS                                           \
+                    AND HIF.CODTHP = HIE.CODTHP                                           \
+                    AND HIF.REVHIE = HIE.REVHIE                                           \
+                    AND SUBSTRING(COALESCE(HIF.POSPOS, ''), 1,                            \
+                                    IIF(LEN(COALESCE(HIF.POSPOS, '')) - 2 > 0,            \ 
+                                    LEN(COALESCE(HIF.POSPOS, '')) - 2, 0)) = HIE.POSPOS   \
+                        JOIN R034FUN FUN ON HIE.ESTPOS = FUN.ESTPOS                       \
+                                        AND HIE.POSTRA = FUN.POSTRA                       \
+                        JOIN R017POS POS ON HIF.ESTPOS = POS.ESTPOS                       \
+                                        AND HIF.POSTRA = POS.POSTRA                       \
+                        JOIN R017CAR CAR ON CAR.ESTPOS = HIF.ESTPOS                       \
+                                        AND CAR.POSTRA = HIF.POSTRA                       \
+                        LEFT JOIN R016ORN ORN ON                                          \
+                             CAR.TABORG = ORN.TABORG                                      \
+                         AND CAR.NUMLOC = ORN.NUMLOC                                      \
+                        LEFT JOIN R024CAR CRG ON                                          \
+                             CAR.ESTCAR = CRG.ESTCAR                                      \
+                         AND CAR.CODCAR = CRG.CODCAR                                      \
+                        LEFT JOIN R018CCU CCU ON                                          \
+                             CAR.NUMEMP = CCU.NUMEMP                                      \
+                         AND CAR.CODCCU = CCU.CODCCU                                      \
+                        LEFT JOIN R006ESC ESC ON                                          \
+                             CAR.CODESC = ESC.CODESC                                      \
+                        LEFT JOIN R022VIN VIN ON                                          \
+                             CAR.CODVIN = VIN.CODVIN                                      \
+                          WHERE FUN.NUMEMP = :aNumEmp                                     \
+                            AND FUN.TIPCOL = :aTipCol                                     \
+                            AND FUN.NUMCAD = :aNumCad                                     \
+                            AND FUN.SITAFA <> 7                                           \
+                            AND HIF.CODTHP = 1                                            \
+                            AND ORN.TABORG = 1                                            \
+                            AND CAR.ESTCAR = 1                                            \
+                            AND HIE.REVHIE = (SELECT MAX(HIEC.REVHIE)                     \
+                                                FROM R017HIE HIEC                         \
+                                                  WHERE HIEC.ESTPOS = HIE.ESTPOS          \
+                                                    AND HIEC.CODTHP = HIE.CODTHP)         \
+                            AND CAR.DATINI = (SELECT MAX(CAR2.DATINI)                     \
+                                                FROM R017CAR CAR2                         \
+                                                  WHERE CAR2.ESTPOS = CAR.ESTPOS          \
+                                                    AND CAR2.POSTRA = CAR.POSTRA)         \
+               ) B ON A.POSTRA = B.POSTRA                                                 \
+                 WHERE 1 = 1";                                                            
+  
+
+Se((aDesPos <> "") e (aDesPos <> " "))
+aSQL = aSQL + " AND A.DESPOS LIKE '%" + aDesPos + "%'";      
+
+aSQL = aSQL + " ORDER BY A.NUMEMP, A.DESPOS";                         
+                  
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca, 0);
+SQL_UsarSQLSenior2 (cBusca, 0);
+SQL_DefinirComando (cBusca, ASQL);
+SQL_DefinirAlfa    (cBusca, "aNumEmp", aNumEmp);
+SQL_DefinirAlfa    (cBusca, "aTipCol", aTipCol);
+SQL_DefinirAlfa    (cBusca, "aNumCad", aNumCad);
+SQL_AbrirCursor    (cBusca);
+
+Enquanto(SQL_EOF(cBusca) = 0)
+{ 
+  SQL_RetornarInteiro(cBusca, "ESTPOS", nEstPos);
+  SQL_RetornarAlfa   (cBusca, "POSTRA", aPosTra); 
+  SQL_RetornarAlfa   (cBusca, "DESPOS", aDesPos);
+  SQL_RetornarInteiro(cBusca, "NUMEMP", nNumEmp);
+  SQL_RetornarInteiro(cBusca, "CODFIL", nCodFil);
+  SQL_RetornarInteiro(cBusca, "ESTCAR", nEstCar);
+  SQL_RetornarAlfa   (cBusca, "CODCAR", aCodCar);
+  SQL_RetornarAlfa   (cBusca, "TITCAR", aTitCar);
+  SQL_RetornarAlfa   (cBusca, "CODCCU", aCodCcu);
+  SQL_RetornarAlfa   (cBusca, "NOMCCU", aNomCcu);
+  SQL_RetornarInteiro(cBusca, "CODESC", nCodEsc);
+  SQL_RetornarAlfa   (cBusca, "NOMESC", aNomEsc);
+  SQL_RetornarInteiro(cBusca, "CODVIN", nCodVin);
+  SQL_RetornarAlfa   (cBusca, "DESVIN", aDesVin);
+  SQL_RetornarInteiro(cBusca, "PERPNE", nPerPne);
+  SQL_RetornarInteiro(cBusca, "QTDQPO", nQtdQpo);
+  
+  cEmp.SQL "SELECT NOMEMP FROM R030EMP WHERE NUMEMP = :nNumEmp";
+  
+  cEmp.AbrirCursor();
+  Se(cEmp.Achou)
+    aNomEmp = cEmp.NomEmp;
+  Senao
+    aNomEmp = "Sem Empresa Associada";
+  
+  cEmp.FecharCursor();   
+  
+  
+  cEmp.SQL "SELECT USU_EVCORP FROM R024CAR                                     \
+              WHERE ESTCAR = :nEstCar                                          \
+                AND CODCAR = :aCodCar";
+  
+  cEmp.AbrirCursor();
+  Se(cEmp.Achou)
+    aEvCorp = cEmp.USU_EVCORP;
+      
+  cEmp.FecharCursor();     
+  Se(aEvCorp = "S")
+  aPapel = "Papel Corporativo (Vagas Sigilosas)";
+  Senao
+  aPapel = "Papel Unidade (Vagas Sigilosas)";
+  
+  cEmp.SQL "SELECT NOMFIL FROM R030FIL                                         \
+              WHERE NUMEMP = :nNumEmp                                          \
+                AND CODFIL = :nCodFil";
+  
+  cEmp.AbrirCursor();
+  Se(cEmp.Achou)
+    aNomFil = cEmp.NomFil;
+  Senao
+    aNomEmp = "Sem Filial Associada";
+  
+  cEmp.FecharCursor();
+  
+  nFaiIni = 0;
+  nFaiFim = 0;
+  
+  aSQL = "SELECT                                                               \
+            MAX(CASE WHEN NIV.SEQNIV = 1 THEN NIV.VALSAL END) AS FAIXAINICIAL, \
+            MAX(CASE WHEN NIV.SEQNIV = 5 THEN NIV.VALSAL END) AS FAIXAFINAL    \
+              FROM                                                             \
+                R076NIV NIV                                                    \
+              JOIN R076CLA CLA ON                                              \
+                  NIV.CODEST = CLA.CODEST                                      \
+              AND NIV.TIPEST = CLA.TIPEST                                      \
+              AND NIV.DATALT = CLA.DATALT                                      \
+              AND NIV.SEQCLA = CLA.SEQCLA                                      \
+              JOIN R017SAL SAL ON                                              \
+                  SAL.ESTSAL = NIV.CODEST                                      \
+              AND SAL.CLAINI = CLA.CLASAL                                      \
+                WHERE                                                          \
+                    SAL.ESTPOS = :nEstPos                                      \
+                    AND SAL.POSTRA = :aPosTra                                  \
+                    AND NIV.SEQNIV IN (1, 5)";   
+
+  SQL_Criar(cCursor);
+  SQL_UsarSqlSenior2 (cCursor, 0);
+  SQL_UsarAbrangencia(cCursor, 0);
+  SQL_DefinirComando (cCursor, aSQL);
+  SQL_DefinirAlfa    (cCursor, "aPosTra", aPosTra);
+  SQL_DefinirInteiro (cCursor, "nEstPos", nEstPos);
+  SQL_AbrirCursor    (cCursor); 
+  
+  Se(SQL_EOF(cCursor) = 0)
+  {
+    SQL_RetornarFlutuante(cCursor, "FAIXAINICIAL", nFaiIni);
+    SQL_RetornarFlutuante(cCursor, "FAIXAFINAL",   nFaiFim);
+    
+    ArredondarValor (nFaiIni, 2);
+    ArredondarValor (nFaiFim, 2);
+  }
+  SQL_FecharCursor(cCursor);
+  SQL_Destruir(cCursor);
+  
+  ConverteMascara(1, nEstPos, aEstPos, "9[3]");
+  ConverteMascara(1, nCodEsc, aCodEsc, "z[5]9999");
+  ConverteMascara(1, nCodVin, aCodVin, "9[2]");
+  ConverteMascara(1, nPerPNE, aPerPNE, "9[1]");
+  ConverteMascara(2, nFaiIni, aFaiIni, "ZZZ.ZZZ.ZZ9,99");
+  ConverteMascara(2, nFaiFim, aFaiFim, "ZZZ.ZZZ.ZZ9,99");
+  
+  DescItemLista("LPerPNE", aPerPNE, aPerPNE);
+    
+  getPostosAbaixo.postos.CriarLinha();
+  getPostosAbaixo.postos.sestpos = aEstPos;
+  getPostosAbaixo.postos.spostra = aPosTra;
+  getPostosAbaixo.postos.sdespos = aDesPos;
+  getPostosAbaixo.postos.scodcar = aCodCar;
+  getPostosAbaixo.postos.stitcar = aTitCar;
+  getPostosAbaixo.postos.scodccu = aCodCcu;
+  getPostosAbaixo.postos.snomccu = aNomCcu;
+  getPostosAbaixo.postos.scodesc = aCodEsc;
+  getPostosAbaixo.postos.snomesc = aNomEsc;
+  getPostosAbaixo.postos.scodvin = aCodVin;
+  getPostosAbaixo.postos.sdesvin = aDesVin;
+  getPostosAbaixo.postos.sperpne = aPerPne;  
+  getPostosAbaixo.postos.sqtdqpo = nQtdQpo;
+  getPostosAbaixo.postos.sfaiini = aFaiIni;
+  getPostosAbaixo.postos.sfaifim = aFaiFim; 
+  getPostosAbaixo.postos.sfaiinid = nFaiIni;
+  getPostosAbaixo.postos.sfaifimd = nFaiFim;    
+  getPostosAbaixo.postos.snomemp = aNomEmp;
+  getPostosAbaixo.postos.snomfil = aNomFil;
+  getPostosAbaixo.postos.spapel = aPapel;
+  
+  SQL_Proximo(cBusca);          
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

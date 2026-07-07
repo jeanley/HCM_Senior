@@ -1,0 +1,100 @@
+Definir Alfa aSQL;                  
+Definir Alfa cCursor;            
+
+Definir Numero nNumEmp;
+Definir Numero nCodFil;
+Definir Numero nCodFlx;
+Definir Numero nRetSol;
+Definir Numero nRetEfe;
+
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+Definir Alfa aCodFlx;
+Definir Alfa aMsgEfe;
+Definir Alfa aMsgSol;
+Definir Alfa aDatIso;
+Definir Alfa aDatFso;
+Definir Alfa aDatIef;
+Definir Alfa aDatFef;
+Definir Alfa aCmpApr;
+
+Definir Data dPerCmp;
+Definir Data dDatIso;
+Definir Data dDatFso;
+Definir Data dDatIef;
+Definir Data dDatFef;
+Definir Data dCmpApr;
+
+aNumEmp = getPeriodoFluxo.enumemp;
+aCodFil = getPeriodoFluxo.ecodfil;
+aCodFlx = getPeriodoFluxo.ecodflx;
+
+AlfaParaInt(aNumEmp, nNumEmp);
+AlfaParaInt(aCodFil, nCodFil);
+AlfaParaInt(aCodFlx, nCodFlx);
+
+DesMontaData (DatSis, nDia, nMes, nAno);
+MontaData (01, nMes, nAno, dPerCmp);
+         
+aSQL = "SELECT * FROM USU_T00BPE                                               \
+          WHERE USU_NUMEMP = :nNumEmp                                          \
+            AND USU_CODFIL = :nCodFil                                          \
+            AND USU_CODFLX = :nCodFlx                                          \
+            AND USU_CMPAPR >= :dPerCmp";
+
+SQL_Criar(cCursor);
+SQL_UsarSqlSenior2 (cCursor, 0);
+SQL_UsarAbrangencia(cCursor, 0);
+SQL_DefinirComando (cCursor, aSQL);
+SQL_DefinirInteiro (cCursor, "nNumEmp", nNumEmp);
+SQL_DefinirInteiro (cCursor, "nCodFil", nCodFil);
+SQL_DefinirInteiro (cCursor, "nCodFlx", nCodFlx);
+SQL_DefinirData    (cCursor, "dPerCmp", dPerCmp);  
+SQL_AbrirCursor    (cCursor); 
+
+Enquanto(SQL_EOF(cCursor) = 0)
+{          
+  SQL_RetornarData(cCursor, "USU_DATISO", dDatIso); 
+  SQL_RetornarData(cCursor, "USU_DATFSO", dDatFso); 
+  SQL_RetornarData(cCursor, "USU_DATIEF", dDatIef); 
+  SQL_RetornarData(cCursor, "USU_DATFEF", dDatFef); 
+  SQL_RetornarData(cCursor, "USU_CMPAPR", dCmpApr); 
+  
+  Se((dDatIso > DatSis) Ou (dDatFso < DatSis)){
+    nRetSol = 1;
+    aMsgSol = "Fora do Período!";
+  }
+  Senao {
+    nRetSol = 0;
+    aMsgSol = "Dentro do Período!";
+  }
+  
+  Se((dDatIef > DatSis) Ou (dDatFef < DatSis)){
+    nRetEfe = 1;
+    aMsgEfe = "Fora do Período!";
+  }
+  Senao {
+    nRetEfe = 0;
+    aMsgEfe = "Dentro do Período!";
+  }
+  ConverteMascara(3, dDatIso, aDatIso, "DD/MM/YYYY");
+  ConverteMascara(3, dDatFso, aDatFso, "DD/MM/YYYY");
+  ConverteMascara(3, dDatIef, aDatIef, "DD/MM/YYYY");
+  ConverteMascara(3, dDatFef, aDatFef, "DD/MM/YYYY");
+  ConverteMascara(3, dCmpApr, aCmpApr, "MM/YYYY");
+  
+  getPeriodoFluxo.sretorno.criarLinha();  
+  getPeriodoFluxo.sretorno.scmpapr = aCmpApr;
+  getPeriodoFluxo.sretorno.sdatiso = aDatIso;
+  getPeriodoFluxo.sretorno.sdatfso = aDatFso;
+  getPeriodoFluxo.sretorno.sdatief = aDatIef;
+  getPeriodoFluxo.sretorno.sdatfef = aDatFef;
+  getPeriodoFluxo.sretorno.sretsol = nRetSol;
+  getPeriodoFluxo.sretorno.sretefe = nRetEfe;
+  getPeriodoFluxo.sretorno.smsgsol = aMsgSol;
+  getPeriodoFluxo.sretorno.smsgefe = aMsgEfe;
+  
+  SQL_Proximo(cCursor);
+}
+SQL_FecharCursor(cCursor);
+SQL_Destruir(cCursor);

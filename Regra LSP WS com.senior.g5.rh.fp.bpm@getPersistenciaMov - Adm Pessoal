@@ -1,0 +1,64 @@
+Definir Alfa aNumEmp;
+Definir Alfa aTipCol;
+Definir Alfa aNumCad;
+Definir Alfa aTipMov; 
+Definir alfa aCmpRef ;
+Definir Alfa aStatus ;
+Definir Alfa aMsgSql;
+Definir Numero nIdBpm;
+Definir Alfa aPrxPap ;
+
+Definir Data dCmpRef ;
+z=z;
+
+
+aTipMov =  getPersistenciaMov.tipmov;
+aNumEmp =  getPersistenciaMov.NumEmp;
+aTipCol =  getPersistenciaMov.TipCol;
+aNumCad =  getPersistenciaMov.NumCad;
+aCmpRef =  getPersistenciaMov.CmpRef;
+aStatus =  getPersistenciaMov.Status;
+nIdBpm =   getPersistenciaMov.insbpm;
+aPrxPap =  getPersistenciaMov.pxrpap ;
+
+AlfaParaint(aNumEmp,nNumEmp);
+AlfaParaint(aTipCol,nTipCol);
+AlfaParaint(aNumCad,nNumCad);
+
+aCmpRef ="01/" + aCmpRef;
+
+Se (aStatus = "Enviar")
+  aStatus = "E" ;
+  
+Se (aStatus = "Aprovar")
+   aStatus = "A";
+   
+Se (aStatus = "Reprovar")
+   aStatus = "R";  
+  
+
+AlfaparaData(aCmpRef,"DD/MM/YYYY", dCmpRef);
+
+
+Se ((aPrxPap = "REMUNERACAO") ou (aPrxPap = "FOLHA")) {
+    getPersistenciaMov.retpap = aPrxPap ;
+}
+
+Se (aStatus = "E")  {
+
+    ExecSqlEx("INSERT INTO USU_T000BMV \
+              VALUES(:aTipMov,         \
+                     :dCmpRef,        \
+                     :nNumEmp, \
+                     :nTipCol, \
+                     :nNumCad , \
+                     :aStatus,  \
+                     :nIdBpm)",nRetSql,aMsgSql);
+} 
+Senao Se (aStatus = "R") {
+    ExecSqlEx ("UPDATE USU_T000BMV\
+                 SET USU_STAAPR = :aStatus \
+               WHERE USU_INSBPM = :nIdBpm",nRetSql,aMsgSql);
+
+}                    
+                 

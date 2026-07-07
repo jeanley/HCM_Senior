@@ -1,0 +1,47 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 11/12/2024
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aEstPos;
+Definir Alfa aCodPlv;
+Definir Alfa aDesRed;
+Definir Alfa aDatIni;
+Definir Alfa aDatTer;
+
+aSQL = "SELECT * FROM R017PLV";
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,aSQL);
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarInteiro(cBusca, "ESTPOS", nEstPos);          
+  SQL_RetornarInteiro(cBusca, "CODPLV", nCodPlv);
+  SQL_RetornarAlfa(cBusca, "DESRED", aDesRed);
+  SQL_RetornarData(cBusca, "DATINI", dDatIni);
+  SQL_RetornarData(cBusca, "DATTER", dDatTer);
+  
+  IntParaAlfa(nEstPos, aEstPos);
+  IntParaAlfa(nCodPlv, aCodPlv);
+  
+  ConverteMascara(3, dDatIni, aDatIni, "DD/MM/YYYY");
+  ConverteMascara(3, dDatTer, aDatTer, "DD/MM/YYYY");
+  
+  getPlanoVagas.planos.CriarLinha();  
+  getPlanoVagas.planos.scodplv = aCodPlv;
+  getPlanoVagas.planos.sestpos = aEstPos;
+  getPlanoVagas.planos.sdesred = aDesRed;
+  getPlanoVagas.planos.sdatini = aDatIni;
+  getPlanoVagas.planos.sdatter = aDatTer;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

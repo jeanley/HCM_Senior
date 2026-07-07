@@ -1,0 +1,401 @@
+x=x;
+
+x=x;
+
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 24/06/2024         
+*/
+x=x;
+Definir Alfa cBusca;
+c=c;
+Definir Alfa cCursor;
+Definir Alfa aSQL;                                            
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+Definir Alfa aEstPos;
+Definir Alfa aPosTra;
+Definir Alfa aDesPos;
+Definir Alfa aQtdQpo;
+Definir Alfa aCodPlv;
+Definir Alfa aTipCon;
+Definir Alfa aCodCar;
+Definir Alfa aDesCar;
+Definir Alfa aDesCon ;
+
+Definir Cursor cR017SAL ;
+Definir Cursor cR070FIL;
+
+               
+Definir Numero nEstPos; 
+
+DEFINIR ALFA anomsin; @Nome Sindicato@
+DEFINIR ALFA adesvin; @Descrição Sindicato@
+DEFINIR ALFA aestpos; @Estrutura do Posto@
+DEFINIR ALFA atitred;
+DEFINIR ALFA ACURSOR;
+DEFINIR ALFA ASQL;
+Definir ALfa aEstSal ;                                              
+Definir Alfa aCodCcu;
+Definir ALfa aNomCcu;
+Definir Alfa aNumCad ;
+Definir Alfa aTipUni;
+
+
+Definir Alfa MOVIMENTACAO_SALARIO; MOVIMENTACAO_SALARIO = "ALTERAÇÃO SALARIAL"; 
+Definir Alfa SALARIO_PROMOCAO;     SALARIO_PROMOCAO =  "PROMOÇÃO" ;
+Definir Alfa MOVIMENTACAO_TRANSFERENCIA; MOVIMENTACAO_TRANSFERENCIA = "TRANSFERÊNCIA DE PESSOAL" ;
+                                                            
+@RENAN@
+Definir Alfa  TIPO_MOVIMENTACAO ;
+Definir Alfa  MOTIVO_SALARIO ;
+Definir Alfa  TIPO_CONTRATO;
+Definir ALfa  CONTRATO_ADMINISTRATITVO;
+Definir ALfa  CONTRATO_DOCENTE; CONTRATO_DOCENTE = "10"; 
+
+Definir alfa aVarAux ;
+
+
+
+aNumEmp = getPostos.enumemp;
+aCodFil = getPostos.ecodfil; 
+aDesPos = getPostos.edespos; 
+aNumCad =  getPostos.numcad ;
+TIPO_MOVIMENTACAO = getPostos.tipmov ;
+
+AlfaParaInt(aNumEmp,nNumEmp) ;
+AlfaParaInt(aCodFil,nCodFil) ;
+AlfaParaInt(aNumCad,nNumCad) ;
+
+
+@paleativo@
+aVarAux = aNumCad ;
+CopiarAlfa (aVarAux,1,1);
+AlfaParaInt(aVarAux,nEmpSol) ;
+
+
+
+
+
+nTipCol  = 1 ; @esta fixo temporariamente deixar dinamico pois terá tecerios(irmãoes)@
+
+
+cR070FIL.Sql " SELECT R030FIL.usu_tipuni FROM R034FUN, R030FIL  \
+               WHERE  R034FUN.NUMEMP = R030FIL.NUMEMP           \
+                AND   R034FUN.CODFIL = R030FIL.CODFIL           \
+                AND   R034FUN.NUMEMP = :nEmpSol                        \
+                AND   R034FUN.tipcol = :nTipCol                       \
+                and   R034FUN.numcad = :nNumCad" ;
+cR070FIL.AbrirCursor();
+Se (cR070FIL.Achou) {
+
+   aTipUni =  cR070FIL.USU_TIPUNI ; 
+}
+cR070FIL.FecharCursor();
+
+
+
+
+VerificaNumeroAlfa(aDesPos);
+
+TIPO_MOVIMENTACAO  = getPostos.tipmov ;
+MOTIVO_SALARIO =    getPostos.motsal;
+TIPO_CONTRATO =    getPostos.tipcon;
+
+
+ConverteParaMaiusculo(TIPO_MOVIMENTACAO, TIPO_MOVIMENTACAO);
+ConverteParaMaiusculo(MOTIVO_SALARIO, MOTIVO_SALARIO);     
+
+
+Se ((aTipUni = "LOC") OU (TIPO_MOVIMENTACAO  = MOVIMENTACAO_TRANSFERENCIA)) {  
+     
+    aSQL = "SELECT                                                                 \
+              CAR.ESTPOS,                                                          \
+              CAR.POSTRA,                                                          \
+              CAR.TIPCON,                                                          \
+              POS.DESPOS,                                                          \
+              COALESCE(QPO.QTDQPO, 0) AS QTDQPO,                                   \
+              PLV.CODPLV,                                                          \
+              COALESCE(QPO.DATQPO, GETDATE()) AS DATQPO                            \
+          FROM                                                                     \
+              R017CAR CAR                                                          \
+              INNER JOIN R017POS POS ON                                            \
+                  CAR.ESTPOS = POS.ESTPOS                                          \
+                  AND CAR.POSTRA = POS.POSTRA                                      \
+                  AND DATFIM >= GETDATE()                                          \
+              INNER JOIN R017PLV PLV ON                                            \
+                  PLV.ESTPOS = POS.ESTPOS                                          \
+              LEFT JOIN (                                                          \
+                  SELECT                                                           \
+                      ESTPOS,                                                      \
+                      POSTRA,                                                      \
+                      CODPLV,                                                      \
+                      MAX(DATQPO) AS DATQPO,                                       \
+                      MAX(QTDQPO) AS QTDQPO                                        \
+                  FROM                                                             \
+                      R092QPO                                                      \
+                  GROUP BY                                                         \
+                      ESTPOS,                                                      \
+                      POSTRA,                                                      \
+                      CODPLV                                                       \
+              ) QPO ON                                                             \
+                  QPO.ESTPOS = POS.ESTPOS                                          \
+                  AND QPO.POSTRA = POS.POSTRA                                      \
+                  AND QPO.CODPLV = PLV.CODPLV                                      \
+          WHERE 1 = 1";   
+}
+Senao {
+
+  aSQL = "SELECT                                                            \
+          HIE_SOL.pospos,                                                   \
+          CAR.ESTPOS,                                                       \
+          CAR.POSTRA,                                                       \
+          CAR.TIPCON,                                                       \
+          POS.DESPOS,                                                       \
+          COALESCE(QPO.QTDQPO, 0) AS QTDQPO,                                \
+          PVL.CODPLV,                                                       \
+          COALESCE(QPO.DATQPO, GETDATE()) AS DATQPO                         \
+      FROM R017CAR CAR                                                      \
+      INNER JOIN R034FUN FUN_SOL                                            \
+          ON (FUN_SOL.NUMEMP ="+aNumEmp+"                                          \
+          AND FUN_SOL.TIPCOL = 1                                            \
+          AND FUN_SOL.NUMCAD = "+aNumCad+")                                    \
+      INNER JOIN R017HIE HIE_SOL                                            \
+          ON HIE_SOL.ESTPOS = FUN_SOL.ESTPOS                                \
+         AND HIE_SOL.POSTRA = FUN_SOL.POSTRA                                \
+         AND HIE_SOL.CODTHP = 1                                             \
+         AND HIE_SOL.REVHIE = (                                             \
+             SELECT MAX(TAB2.REVHIE)                                        \
+             FROM R017HIE TAB2                                              \
+             WHERE TAB2.ESTPOS = FUN_SOL.ESTPOS                             \
+               AND TAB2.POSTRA = FUN_SOL.POSTRA                             \
+               AND TAB2.CODTHP = HIE_SOL.CODTHP                             \
+         )                                                                  \
+      INNER JOIN R017POS POS                                                \
+          ON CAR.ESTPOS = POS.ESTPOS                                        \
+         AND CAR.POSTRA = POS.POSTRA                                        \
+      INNER JOIN R017HIE HIE_POS                                            \
+          ON HIE_POS.ESTPOS = CAR.ESTPOS                                    \
+         AND HIE_POS.POSTRA = CAR.POSTRA                                    \
+         AND HIE_POS.CODTHP = 1                                             \
+         AND HIE_POS.REVHIE = (                                             \
+             SELECT MAX(TAB2.REVHIE)                                        \
+             FROM R017HIE TAB2                                              \
+             WHERE TAB2.ESTPOS = CAR.ESTPOS                                 \
+               AND TAB2.POSTRA = CAR.POSTRA                                 \
+               AND TAB2.CODTHP = HIE_POS.CODTHP                             \
+         )                                                                  \
+      LEFT JOIN (                                                           \
+          SELECT                                                            \
+              R092QPO.ESTPOS,                                               \
+              R092QPO.POSTRA,                                               \
+              R092QPO.CODPLV,                                               \
+              MAX(R092QPO.DATQPO) AS DATQPO,                                \
+              MAX(R092QPO.QTDQPO) AS QTDQPO                                 \
+          FROM R092QPO, R017PLV                                             \
+          WHERE R092QPO.estpos = R017PLV.estpos                             \
+            AND R092QPO.codplv = R017PLV.codplv                             \
+            AND R017PLV.datter >= GETDATE()                                 \
+          GROUP BY                                                          \
+              R092QPO.ESTPOS,                                               \
+              R092QPO.POSTRA,                                               \
+              R092QPO.CODPLV                                                \
+      ) QPO                                                                 \
+          ON QPO.ESTPOS = POS.ESTPOS                                        \
+         AND QPO.POSTRA = POS.POSTRA                                        \
+      INNER JOIN R017PLV PVL                                                \
+          ON (PVL.estpos = QPO.estpos                                       \
+          AND PVL.codplv = QPO.codplv)                                       \           \
+      WHERE ISNULL(HIE_POS.pospos, '') LIKE CONCAT(ISNULL(HIE_SOL.POSPOS, ''), '%')"   ;
+
+}
+ 
+ 
+ 
+      
+Se ((aTipUni = "LOC") OU (TIPO_MOVIMENTACAO  = MOVIMENTACAO_TRANSFERENCIA)) {
+    Se((aNumEmp <> "") e (aNumEmp <> " "))
+    aSQL = aSQL + " AND CAR.NUMEMP = " + aNumEmp;
+                      
+    Se((aCodFil <> "") e (aCodFil <> " "))
+    aSQL = aSQL + " AND CAR.CODFIL = " + aCodFil;
+}
+
+
+/* COMENTADO RENAN TRATEI BAIXO PARA PESQUISAR POR CÓDIGO DE LOCAL 
+  Se((aDesPos <> "") e (aDesPos <> " "))
+aSQL = aSQL + " AND POS.DESPOS LIKE '%" + aDesPos + "%'";  */
+
+
+/*
+   RENAN MELHORIA PARA PEQUISAR POR CÓDIGO DO POSTO
+*/
+nTemNum = VerificaNumeroAlfa(aDesPos);
+
+Se((aDesPos <> "") e (aDesPos <> " ") e (nTemNum = 0)) 
+aSQL = aSQL + " AND POS.DESPOS LIKE '%" + aDesPos + "%'";  
+
+Se((aDesPos <> "") e (aDesPos <> " ") e (nTemNum = 1)) 
+aSQL = aSQL + " AND POS.POSTRA LIKE '%" + aDesPos + "%'";  
+
+
+@RENAN@
+Se ((TIPO_MOVIMENTACAO = MOVIMENTACAO_SALARIO) e (MOTIVO_SALARIO = SALARIO_PROMOCAO) e (TIPO_CONTRATO = CONTRATO_DOCENTE))
+aSQL = aSQL + " AND CAR.TIPCON <> 10" ;
+
+     
+
+aSQL = aSQL + " ORDER BY CAR.NUMEMP, CAR.CODFIL, POS.DESPOS";                         
+                  
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca, 0);
+SQL_UsarSQLSenior2 (cBusca, 0);
+SQL_DefinirComando (cBusca, ASQL);
+SQL_AbrirCursor    (cBusca);
+
+Enquanto(SQL_EOF(cBusca) = 0)
+{ 
+  SQL_RetornarInteiro(cBusca, "ESTPOS", nEstPos);
+  SQL_RetornarAlfa   (cBusca, "POSTRA", aPosTra); 
+  SQL_RetornarAlfa   (cBusca, "DESPOS", aDesPos);
+  SQL_RetornarAlfa   (cBusca, "TIPCON", aTipCon);
+  SQL_RetornarInteiro(cBusca, "QTDQPO", nQtdQpo);
+  SQL_RetornarInteiro(cBusca, "CODPLV", nCodPlv);
+  
+  ConverteMascara(1, nEstPos, aEstPos, "9[3]");
+  ConverteMascara(1, nQtdQpo, aQtdQpo, "9[4]");
+  ConverteMascara(1, nCodPlv, aCodPlv, "9[4]");
+  
+  ASQL = "SELECT POS.CodSin, POS.CodVin, POS.CodCar, POS.EstCar, SIN.NomSin,  \
+                 CAR.TitRed, CCU.CODCCU,CCU.NOMCCU ,SIN.USU_CARHOR                                                  \
+          FROM R017CAR POS, R014SIN SIN, R024CAR CAR, R018CCU CCU                       \
+           WHERE POS.PosTra =  :aPosTra AND                                    \
+                 POS.EstPos = :aEstPos AND                                     \                         
+                 SIN.CodSin = POS.CodSin AND                                   \
+                 CAR.EstCar = POS.EstCar AND                                   \
+                 CAR.CodCar = POS.CodCar AND \
+                 POS.NUMEMP = CCU.NUMEMP AND \
+                 POS.CODCCU = CCU.CODCCU";                                        
+  
+  SQL_CRIAR(ACURSOR);
+  SQL_USARABRANGENCIA(ACURSOR,0);
+  SQL_USARSQLSENIOR2(ACURSOR,0);
+  SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+  SQL_DEFINIRALFA(ACURSOR,"aestpos",aestpos);
+  SQL_DEFINIRALFA(ACURSOR,"apostra",apostra);                                                          
+  SQL_ABRIRCURSOR(ACURSOR);
+  SE(SQL_EOF(ACURSOR) = 0)
+  {
+      SQL_RETORNARALFA(ACURSOR,"NomSin", anomsin);
+      SQL_RETORNARALFA(ACURSOR,"TitRed", atitred);
+  
+      
+
+      Definir Alfa aCodVin ;
+      Definir Alfa aCodSin; 
+      Definir Alfa aDesVin; 
+      Definir Alfa aCarhor ;    
+        
+      /*
+       RENAN ADICIONADO RETORNO CENTRO DE CUSTO
+      */
+      Sql_RetornarAlfa(ACURSOR, "CODCCU",aCodCcu); 
+      Sql_RetornarAlfa(ACURSOR, "NOMCCU",aNomCcu); 
+      SQL_RETORNARALFA(ACURSOR,"CodCar", aCodCar);
+      SQL_RETORNARALFA(ACURSOR,"TitRed", aDesCar);
+      SQL_RETORNArInteiro(ACURSOR,"CodVin", nCodVin); 
+      Sql_RetornarInteiro(ACURSOR,"USU_CARHOR",nCarHor);
+      
+       @SQL_RETORNARaLFA (ACURSOR,"DESVIN", aDesVin); @
+       SQL_RETORNArInteiro(ACURSOR,"CodSin", nCodSin);
+       
+      IntParaAlfa(nCodVin,aCodVin);
+      IntParaAlfa(nCodSin,aCodSin);
+      convertemascara(4,nCarHor, aCarhor,"#Q#hh:mm");
+      
+      DescItemLista("LTipCon", aTipCon,aDesCon); 
+      
+      Se (nCarHor = 0)
+        aCarhor = "00:00";  
+      
+      getPostos.postos.CriarLinha();
+      getPostos.postos.sestpos = aEstPos;
+      getPostos.postos.spostra = aPosTra;
+      getPostos.postos.sdespos = aDesPos;
+      getPostos.postos.stipcon = aTipCon;
+      getPostos.postos.sqtdqpo = aQtdQpo;
+      getPostos.postos.scodplv = aCodPlv;
+      getPostos.postos.snomsin = anomsin;
+      getPostos.postos.stitred = atitred;
+      getPostos.postos.carhor =  aCarhor ;
+      
+      getPostos.postos.posto  =    aPosTra + " - "  + aDesPos;
+      getPostos.postos.ccusto =    aCodCcu + " - "  + aNomCcu;
+      getPostos.postos.cargo  =    aCodCar + " - "  + aDesCar;
+      getPostos.postos.contrato  = aTipCon + " - "  + aDesCon;
+      getPostos.postos.sindicato  = aCodSin + " - "  + anomsin; 
+      @getPostos.postos.vinculo  =   aCodVin + " - "  + aDesVin;  @   
+      aEstSal = "";
+      
+      cR017SAL.Sql "SELECT estsal FROM R017SAL  \
+                    WHERE  ESTPOS = :nEstPos \
+                      AND  POSTRA = :aPosTra \
+                      ORDER BY DATALT DESC"; 
+      cR017SAL.AbrirCursor();
+      Se (cR017SAL.Achou) {
+      
+          nEstSal =  cR017SAL.EstSal ;
+          IntParaalfa(nEstSal,aEstSal);      
+      }
+      cR017SAL.FecharCursor();
+   
+                                                                 
+  }
+   getPostos.postos.estsal = aEstSal;  
+
+  
+  SQL_Proximo(cBusca);          
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca);
+
+/* 
+  Lucas Ferreira
+  28/01/2025 - Ajustando para trazer Sindicato
+
+
+DEFINIR ALFA anomsin; @Nome Sindicato@
+DEFINIR ALFA adesvin; @Descrição Sindicato@
+DEFINIR ALFA aestpos; @Estrutura do Posto@
+DEFINIR ALFA acodpos; @Código Posto@
+DEFINIR ALFA ACURSOR;
+DEFINIR ALFA ASQL;
+
+aestpos = aEstPos;
+acodpos = aPosTra;
+
+
+@ BUSCA NO BANCO @
+              
+ASQL = "SELECT POS.CodSin, POS.CodVin, SIN.NomSin FROM R017CAR POS, R014SIN SIN \
+         WHERE POS.PosTra =  :acodpos AND                                       \
+               POS.EstPos = :aestpos AND                                        \
+               SIN.CodSin = POS.CodSin";                                        
+
+SQL_CRIAR(ACURSOR);
+SQL_USARABRANGENCIA(ACURSOR,0);
+SQL_USARSQLSENIOR2(ACURSOR,0);
+SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+SQL_DEFINIRALFA(ACURSOR,"aestpos",aestpos);
+SQL_DEFINIRALFA(ACURSOR,"acodpos",acodpos);                                                          
+SQL_ABRIRCURSOR(ACURSOR);
+SE(SQL_EOF(ACURSOR) = 0)
+{
+    SQL_RETORNARALFA(ACURSOR,"NomSin", anomsin);
+    @SQL_RETORNARALFA(ACURSOR,"DesVin", adesvin); @
+    
+    getPostos.snomsin = anomsin;
+    
+}
+
+}*/

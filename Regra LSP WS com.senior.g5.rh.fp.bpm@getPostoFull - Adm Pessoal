@@ -1,0 +1,41 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 11/12/2024
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aEstPos;
+Definir Alfa aPosTra;
+Definir Alfa aDesPos;
+Definir Alfa aDesRed;
+
+
+aSQL = "SELECT ESTPOS, POSTRA, DESPOS, DESRED FROM R017POS";
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,aSQL);
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarInteiro(cBusca, "ESTPOS", nEstPos);
+  SQL_RetornarAlfa(cBusca, "POSTRA", aPosTra);
+  SQL_RetornarAlfa(cBusca, "DESPOS", aDesPos);
+  SQL_RetornarAlfa(cBusca, "DESRED", aDesRed);
+  
+  IntParaAlfa(nEstPos, aEstPos);
+  
+  getPostoFull.postos.CriarLinha();  
+  getPostoFull.postos.sestpos = aEstPos;
+  getPostoFull.postos.spostra = aPosTra;
+  getPostoFull.postos.sdespos = aDesPos;
+  getPostoFull.postos.sdesred = aDesRed;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 
