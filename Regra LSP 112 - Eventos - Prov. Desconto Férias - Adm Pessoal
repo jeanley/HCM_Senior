@@ -1,0 +1,125 @@
+/* Regra Especial desenvolvida para atender o cálculo de férias e 13o Salário
+dos colaboradores professores (docente);
+Deve ser vinculada aos Eventos de férias, abono pecuniário, 13o adto, 13o integral
+ e 13o complementar;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data: 07/11/2024;
+Senior Sistemas - Noroeste Paulista */
+
+@=================== Definição das variáveis padrões ==========================@
+Definir Cursor cur_ver112;
+
+Definir Data dCmpAnt;
+
+Se ((OriMov = "D") ou (OriMov = "X"))
+           {
+             RefEvt = RefMov;
+             ValEvt = ValMov;
+             Cancel(1);
+           }
+
+@====== somente aos cálculos de férias (normais, programadas ou coletivas) ====@
+Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53))
+  {
+@========== busca competência anterior ao início das férias ===================@
+    DesmontaData(R040FEM.IniFer,xDia,xMes,xAno);
+    xMes--;
+    
+    Se (xMes = 0)
+      {
+        xMes = 12;
+        xAno--;
+      }
+
+@================ montagem da data da competência anterior ====================@
+    MontaData(01,xMes,xAno,dCmpAnt);
+    nNumEmp = R040FEM.NumEmp;
+    nTipCol = R040FEM.TipCol;
+    nNumCad = R040FEM.NumCad;
+    
+@============================ código do evento vigente ========================@    
+    nCodEvt = CodEvt;
+    
+@== Zera lógica de busca dos valores de eventos da base provisão desconto =====@    
+    xProDes = 0;
+
+@============== cursor para busca dos valores do mês anterior =================@    
+    cur_ver112.sql "select numemp from r030emp where numemp = 0 union \
+                    select sum(case \
+                                when r008evb.sinbas = '-' \
+                                  then r046ver.valeve * -1 \
+                                else \
+                                r046ver.valeve end) \
+                      from r046ver,\
+                           r044cal,\
+                           r008evb \
+                     where r046ver.numemp = r044cal.numemp \
+                       and r046ver.codcal = r044cal.codcal \
+                       and r046ver.tabeve = r008evb.codtab \
+                       and r046ver.codeve = r008evb.evebas \
+                       and r044cal.tipcal = 11 \
+                       and r044cal.perref = :dCmpAnt \
+                       and r046ver.numemp = :nNumEmp \
+                       and r046ver.tipcol = :nTipCol \
+                       and r046ver.numcad = :nNumCad \
+                       and r008evb.codeve = :nCodEvt";
+   cur_ver112.AbrirCursor();
+   Se (cur_ver112.Achou)
+   xProDes = cur_ver112.numemp;
+   
+   cur_ver112.FecharCursor();
+
+@==== se não achar valor na competência anterior, busca a antepenúltima =======@   
+   Se (xProDes = 0)
+     {
+        DesmontaData(dCmpAnt,xDia,xMes,xAno);
+        xMes--;
+        
+        Se (xMes = 0)
+          {
+            xMes = 12;
+            xAno--;
+          }
+    
+        MontaData(01,xMes,xAno,dCmpAnt);
+
+@============== cursor para busca dos valores do mês anterior =================@    
+        cur_ver112.sql "select numemp from r030emp where numemp = 0 union \
+                        select sum(case \
+                                when r008evb.sinbas = '-' \
+                                  then r046ver.valeve * -1 \
+                                else \
+                                r046ver.valeve end) \ 
+                          from r046ver,\
+                               r044cal,\
+                               r008evb \
+                         where r046ver.numemp = r044cal.numemp \
+                           and r046ver.codcal = r044cal.codcal \
+                           and r046ver.tabeve = r008evb.codtab \
+                           and r046ver.codeve = r008evb.evebas \
+                           and r044cal.tipcal = 11 \
+                           and r044cal.perref = :dCmpAnt \
+                           and r046ver.numemp = :nNumEmp \
+                           and r046ver.tipcol = :nTipCol \
+                           and r046ver.numcad = :nNumCad \
+                           and r008evb.codeve = :nCodEvt";
+       cur_ver112.AbrirCursor();
+       Se (cur_ver112.Achou)
+       xProDes = cur_ver112.numemp;
+       
+       cur_ver112.FecharCursor();
+     }  
+
+@================= não calcula evento se não existir descontos ================@     
+   Se (xProDes <= 0)
+     {
+       RefEvt = 0;
+       ValEvt = 0;
+     }
+     Senao @= cálculo do evento provisão desconto =@
+       {
+         RefEvt = 1;
+         ValEvt = (xProDes / 30) * R040FEM.DiaFer;
+       }
+  }

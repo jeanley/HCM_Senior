@@ -1,0 +1,1272 @@
+/* Regra Especial desenvolvida para atender o cálculo de Adicional por 
+Tempo de Serviço;
+Deve ser vinculada a todos os Eventos de direito da respectiva verba;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 14/02/2025 e 17/02/2025;
+Data(s) de novas apropriações técnicas: 12/02/2025, 14/02/2025, 17/02/2025, 
+25/02/2025, 05/03/2025 e 06/03/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+Definir Alfa aForPag;
+Definir Alfa aCrtEve;
+Definir Alfa aForAts;
+
+Definir Cursor cur_sib113;
+Definir Cursor cur_hsi113;
+Definir Cursor cur_sin113;
+Definir Cursor cur_fun113;
+Definir Cursor cur_evc113;
+Definir Cursor cur_adm113;
+Definir Cursor cur_hfi113;
+Definir Cursor cur_pli113;
+Definir Cursor cur_ver113;
+
+Definir Data dFimCmp;
+Definir Data dDatAlt;
+Definir Data dCmpTer;
+Definir Data dPerAdm;
+Definir Data dAdmMax;
+Definir Data dDatAdm;
+Definir Data dDatZer;
+Definir Data dCmpAlt;
+Definir Data dDatAfa;
+
+@======== Todos tipos de cálculo de direito da verba "Adic.Tempo Serviço" =====@
+Se ((TipCal = 11) ou (TipCal = 12) ou (TipCal = 13) ou (TipCal = 62) ou (TipCal = 31) 
+  ou (TipCal = 32) ou (TipCal = 33) ou (TipCal = 34) ou (TipCal = 35) ou (TipCal = 51)
+  ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 54) ou (TipCal = 55) ou (TipCal = 63) ou (TipCal = 65) 
+  ou (TipCal = 70) ou (TipCal = 71) ou (TipCal = 72) ou (TipCal = 75) ou (TipCal = 76) 
+  ou (TipCal = 77) ou (TipCal = 78) ou (TipCal = 79) ou (TipCal = 95) ou (TipCal = 96) 
+  ou (TipCal = 97) ou (TipCal = 98) ou (TipCal = 99) ou (TipCal = 69) ou (TipCal = 64))
+   {
+     Se ((TipCal = 11) ou (TipCal = 12) ou (TipCal = 62) ou (TipCal = 31) ou (TipCal = 32) ou (TipCal = 33))
+      {
+        Se ((TipCal = 12) e (OriMov <> "D"))
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final113;
+          }
+        
+        Se ((OriMov = "D") ou (OriMov = "X"))
+          {
+            RefEvt = RefMov;
+            ValEvt = ValMov;
+            VaPara Final113;
+          }
+      }
+
+Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 54))
+  {
+  Se ((OriMov = "D") ou (OriMov = "X"))
+    {
+    RefEvt = RefMov;
+    ValEvt = ValMov;
+    VaPara Final113;
+    }
+  }
+
+    nNumEmp = R034FUN.NumEmp;
+    nTipCol = R034FUN.TipCol;
+    nNumCad = R034FUN.NumCad;
+    nCodPer = 0;
+    
+@ conforme apropriação lançamento % livre apresentada em 10/2025  - CN @
+    cur_pli113.sql "select codper \
+                      from r034pli \
+                     where numemp = :nNumEmp \
+                       and tipcol = :nTipCol \
+                       and numcad = :nNumCad \
+                       and codper = 3 \
+                       and perliv > 0";
+    cur_pli113.AbrirCursor();
+    Se (cur_pli113.Achou)
+    nCodPer = cur_pli113.codper;
+
+    cur_pli113.FecharCursor();  
+    
+    Se (nCodPer > 0)
+      {
+        Se ((nNumEmp = 3) ou (nNumEmp = 4))
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final113;
+          }
+      }                     
+      
+    dDatAlt = R034FUN.DatAdm;
+    nInsAnt = 0;
+    nInsAtu = 0;
+    
+@===== Apropriação de data de referência conforme tipo de cálulo vigente ======@
+    Se ((TipCal = 62) ou (TipCal = 34) ou (TipCal = 63) ou (TipCal = 65) ou (TipCal = 70)
+    ou (TipCal = 71) ou (TipCal = 72) ou (TipCal = 75) ou (TipCal = 76) ou (TipCal = 77) 
+    ou (TipCal = 78) ou (TipCal = 79) ou (TipCal = 95) ou (TipCal = 96) ou (TipCal = 97) 
+    ou (TipCal = 98) ou (TipCal = 99) ou (TipCal = 69))
+    dFimCmp = R042RCM.DatDem;
+    Senao Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53))
+    dFimCmp = R040FEM.IniFer;
+    Senao
+    dFimCmp = FimCmp;  
+     
+    RetSinEmp(nNumEmp,nTipCol,nNumCad,dFimCmp);
+    nCodSin = CodSinEmp;
+    
+    nTipAnu = 0;
+    xValAnu = 0;
+    dPerAdm = 0;
+    aForPag = "";
+    dDatAdm = 0;
+    dAdmMax = 0;
+    nQtdAnu = 0;
+    dDatZer = 0;
+    aForAts = "";
+    nPerTet = 0;
+    nQtdAts = 0;
+    nInsAtu = 0;
+    nAnuAnt = 0;
+    
+    cur_adm113.sql "select usu_tr014dts.usu_peradm,usu_tr014dts.usu_cmpalt,\
+                           usu_tr014cts.usu_cmpter,usu_tr014cts.usu_tipats,\
+                           r014sin.numcgc \
+                      from usu_tr014dts,\
+                           usu_tr014cts,\
+                           r014sin \
+                     where usu_tr014cts.usu_codsin = r014sin.codsin \
+                       and usu_tr014cts.usu_codsin = usu_tr014dts.usu_codsin \
+                       and usu_tr014cts.usu_cmpalt = usu_tr014dts.usu_cmpalt \
+                       and usu_tr014dts.usu_codsin = :nCodSin \
+                       and usu_tr014dts.usu_peranu > 0 \
+                       and usu_tr014dts.usu_cmpalt <= :dFimCmp \
+                  group by usu_tr014dts.usu_peradm,usu_tr014dts.usu_cmpalt,\
+                           usu_tr014cts.usu_cmpter,usu_tr014cts.usu_tipats,\
+                           r014sin.numcgc \
+                  order by usu_tr014dts.usu_cmpalt,usu_tr014dts.usu_peradm";
+    cur_adm113.AbrirCursor();
+    Enquanto (cur_adm113.Achou)
+     {
+       Se ((dDatAlt > cur_adm113.usu_cmpter) e (cur_adm113.usu_cmpter > 0))
+       VaPara Prox113;
+       
+       nInsAtu = cur_adm113.numcgc;
+       
+       dPerAdm = cur_adm113.usu_peradm;
+       
+       nQtdAno = 0;
+       nMesAtu = 0;
+       
+       Se (cur_adm113.usu_tipats = "A")
+         {
+           Se (nQtdAnu = 0)
+             {
+               Se ((dPerAdm > 0) e (dDatAlt < dPerAdm))
+               dDatAlt = dPerAdm;
+             }
+             Senao
+             dDatAlt = dDatAlt + (nQtdAnu * 365.25);
+             
+           Se (cur_adm113.usu_cmpter > 0) 
+             {
+               RetDifDat (2,dDatAlt,cur_adm113.usu_cmpter,nMesAtu);
+               @RetDifDat (3,dDatAlt,cur_adm113.usu_cmpter,nQtdAno);@
+             }  
+           Senao
+             {
+               RetDifDat (2,dDatAlt,dFimCmp,nMesAtu);
+               @RetDifDat (3,dDatAlt,dFimCmp,nQtdAno);@
+             }  
+         }
+       Senao Se (cur_adm113.usu_tipats = "D")
+         {
+           Se (nQtdAnu = 0)
+             {
+               RetDifDat (2,dDatAlt,dFimCmp,nMesAtu);
+               @RetDifDat (3,dDatAlt,dFimCmp,nQtdAno);@
+             }  
+           Senao 
+           VaPara ProxATS113;
+         }  
+        
+       Se (nQtdAno < 0)
+       nQtdAno = 0;
+       
+       Se (nMesAtu < 0)
+       nMesAtu = 0;
+       
+/*= conforme delimitação interna do Cliente no final de 10/2025, estabelecido 
+aos códigos de sindicato abaixo regra de acúmulo de contratos anteriores no 
+mesmo colégio (filial) e sindicatos abaixo:
+2006 – SIND DOS PROFESSORES DO ESTADO DO RS
+2009 – SIND DOS TRABAL EM ESTAB DE ENSINO DE PASSO FUNDO E REGIAO
+2010 – SIND DOS TRABALHADORES DO ENSINO PRIVADO DOS VALES DO RS
+2011 – SIND DOS TRABALHADORES EM ADMINISTRACAO ESCOLAR NO RS
+2014 – SIND DOS TRAB EM EST. DE ENSINO PRIVADO DO NOROESTE DO RS
+1029 – SIND DOS PROFESSORES EM ESTA PARTICULARES DE ENSINO DO DF
+1030 – SIND INTERMUNICIPAL DOS PROFESSORES NO ESTADO DE SC
+1004 – SIND DOS AUXILIARES DA ADMINISTRACAO ESCOLAR DA GRANDE FLORIA
+1010 – SIND DOS AUXLIARES DA ADMINISTRACAO ESCOLAR DO OESTE DE SC
+1024 – SIND DOS PROFESSORES DO OESTE DE SC
+1038 – SIND TRAB INST ENS PART FUND EDUC NORTE - AUX
+1016 – SIND TRABALH INSTITUI ENSINO PART E FUND EDUC NORTE DE SC - PROF
+1036 – SIND DOS TRABAL EM ESTABEL DE ENs DA REGIAO SUL DE SC - AUXILIARES
+1014 – SIND DOS TRAB EM ESTA DE ENSINO DA REGIAO SUL DE SC - PROFES
+1009 – SIND DOS AUX DE ADM ESCOLAR EM ESTAB PARTIC DE ENSINO NO DF
+1001 – SIND DOS AUXILIARES EM ADMINISTRACAO ESCOLAR DA REGIAO SERRANA
+3036 - SIND DOS PROFESSORES DO ESTADO DE MG */
+ 
+       Se ((nCodSin = 2006) ou (nCodSin = 2009) ou (nCodSin = 2010) ou (nCodSin = 2011)
+        ou (nCodSin = 2014) ou (nCodSin = 1029) ou (nCodSin = 1030) ou (nCodSin = 1004)
+        ou (nCodSin = 1010) ou (nCodSin = 1024) ou (nCodSin = 1038) ou (nCodSin = 1016)
+        ou (nCodSin = 1036) ou (nCodSin = 1014) ou (nCodSin = 1009) ou (nCodSin = 1001)
+        ou (nCodSin = 3036))
+         {
+           dDatAdm = R034FUN.DatAdm;
+           nNumCpf = R034FUN.NumCpf;
+           nQtdSin = 0;
+           nInsFil = 0;
+           
+           cur_hfi113.sql "select r030fil.numcgc \
+                             from r030fil,\
+                                  r038hfi \
+                            where r038hfi.numemp = r030fil.numemp \
+                              and r038hfi.codfil = r030fil.codfil \
+                              and r038hfi.numemp = :nNumEmp \
+                              and r038hfi.tipcol = :nTipCol \
+                              and r038hfi.numcad = :nNumCad \
+                              and r038hfi.datalt = (select max(hfi.datalt) \
+                                                      from r038hfi hfi \
+                                                     where r038hfi.numemp = hfi.numemp \
+                                                       and r038hfi.tipcol = hfi.tipcol \
+                                                       and r038hfi.numcad = hfi.numcad \
+                                                       and hfi.datalt <= :dFimCmp)";
+           cur_hfi113.AbrirCursor(); 
+           Se (cur_hfi113.Achou)
+           nInsFil = cur_hfi113.numcgc;
+           
+           cur_hfi113.FecharCursor();                                                  
+            
+           Se ((nInsFil > 0) e (nInsAtu > 0))
+             {
+               nSin = 0;
+               nQtdSin = 0;
+               
+               cur_fun113.sql "select r034fun.numcad,r034fun.datadm,r038hsi.datalt,\
+                                      r034fun.datafa \
+                                 from r034fun,\
+                                      r038hsi,\
+                                      r014sin,\
+                                      r010sit,\
+                                      r038hfi,\
+                                      r030fil \
+                                where r034fun.sitafa = r010sit.codsit \
+                                  and r034fun.numemp = r038hsi.numemp \
+                                  and r034fun.tipcol = r038hsi.tipcol \
+                                  and r034fun.numcad = r038hsi.numcad \
+                                  and r038hsi.datalt = (select max(hsi.datalt) \
+                                                          from r038hsi hsi \
+                                                         where r038hsi.numemp = hsi.numemp \
+                                                           and r038hsi.tipcol = hsi.tipcol \
+                                                           and r038hsi.numcad = hsi.numcad \
+                                                           and hsi.datalt <= r034fun.datafa) \
+                                  and r038hsi.codsin = r014sin.codsin \
+                                  and r034fun.numemp = r038hfi.numemp \
+                                  and r034fun.tipcol = r038hfi.tipcol \
+                                  and r034fun.numcad = r038hfi.numcad \
+                                  and r038hfi.datalt = (select max(hfi.datalt) \
+                                                          from r038hfi hfi \
+                                                         where r038hfi.numemp = hfi.numemp \
+                                                           and r038hfi.tipcol = hfi.tipcol \
+                                                           and r038hfi.numcad = hfi.numcad \
+                                                           and hfi.datalt <= r034fun.datafa) \
+                                  and r038hfi.numemp = r030fil.numemp \  
+                                  and r038hfi.codfil = r030fil.codfil \
+                                  and r034fun.tipcon <> 5 \
+                                  and r014sin.numcgc = :nInsAtu \
+                                  and r030fil.numcgc = :nInsFil \
+                                  and r010sit.tipsit = 7 \
+                                  and r034fun.numemp = :nNumEmp \
+                                  and r034fun.tipcol = :nTipCol \
+                                  and r034fun.numcad <> :nNumCad \
+                                  and r034fun.datadm < :dDatAdm \
+                                  and r034fun.numcpf = :nNumCpf \
+                             order by r038hsi.datalt desc";
+               cur_fun113.AbrirCursor();
+               Enquanto (cur_fun113.Achou)
+                 {
+                   dDatAlt = cur_fun113.datalt;
+               
+                    Se ((dPerAdm > 0) e (dDatAlt < dPerAdm))
+                    dDatAlt = dPerAdm;
+                    
+                    dDatAfa = cur_fun113.datafa;
+                    
+                    @RetDifDat (3,dDatAlt,dDatAfa,nQtdSin);@
+                    RetDifDat (2,dDatAlt,dDatAfa,nSin);
+                    
+                    Se (nSin > 0)
+                    nQtdSin = nQtdSin + nSin;
+                    
+                    nSin = 0;
+                    
+                    cur_fun113.Proximo();
+                  }
+                cur_fun113.FecharCursor(); 
+
+                Se (nQtdSin > 0)
+                nMesAtu = nMesAtu + nQtdSin;
+
+                /*
+                Se (nQtdSin > 0)
+                  {
+                    nQtdSin = nQtdSin / 12;
+                    TruncarValor(nQtdSin);
+                    
+                    Se (nQtdSin >= 1)
+                    nQtdAno = nQtdAno + nQtdSin; 
+                  } */ 
+             }
+         }
+        
+        xAnu = 0;
+        
+        dCmpAlt = cur_adm113.usu_cmpalt;
+        
+        nQtdAno = nMesAtu / 12;
+        TruncarValor(nQtdAno);
+        
+        Se (nAnuAnt = 0)
+          {
+            nAnuAnt = 1;
+
+            cur_fun113.sql "select usu_qtdats \
+                              from r034fun \
+                             where numemp = :nNumEmp \
+                               and tipcol = :nTipCol \
+                               and numcad = :nNumCad \
+                               and usu_perats > 0 \
+                               and usu_qtdats > 0";
+            cur_fun113.AbrirCursor();
+            Se (cur_fun113.Achou)
+            nQtdAno = nQtdAno + cur_fun113.usu_qtdats;
+            
+            cur_fun113.FecharCursor();          
+          }
+        
+        cur_sib113.sql "select usu_tr014dts.usu_peranu,usu_tr014dts.usu_numanu,\
+                               usu_tr014cts.usu_forats,usu_tr014dts.usu_pertet \
+                          from usu_tr014dts,\
+                               usu_tr014cts \
+                         where usu_tr014cts.usu_codsin = usu_tr014dts.usu_codsin \
+                           and usu_tr014cts.usu_cmpalt = usu_tr014dts.usu_cmpalt \
+                           and usu_tr014dts.usu_codsin = :nCodSin \
+                           and usu_tr014dts.usu_peradm = :dPerAdm \
+                           and usu_tr014dts.usu_peranu > 0 \
+                           and usu_tr014dts.usu_cmpalt = :dCmpAlt \
+                           and usu_tr014dts.usu_numanu = (select max(dts.usu_numanu) \
+                                                            from usu_tr014dts dts \
+                                                           where usu_tr014dts.usu_codsin = dts.usu_codsin \
+                                                             and usu_tr014dts.usu_peradm = dts.usu_peradm \
+                                                             and usu_tr014dts.usu_cmpalt = dts.usu_cmpalt \
+                                                             and dts.usu_numanu <= :nQtdAno)";
+        cur_sib113.AbrirCursor();
+        Se (cur_sib113.Achou)
+          {
+            nQtdAnu = cur_sib113.usu_numanu;
+            aForAts = cur_sib113.usu_forats;
+            nPerTet = cur_sib113.usu_pertet;
+            
+            Se (nQtdAnu > 0)
+            nQtdAts = nQtdAno / nQtdAnu;
+            
+            TruncarValor(nQtdAts);
+    
+            xAnu = cur_sib113.usu_peranu * nQtdAts;
+            
+            Se (xAnu > nPerTet)
+            xAnu = nPerTet;
+          }
+        cur_sib113.FecharCursor(); 
+        
+        Se (xAnu > 0)
+        xValAnu = xValAnu + xAnu;
+        
+        Prox113:
+       
+       cur_adm113.Proximo();
+     }
+     
+    ProxATS113:
+     
+    cur_adm113.FecharCursor();  
+
+    Se (xValAnu = 0)
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final113;
+      }
+      Senao
+        {
+          Se (xValAnu > nPerTet)
+            {
+              cur_sib113.sql "select usu_tr014dts.usu_pertet \
+                                from usu_tr014dts,\
+                                     usu_tr014cts \
+                               where usu_tr014cts.usu_codsin = usu_tr014dts.usu_codsin \
+                                 and usu_tr014cts.usu_cmpalt = usu_tr014dts.usu_cmpalt \
+                                 and usu_tr014dts.usu_codsin = :nCodSin \
+                                 and usu_tr014dts.usu_peradm = (select max(dts.usu_peradm) \
+                                                                  from usu_tr014dts dts \
+                                                                 where usu_tr014dts.usu_codsin = dts.usu_codsin \
+                                                                   and usu_tr014dts.usu_cmpalt = dts.usu_cmpalt \
+                                                                   and dts.usu_peradm <= :dPerAdm) \
+                                 and usu_tr014dts.usu_peranu > 0 \
+                                 and usu_tr014dts.usu_cmpalt = (select max(dts.usu_cmpalt) \
+                                                                  from usu_tr014dts dts \
+                                                                 where usu_tr014dts.usu_codsin = dts.usu_codsin \
+                                                                   and usu_tr014dts.usu_peradm = dts.usu_peradm) \
+                                 and usu_tr014dts.usu_numanu = (select max(dts.usu_numanu) \
+                                                                  from usu_tr014dts dts \
+                                                                 where usu_tr014dts.usu_codsin = dts.usu_codsin \
+                                                                   and usu_tr014dts.usu_peradm = dts.usu_peradm \
+                                                                   and usu_tr014dts.usu_cmpalt = dts.usu_cmpalt \
+                                                                   and dts.usu_numanu <= :nQtdAno)";
+              cur_sib113.AbrirCursor();
+              Se (cur_sib113.Achou)
+                {
+                   Se (xValAnu > cur_sib113.usu_pertet)
+                   xValAnu = cur_sib113.usu_pertet;
+                }
+                Senao
+                  {
+                    Se (xValAnu > nPerTet)
+                    xValAnu = nPerTet;
+                  }
+              cur_sib113.FecharCursor();                                                             
+            }
+                                            
+          RefEvt = xValAnu;
+          xValAnu = xValAnu / 100;
+          ValEvt = BasEvt * xValAnu;
+        }  
+
+@========================== qdo for ATS p/ cada ano completado ================@
+      Se (aForAts = "A")
+       {
+@================================ cálculos de folha ===========================@
+         Se ((TipCal = 11) ou (TipCal = 13) ou (TipCal = 62)) 
+          {
+            Se ((CodEvt <> 2788) e (CodEvt <> 818) e (CodEvt <> 1967) 
+             e (CodEvt <> 2946) e (CodEvt <> 1528)e (CodEvt <> 1741))
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final113;
+              }
+              Senao
+                {
+                  Se ((nQtdAnu = 1) e (CodEvt <> 2788)) @ anuênio @ 
+                    {
+                      RefEvt = 0;
+                      ValEvt = 0;
+                      VaPara Final113;
+                    }
+                  Senao Se ((nQtdAnu = 2) e (CodEvt <> 818)) @ biênio @
+                    {
+                      RefEvt = 0;
+                      ValEvt = 0;
+                      VaPara Final113;
+                    }
+                  Senao Se ((nQtdAnu = 3) e (CodEvt <> 1967)) @ triênio @
+                    {
+                      RefEvt = 0;
+                      ValEvt = 0;
+                      VaPara Final113;
+                    }
+                  Senao Se ((nQtdAnu = 4) e (CodEvt <> 2946)) @ quadriênio @
+                    {
+                      RefEvt = 0;
+                      ValEvt = 0;
+                      VaPara Final113;
+                    }
+                  Senao Se ((nQtdAnu = 5) e (CodEvt <> 1528)) @ quinquênio @
+                    {
+                      RefEvt = 0;
+                      ValEvt = 0;
+                      VaPara Final113;
+                    }
+                }
+          }
+          Senao Se (TipCal = 31) @ adto 13o salário @
+           {
+             Se ((CodEvt <> 1737) e (CodEvt <> 1738) e (CodEvt <> 753) 
+              e (CodEvt <> 1739) e (CodEvt <> 1740)) 
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+                   Se ((nQtdAnu = 1) e (CodEvt <> 1737)) @ anuênio @ 
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1738)) @ biênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 753)) @ triênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1739)) @ quadriênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1740)) @ quinquênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                 }
+           }
+          Senao Se ((TipCal = 32) ou (TipCal = 33) ou (TipCal = 35)) @ 13o salário integral, prov.compl @
+           {
+             Se ((CodEvt <> 1742) e (CodEvt <> 1743) e (CodEvt <> 806) 
+              e (CodEvt <> 1744) e (CodEvt <> 1745))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+                  Se (TipCal = 33)
+                   {
+                     nNumEmp = R034FUN.NumEmp;
+                     nTipCol = R034FUN.TipCol;
+                     nNumCad = R034FUN.NumCad;
+                     dPerRef = PerRef;
+                     nCodEvt = CodEvt;
+                     
+                     cur_ver113.sql "select valeve \
+                                       from r046ver \
+                                      where numemp = :nNumEmp \
+                                        and tipcol = :nTipCol \
+                                        and numcad = :nNumCad \
+                                        and codeve = :nCodEvt \
+                                        and valeve > 0 \
+                                        and exists (select 1 \
+                                                      from r044cal cal \
+                                                     where r046ver.numemp = cal.numemp \
+                                                       and r046ver.codcal = cal.codcal \
+                                                       and cal.perref = :dPerRef \
+                                                       and cal.tipcal = 32)";
+                      cur_ver113.AbrirCursor();
+                      Se (cur_ver113.Achou)
+                        {
+                          ValEvt = ValEvt - cur_ver113.valeve; 
+                        }
+                      cur_ver113.FecharCursor();                                                 
+                   }
+
+                   Se ((nQtdAnu = 1) e (CodEvt <> 1742)) @ anuênio @ 
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1743)) @ biênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 806)) @ triênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1744)) @ quadriênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1745)) @ quinquênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                 }
+           }
+          Senao Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 54) ou (TipCal = 55)) @ férias / provisão @
+           {
+             Se ((CodEvt <> 1747) e (CodEvt <> 1748) e (CodEvt <> 557)  @ férias @
+              e (CodEvt <> 1749) e (CodEvt <> 1763)
+              e (CodEvt <> 1765) e (CodEvt <> 1766) e (CodEvt <> 603)  @ abono @
+              e (CodEvt <> 1767) e (CodEvt <> 1768)
+              e (CodEvt <> 1737) e (CodEvt <> 1738) e (CodEvt <> 753) @ adto 13o @
+              e (CodEvt <> 1739) e (CodEvt <> 1740))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+@================= Cursor p/ busca da característica do evento ================@                    
+                    nNumEmp = R034FUN.NumEmp;
+                    nCodEvt = CodEvt;
+
+                    cur_evc113.sql "select r008evc.crteve \
+                                      from r008evc,\    
+                                           r030emp \ 
+                                     where r008evc.codtab = r030emp.tabeve \
+                                       and r030emp.numemp = :nNumEmp \
+                                       and r008evc.codeve = :nCodEvt";
+                    cur_evc113.AbrirCursor();
+                    Se (cur_evc113.Achou)
+                      {
+                        aCrtEve = cur_evc113.crteve;
+                        
+                        CopiarAlfa(aCrtEve,1,2);
+                        AlfaParaInt(aCrtEve,nCrtEve);
+
+@=================================== qdo for férias ===========================@                        
+                        Se (nCrtEve = 11)
+                          {
+                            Se ((CodEvt <> 1747) e (CodEvt <> 1748) e (CodEvt <> 557)
+                             e (CodEvt <> 1749) e (CodEvt <> 1763))                  
+                               {
+                                 cur_evc113.FecharCursor();
+                                 RefEvt = 0;
+                                 ValEvt = 0;
+                                 VaPara Final113;
+                               }
+                               Senao
+                                 {
+                                   Se ((nQtdAnu = 1) e (CodEvt <> 1747)) @ anuênio @ 
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1748)) @ biênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 557)) @ triênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1749)) @ quadriênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1763)) @ quinquênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                 }        
+                          }
+                        Senao Se (nCrtEve = 12)  @= qdo for abono pecuniário =@
+                          {
+                            Se ((CodEvt <> 1765) e (CodEvt <> 1766) e (CodEvt <> 603)
+                             e (CodEvt <> 1767) e (CodEvt <> 1768))
+                               {
+                                 cur_evc113.FecharCursor();
+                                 RefEvt = 0;
+                                 ValEvt = 0;
+                                 VaPara Final113;
+                               }
+                               Senao
+                                 {
+                                   Se ((nQtdAnu = 1) e (CodEvt <> 1765)) @ anuênio @ 
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1766)) @ biênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 603)) @ triênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1767)) @ quadriênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1768)) @ quinquênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                 }        
+                          }
+                        Senao Se (nCrtEve = 15)  @= qdo for adto 13o nas férias =@
+                          {
+                            Se ((CodEvt <> 1737) e (CodEvt <> 1738) e (CodEvt <> 753) 
+                             e (CodEvt <> 1739) e (CodEvt <> 1740))
+                               {
+                                 cur_evc113.FecharCursor();
+                                 RefEvt = 0;
+                                 ValEvt = 0;
+                                 VaPara Final113;
+                               }
+                               Senao
+                                 {
+                                   Se ((nQtdAnu = 1) e (CodEvt <> 1737)) @ anuênio @ 
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1738)) @ biênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 753)) @ triênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1739)) @ quadriênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1740)) @ quinquênio @
+                                     {
+                                       cur_evc113.FecharCursor();
+                                       RefEvt = 0;
+                                       ValEvt = 0;
+                                       VaPara Final113;
+                                     }
+                                 }        
+                          }   
+                      }
+                     cur_evc113.FecharCursor();
+                 }
+           }
+         Senao Se (TipCal = 63) @ a.p.i. @
+           {
+             Se ((CodEvt <> 1770) e (CodEvt <> 1771) e (CodEvt <> 955) 
+              e (CodEvt <> 1772) e (CodEvt <> 1773))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+                   Se ((nQtdAnu = 1) e (CodEvt <> 1770)) @ anuênio @ 
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1771)) @ biênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 955)) @ triênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1772)) @ quadriênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1773)) @ quinquênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                 }
+           }
+          Senao Se (TipCal = 65) @ fim antecipado contrato c/ a empresa @
+           {
+             Se ((CodEvt <> 1775) e (CodEvt <> 1776) e (CodEvt <> 1777) 
+              e (CodEvt <> 1778) e (CodEvt <> 1779))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+                   Se ((nQtdAnu = 1) e (CodEvt <> 1775)) @ anuênio @ 
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1776)) @ biênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 1777)) @ triênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1778)) @ quadriênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1779)) @ quinquênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                 }
+           }
+          Senao Se (TipCal = 69) @ inden.data base dissídio @
+           {
+             Se ((CodEvt <> 1781) e (CodEvt <> 1782) e (CodEvt <> 1783) 
+              e (CodEvt <> 1784) e (CodEvt <> 1785))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+                   Se ((nQtdAnu = 1) e (CodEvt <> 1781)) @ anuênio @ 
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1782)) @ biênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 1783)) @ triênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1784)) @ quadriênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1785)) @ quinquênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                 }
+           }
+          Senao Se (TipCal = 70) @ estabilidade @
+           {
+             Se ((CodEvt <> 1787) e (CodEvt <> 1788) e (CodEvt <> 1204) 
+              e (CodEvt <> 1789) e (CodEvt <> 1790))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+                   Se ((nQtdAnu = 1) e (CodEvt <> 1787)) @ anuênio @ 
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1788)) @ biênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 1204)) @ triênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1789)) @ quadriênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1790)) @ quinquênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                 }
+           } 
+          Senao Se (TipCal = 71) @ 13o prop.resc. @
+           {
+             Se ((CodEvt <> 1792) e (CodEvt <> 1793) e (CodEvt <> 855) 
+              e (CodEvt <> 1794) e (CodEvt <> 1795))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+                   Se ((nQtdAnu = 1) e (CodEvt <> 1792)) @ anuênio @ 
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1793)) @ biênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 855)) @ triênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1794)) @ quadriênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1795)) @ quinquênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                 }
+           }
+          Senao Se (TipCal = 72) @ 13o ind.resc. @
+           {
+             Se ((CodEvt <> 1797) e (CodEvt <> 1798) e (CodEvt <> 904) 
+              e (CodEvt <> 1799) e (CodEvt <> 1800))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+                   Se ((nQtdAnu = 1) e (CodEvt <> 1797)) @ anuênio @ 
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1798)) @ biênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 904)) @ triênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1799)) @ quadriênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1800)) @ quinquênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                 }
+           }
+          Senao Se ((TipCal >= 75) e (TipCal <= 79)) @ férias resc. @
+           {
+             Se ((CodEvt <> 1802) e (CodEvt <> 1803) e (CodEvt <> 657) 
+              e (CodEvt <> 1804) e (CodEvt <> 1805))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final113;
+               }
+               Senao
+                 {
+                   Se ((nQtdAnu = 1) e (CodEvt <> 1802)) @ anuênio @ 
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 2) e (CodEvt <> 1803)) @ biênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 3) e (CodEvt <> 657)) @ triênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 4) e (CodEvt <> 1804)) @ quadriênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                   Senao Se ((nQtdAnu = 5) e (CodEvt <> 1805)) @ quinquênio @
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final113;
+                     }
+                 }
+           }                                
+       }
+       Senao @=================== qdo for ATS progressivo =====================@
+         {
+@================================ cálculos de folha ===========================@
+           Se (((TipCal = 11) ou (TipCal = 13)) e (CodEvt <> 2756) e (CodEvt <> 1741))
+             {
+               RefEvt = 0;
+               ValEvt = 0;
+               VaPara Final113;
+             }
+@================================ cálculos de rescisão ===========================@
+           Senao Se ((TipCal = 62) e (CodEvt <> 3816))
+             {
+               RefEvt = 0;
+               ValEvt = 0;
+               VaPara Final113;
+             }                       
+             
+@================================= adto 13o salário ===========================@
+           Senao Se ((TipCal = 31) e (CodEvt <> 1741))
+             {
+               RefEvt = 0;
+               ValEvt = 0;
+               VaPara Final113;
+             }
+@======================= 13o salário integral/complementar/provisão ===========@
+           Senao Se (((TipCal = 32) ou (TipCal = 33) ou (TipCal = 35)) e (CodEvt <> 1746))
+             {
+               RefEvt = 0;
+               ValEvt = 0;
+               VaPara Final113;
+             }
+           Senao Se ((TipCal = 33) e (CodEvt = 1746))
+             {
+               nNumEmp = R034FUN.NumEmp;
+               nTipCol = R034FUN.TipCol;
+               nNumCad = R034FUN.NumCad;
+               dPerRef = PerRef;
+               nCodEvt = CodEvt;
+               
+               cur_ver113.sql "select valeve \
+                                 from r046ver \
+                                where numemp = :nNumEmp \
+                                  and tipcol = :nTipCol \
+                                  and numcad = :nNumCad \
+                                  and codeve = :nCodEvt \
+                                  and valeve > 0 \
+                                  and exists (select 1 \
+                                                from r044cal cal \
+                                               where r046ver.numemp = cal.numemp \
+                                                 and r046ver.codcal = cal.codcal \
+                                                 and cal.perref = :dPerRef \
+                                                 and cal.tipcal = 32)";
+                cur_ver113.AbrirCursor();
+                Se (cur_ver113.Achou)
+                  {           /*Trecho comentado dia 22/12 por Isabella Nassaro
+                               pois não estava sendo apropriado valor no evento
+                               de 13 Complementar                */
+                    ValEvt = ValEvt @(xValTit + pValTit) - cur_ver113.valeve@; 
+                  }
+                cur_ver113.FecharCursor();                                                 
+             } 
+@===================================== férias / provisão ======================@
+           Senao Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 55))
+             {
+               Se ((CodEvt = 1747) ou (CodEvt = 1748) ou (CodEvt = 557)  @ férias @
+                ou (CodEvt = 1749) ou (CodEvt = 1763)
+                ou (CodEvt = 1765) ou (CodEvt = 1766) ou (CodEvt = 603)  @ abono @
+                ou (CodEvt = 1767) ou (CodEvt = 1768)
+                ou (CodEvt = 1737) ou (CodEvt = 1738) ou (CodEvt = 753) @ adto 13o @
+                ou (CodEvt = 1739) ou (CodEvt = 1740))
+                 {
+                   RefEvt = 0;
+                   ValEvt = 0;
+                   VaPara Final113;
+                 }
+                 Senao
+                   {
+@================= Cursor p/ busca da característica do evento ================@                    
+                    nNumEmp = R034FUN.NumEmp;
+                    nCodEvt = CodEvt;
+
+                    cur_evc113.sql "select r008evc.crteve \
+                                      from r008evc,\    
+                                           r030emp \ 
+                                     where r008evc.codtab = r030emp.tabeve \
+                                       and r030emp.numemp = :nNumEmp \
+                                       and r008evc.codeve = :nCodEvt";
+                    cur_evc113.AbrirCursor();
+                    Se (cur_evc113.Achou)
+                      {
+                        aCrtEve = cur_evc113.crteve;
+                        
+                        CopiarAlfa(aCrtEve,1,2);
+                        AlfaParaInt(aCrtEve,nCrtEve);
+
+@=================================== qdo for férias ===========================@                        
+                        Se ((nCrtEve = 11) e (CodEvt <> 1764))
+                          {
+                            cur_evc113.FecharCursor();
+                            RefEvt = 0;
+                            ValEvt = 0;
+                            VaPara Final113;
+                          }
+                        Senao Se ((nCrtEve = 12) e (CodEvt <> 1769))  @= qdo for abono pecuniário =@
+                          {
+                            cur_evc113.FecharCursor();
+                            RefEvt = 0;
+                            ValEvt = 0;
+                            VaPara Final113;
+                          }
+                        Senao Se ((nCrtEve = 15) e (CodEvt <> 1741))  @= qdo for adto 13o nas férias =@
+                          {
+                            cur_evc113.FecharCursor();
+                            RefEvt = 0;
+                            ValEvt = 0;
+                            VaPara Final113;
+                          }   
+                      }
+                     cur_evc113.FecharCursor();
+                   }
+             }
+            Senao Se ((TipCal = 63) e (CodEvt <> 1774)) @ a.p.i. @
+             {
+               RefEvt = 0;
+               ValEvt = 0;
+               VaPara Final113;
+             }
+            Senao Se ((TipCal = 65) e (CodEvt <> 1780)) @ fim antecipado contrato c/ a empresa @
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final113;
+              }
+            Senao Se ((TipCal = 69) e (CodEvt <> 1786)) @ ind.data base dissídio @
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final113;
+              }
+            Senao Se ((TipCal = 70) e (CodEvt <> 1791)) @ estabilidade @
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final113;
+              }
+            Senao Se ((TipCal = 71) e (CodEvt <> 1796)) @ 13o prop.resc. @
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final113;
+              }
+            Senao Se ((TipCal = 72) e (CodEvt <> 1801)) @ 13o ind.resc. @
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final113;
+              }
+            Senao Se (((TipCal >= 75) e (TipCal <= 79)) e (CodEvt <> 1806)) @ férias resc. @
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final113;
+              }
+         }
+  }
+  
+
+  
+Final113:  

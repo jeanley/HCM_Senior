@@ -1,0 +1,129 @@
+@ Regra voltada ao evento 1616 usado para semestralidade @
+@ Cliente: Marista Brasil;@
+@ Autor: Michael Abreu; @
+@ Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) @
+
+Definir data dDatZer;
+nNumEmp = R042RCM.NumEmp;
+nTipCol = R042RCM.TipCol;
+nNumCad = R042RCM.NumCad;
+MontaData (31, 12, 1900, dDatZer);
+
+@================= Calcula apenas para empresa 1 ==============@
+         Se (R042RCM.NumEmp <> 1) {
+             RefEvt = 0;
+             ValEvt = 0;
+             VaPara Final102;  }
+
+@================= Busca lançamento fixo ou variável qdo existir ==============@
+         Se ((OriMov = "D") ou (OriMov = "X")) {
+             RefEvt = RefMov;
+             ValEvt = ValMov;
+             VaPara Final102;        }
+
+@================= Apenas para professores docentes ==============@
+RetVinEmp(R042RCM.numemp,R042RCM.tipcol,R042RCM.numcad,R042RCM.DatDem);
+
+xvinemp = CodVinEmp;
+
+         Se (xVinEmp <> 10) {
+             RefEvt = 0;
+             ValEvt = 0;
+             VaPara Final102;  }
+           
+@================= Calcular apenas em Rescisão ==============@
+         Se (TipCal <> 62) {
+             RefEvt = 0;
+             ValEvt = 0;
+             VaPara Final102;  }
+           
+@================= Calcular apenas em Tipos de rescisão 2 - Inic.Empresa s/ Justa Causa ==============@
+         Se (R042RCM.CauDem <> 2)  {
+             RefEvt = 0;
+             ValEvt = 0;
+             VaPara Final102;  }
+           
+@================= Preciso formar as datas que serão o fim do Primeiro e Segundo Semestre ==============@
+Definir data dDatFim;
+Definir data dDatHoj;
+dDatHoj = R042RCM.DatDem - 1;
+xDiaRes = 0;
+
+DesMontaData (dDatHoj,xDia,xMes,xAno);
+
+Se (xMes <= 6) { 
+@ Primeiro Semestre @
+MontaData (30,6,xAno,dDatFim);
+xDiaRes = dDatFim - dDathoj;
+}
+
+Se (xMes >= 7) { 
+@ Segundo Semestre @
+MontaData (31,12,xAno,dDatFim); 
+xDiaRes = dDatFim - dDathoj;
+}
+
+@================= Preciso saber o Sindicato do Professor  ==============@
+    
+     RetSinEmp (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,R042RCM.DatDem);
+     nCodSin = CodSinEmp;
+
+@================= Cursor para saber o percentual de Adicional de Atividade - USU_TR014ECC  ==============@
+
+Definir cursor Cur_usu_ter14ecc;
+
+Cur_usu_ter14ecc.SQL " select usu_valext,usu_cmpalt from usu_tr014ecc   \
+                                             where usu_tipext = 'PA'    \
+                                             and usu_codsin= :nCodsin   \
+                                             and usu_cmpalt < :ddatfim   \
+                                             order by usu_cmpalt desc";
+                                             
+Cur_usu_ter14ecc.AbrirCursor();
+
+Se (Cur_usu_ter14ecc.Achou)
+Inicio
+xHorAti = Cur_usu_ter14ecc.usu_valext / 100;
+fim;
+Cur_usu_ter14ecc.FecharCursor();
+
+Se (xHorAti = 0) {
+xHorAti = 1; } 
+
+@================= Cursor para saber o valor aula de rescisão Total  ==============@
+
+Definir Cursor Cur_APF;
+
+Cur_APF.SQL "SELECT HorMes, ValApf, CodApf      \
+FROM R171APF                            \
+WHERE NumEmp = :nNumEmp                  \
+  AND TipCol = :nTipCol                  \
+  AND NumCad = :nNumCad                   \
+  AND DatFim = :dDatZer";
+
+Cur_APF.AbrirCursor();
+
+Definir Numero vTotal;
+vTotal = 0;
+
+Enquanto (Cur_APF.Achou)
+Inicio
+   nCodApf = Cur_APF.CodApf;
+   nHorMes = Cur_APF.HorMes;
+   nValApf = Cur_APF.ValApf; 
+   vTotal = vTotal + ((Cur_APF.HorMes / 60) * Cur_APF.ValApf);
+   Cur_APF.Proximo();
+Fim;
+
+Cur_APF.FecharCursor();
+
+@================= Cálculo final para encontrar o valor do evento  ==============@
+
+nValSal = vTotal;
+nUmSex = vTotal / 6;
+nValAti = (nValSal + nUmSex) * xHorAti;
+nValorTot = (nValSal + nUmSex + nValAti);
+nValorDia = nValorTot / 30;
+ValEvt = nValorDia * xDiaRes;
+
+x=x;           
+Final102: 
