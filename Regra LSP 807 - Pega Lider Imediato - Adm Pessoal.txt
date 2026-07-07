@@ -1,0 +1,353 @@
+/*DEFINIR CURSOR CR034FUN; 
+DEFINIR CURSOR CDACHE; 
+DEFINIR NUMERO NNUMEMP; 
+DEFINIR NUMERO NTIPCOL; 
+DEFINIR NUMERO NNUMCAD; 
+DEFINIR NUMERO NESTPOS; 
+DEFINIR ALFA   APOSTRA; 
+DEFINIR NUMERO NEMPCHE; 
+DEFINIR NUMERO NTIPCHE; 
+DEFINIR NUMERO NCADCHE; 
+DEFINIR NUMERO NALTERAR; 
+DEFINIR CURSOR CUSU; 
+DEFINIR ALFA   AUSUCOL; 
+DEFINIR ALFA   AUSUCHE; 
+DEFINIR ALFA   AFILTRO; 
+DEFINIR NUMERO NACHOUAD; 
+DEFINIR ALFA   ACODUSU; 
+DEFINIR ALFA   ACODCHE; 
+DEFINIR ALFA   AATRIBUTO; 
+DEFINIR DATA   DDATHOJ; 
+DEFINIR NUMERO NHORHOJ; 
+definir alfa apostopai; 
+ 
+ 
+CR034FUN.SQL "SELECT NUMEMP, TIPCOL, NUMCAD, ESTPOS, POSTRA  \
+FROM R034FUN WHERE SITAFA <> 7 AND TIPCOL = 1 "; 
+CR034FUN.ABRIRCURSOR(); 
+ 
+ENQUANTO(CR034FUN.ACHOU) 
+{ 
+  NNUMEMP = CR034FUN.NUMEMP; 
+  NTIPCOL = CR034FUN.TIPCOL; 
+  NNUMCAD = CR034FUN.NUMCAD;  
+  NESTPOS = CR034FUN.ESTPOS; 
+  APOSTRA = CR034FUN.POSTRA; 
+  NALTERAR = 0; 
+  NINSERIR = 0; 
+  ncont = 0;
+  
+  RETORNAPOSTOPAI(APOSTRA,NESTPOS,1,DATSIS,APOSTOPAI);
+
+  RETORNACHEFEPOSTO(0,NESTPOS,1,DATSIS,APOSTOPAI,NEMPCHE,NTIPCHE,NCADCHE);
+
+  SE(NCADCHE=0)
+  {
+    RETORNACHEFEPOSTO(1,NESTPOS,1,DATSIS,APOSTOPAI,NEMPCHE,NTIPCHE,NCADCHE);  
+  }
+  enquanto(NCADCHE=0)
+  {
+    RETORNAPOSTOPAI(APOSTOPAI,NESTPOS,1,DATSIS,APOSTOPAI); 
+    RETORNACHEFEPOSTO(1,NESTPOS,1,DATSIS,APOSTOPAI,NEMPCHE,NTIPCHE,NCADCHE); 
+    ncont = ncont + 1;
+    se(ncont = 20)
+    {
+      vapara fui;
+    }
+  }
+  fui:
+  
+  CDACHE.SQL "SELECT USU_NUMEMPLID, USU_TIPCOLLID, USU_NUMCADLID \
+              FROM USU_TLIDERAD WHERE                            \
+              USU_NUMEMP = :NNUMEMP AND                          \
+              USU_TIPCOL = :NTIPCOL AND                          \
+              USU_NUMCAD = :NNUMCAD"; 
+              
+  CDACHE.ABRIRCURSOR(); 
+  SE(CDACHE.ACHOU) 
+  {                                                      
+    SE ((NEMPCHE <> CDACHE.USU_NUMEMPLID) OU (NTIPCHE <> CDACHE.USU_TIPCOLLID)  OU (NCADCHE <> CDACHE.USU_NUMCADLID)) 
+    { 
+       NALTERAR = 1; 
+       NEMPCHE = CDACHE.USU_NUMEMPLID;  
+       NTIPCHE = CDACHE.USU_TIPCOLLID;  
+       NCADCHE = CDACHE.USU_NUMCADLID; 
+    }    
+  } 
+  SENAO 
+  { 
+     NINSERIR = 1; 
+  } 
+  CDACHE.FECHARCURSOR(); 
+  SE((NINSERIR =1) OU (NALTERA =1))                           
+  { 
+    AUSUCOL = ""; 
+    AUSUCHE = ""; 
+    CUSU.SQL "SELECT R999USU.NOMUSU \ 
+                     FROM R034USU, R999USU \ 
+                    WHERE R034USU.NUMEMP = :NNUMEMP \ 
+                      AND R034USU.TIPCOL = :NTIPCOL \ 
+                      AND R034USU.NUMCAD = :NNUMCAD \ 
+                      AND R034USU.CODUSU = R999USU.CODUSU"; 
+    CUSU.ABRIRCURSOR(); 
+    SE(CUSU.ACHOU) 
+    {
+      AUSUCOL = CUSU.NOMUSU; 
+    }                      
+    CUSU.FECHARCURSOR(); 
+    CUSU.SQL "SELECT R999USU.NOMUSU \ 
+                     FROM R034USU, R999USU \ 
+                    WHERE R034USU.NUMEMP = :NEMPCHE \ 
+                      AND R034USU.TIPCOL = :NTIPCHE \ 
+                      AND R034USU.NUMCAD = :NCADCHE \ 
+                      AND R034USU.CODUSU = R999USU.CODUSU"; 
+    CUSU.ABRIRCURSOR(); 
+    SE(CUSU.ACHOU)
+    { 
+      AUSUCHE = CUSU.NOMUSU;  
+    }                     
+      CUSU.FECHARCURSOR(); 
+     
+      DDATHOJ = DATSIS; 
+      NHORHOJ = HORSIS; 
+      SE(NINSERIR =1) 
+      { 
+        EXECSQL "INSERT INTO USU_TLIDERAD                                    \   
+        (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_NUMEMPLID,                  \
+         USU_TIPCOLLID, USU_NUMCADLID,                                       \
+         USU_DATALT, USU_HORALT) VALUES                                      \ 
+       (:NNUMEMP,   :NTIPCOL,   :NNUMCAD,   :NEMPCHE,                        \
+        :NTIPCHE,   :NCADCHE,                                                \
+        :DDATHOJ,   :NHORHOJ  )";         
+      } 
+      SENAO 
+      { 
+        EXECSQL "UPDATE USU_TLIDERAD         \ 
+          SET USU_NUMEMPLID = :NEMPCHE,      \ 
+              USU_TIPCOLLID = :NTIPCHE,      \ 
+              USU_NUMCADLID = :NCADCHE,      \ 
+              USU_DATALT = :DDATHOJ,         \ 
+              USU_HORALT = :NHORHOJ          \ 
+        WHERE USU_NUMEMP = :NNUMEMP          \ 
+        AND   USU_TIPCOL = :NTIPCOL          \ 
+        AND   USU_NUMCAD = :NNUMCAD ";               
+      } 
+      
+      ncontsai = ncontsai + 1;
+      
+      se(ncontsai = 300)
+      {
+        vapara sair;
+      }
+              
+}  
+CR034FUN.PROXIMO(); 
+} 
+sair:
+CR034FUN.FECHARCURSOR();   */
+
+
+
+DEFINIR CURSOR CR034FUN; 
+DEFINIR CURSOR CDACHE; 
+DEFINIR NUMERO NNUMEMP; 
+DEFINIR NUMERO NTIPCOL; 
+DEFINIR NUMERO NNUMCAD; 
+DEFINIR NUMERO NESTPOS; 
+DEFINIR ALFA   APOSTRA; 
+DEFINIR NUMERO NEMPCHE; 
+DEFINIR NUMERO NTIPCHE; 
+DEFINIR NUMERO NCADCHE; 
+DEFINIR NUMERO NALTERAR; 
+DEFINIR CURSOR CUSU; 
+DEFINIR ALFA   AUSUCOL; 
+DEFINIR ALFA   AUSUCHE; 
+DEFINIR ALFA   AFILTRO; 
+DEFINIR NUMERO NACHOUAD; 
+DEFINIR ALFA   ACODUSU; 
+DEFINIR ALFA   ACODCHE; 
+DEFINIR ALFA   AATRIBUTO; 
+DEFINIR DATA   DDATHOJ; 
+DEFINIR NUMERO NHORHOJ; 
+definir alfa apostopai;                                                                
+definir alfa aemail;
+definir cursor curmail;                                  
+DEFINIR ALFA AEMACOMLID;
+definir alfa aerro;
+definir numero nerro;
+ 
+ncontsai = 0;
+NALTERAR = 0;
+NINSERIR = 0;
+ 
+CR034FUN.SQL "SELECT NUMEMP, TIPCOL, NUMCAD, ESTPOS, POSTRA  \
+FROM R034FUN WHERE SITAFA <> 7 and numcad = 10039258";      
+CR034FUN.ABRIRCURSOR(); 
+
+ncadche = 0;
+ntipche = 0;
+nempche = 0;
+NNUMEMP = 0;                        
+NTIPCOL = 0; 
+NNUMCAD = 0;   
+APOSTRA =""; 
+ 
+ENQUANTO(CR034FUN.ACHOU) 
+{ 
+  NNUMEMP = CR034FUN.NUMEMP; 
+  NTIPCOL = CR034FUN.TIPCOL; 
+  NNUMCAD = CR034FUN.NUMCAD;  
+  NESTPOS = CR034FUN.ESTPOS; 
+  APOSTRA = CR034FUN.POSTRA; 
+  NALTERAR = 0; 
+  NINSERIR = 0; 
+  ncont = 0;
+  aemail = "";
+  
+  RETORNAPOSTOPAI(APOSTRA,NESTPOS,1,DATSIS,APOSTOPAI);
+
+  RETORNACHEFEPOSTO(0,NESTPOS,1,DATSIS,APOSTOPAI,NEMPCHE,NTIPCHE,NCADCHE);
+
+  SE(NCADCHE=0)
+  {
+    RETORNACHEFEPOSTO(1,NESTPOS,1,DATSIS,APOSTOPAI,NEMPCHE,NTIPCHE,NCADCHE);  
+  }
+  enquanto(NCADCHE=0)
+  {
+    RETORNAPOSTOPAI(APOSTOPAI,NESTPOS,1,DATSIS,APOSTOPAI); 
+    RETORNACHEFEPOSTO(1,NESTPOS,1,DATSIS,APOSTOPAI,NEMPCHE,NTIPCHE,NCADCHE); 
+    ncont = ncont + 1;
+    se(ncont = 10)
+    {
+     se(NCADCHE = 0)
+      {
+        vapara sair;                       
+      }
+    }
+  }
+  
+  
+  
+  CDACHE.SQL "SELECT USU_NUMEMPLID, USU_TIPCOLLID, USU_NUMCADLID, usu_emacomlid \
+              FROM USU_TLIDERAD WHERE                            \
+              USU_NUMEMP = :NNUMEMP AND                          \
+              USU_TIPCOL = :NTIPCOL AND                          \                                                   
+              USU_NUMCAD = :NNUMCAD"; 
+              
+  CDACHE.ABRIRCURSOR(); 
+  SE(CDACHE.ACHOU) 
+  {
+    NNUMEMPLID = CDACHE.USU_NUMEMPLID;
+    NTIPCOLLID = CDACHE.USU_TIPCOLLID;
+    NNUMCADLID = CDACHE.USU_NUMCADLID;
+    AEMACOMLID = CDACHE.USU_EMACOMLID;
+    
+    curmail.sql"select emacom from r034cpl     \
+                  where                        \
+                  numemp = :NEMPCHE and        \
+                  tipcol = :NTIPCHE and        \
+                  numcad = :NCADCHE";
+                  
+      curmail.abrircursor();
+      se(curmail.achou)
+      {
+        aemail = curmail.emacom;
+      }
+      curmail.fecharcursor();
+      
+      se(aemail <> AEMACOMLID)
+      {
+        nalterar = 1;
+      } 
+      
+                                                        
+    SE ((NEMPCHE <> NNUMEMPLID) OU (NTIPCHE <> NTIPCOLLID)  OU (NCADCHE <> NNUMCADLID)) 
+    { 
+       NALTERAR = 1; 
+       /*NEMPCHE = CDACHE.USU_NUMEMPLID;  
+       NTIPCHE = CDACHE.USU_TIPCOLLID;  
+       NCADCHE = CDACHE.USU_NUMCADLID;*/
+       NALTERAR = 1; 
+    }    
+  } 
+  SENAO 
+  { 
+     NINSERIR = 1; 
+  } 
+  CDACHE.FECHARCURSOR();
+  
+   
+  SE((NINSERIR =1) OU (NALTERAR =1))                           
+  { 
+    AUSUCOL = ""; 
+    AUSUCHE = ""; 
+    
+    /*CUSU.SQL "SELECT R999USU.NOMUSU \ 
+                     FROM R034USU, R999USU \ 
+                    WHERE R034USU.NUMEMP = :NNUMEMP \ 
+                      AND R034USU.TIPCOL = :NTIPCOL \ 
+                      AND R034USU.NUMCAD = :NNUMCAD \ 
+                      AND R034USU.CODUSU = R999USU.CODUSU"; 
+    CUSU.ABRIRCURSOR(); 
+    SE(CUSU.ACHOU) 
+    {
+      AUSUCOL = CUSU.NOMUSU; 
+    }                      
+    CUSU.FECHARCURSOR(); */
+    
+    /*CUSU.SQL "SELECT R999USU.NOMUSU \ 
+                     FROM R034USU, R999USU \ 
+                    WHERE R034USU.NUMEMP = :NEMPCHE \ 
+                      AND R034USU.TIPCOL = :NTIPCHE \                                          
+                      AND R034USU.NUMCAD = :NCADCHE \ 
+                      AND R034USU.CODUSU = R999USU.CODUSU"; 
+    CUSU.ABRIRCURSOR(); 
+    SE(CUSU.ACHOU)
+    { 
+      AUSUCHE = CUSU.NOMUSU;  
+    }                     
+      CUSU.FECHARCURSOR();*/ 
+     
+      DDATHOJ = DATSIS; 
+      NHORHOJ = HORSIS; 
+      @aemail = "";@
+      
+                  
+      SE(NINSERIR =1) 
+      { 
+        EXECSQLEX( "INSERT INTO USU_TLIDERAD                                 \   
+        (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_NUMEMPLID,                  \
+         USU_TIPCOLLID, USU_NUMCADLID,                                       \
+         USU_DATALT, USU_HORALT, USU_EMACOMLID)                              \
+         VALUES                                                              \ 
+       (:NNUMEMP,   :NTIPCOL,   :NNUMCAD,   :NEMPCHE,                        \                                                                
+        :NTIPCHE,   :NCADCHE,                                                \
+        :DDATHOJ,   :NHORHOJ, :aemail)",NERRO, AERRO);         
+      } 
+      SENAO 
+      { 
+        EXECSQLEX ("UPDATE USU_TLIDERAD         \ 
+          SET USU_NUMEMPLID = :NEMPCHE,      \ 
+              USU_TIPCOLLID = :NTIPCHE,      \ 
+              USU_NUMCADLID = :NCADCHE,      \ 
+              USU_DATALT = :DDATHOJ,         \ 
+              USU_HORALT = :NHORHOJ,         \
+              USU_EMACOMLID = :aemail        \ 
+        WHERE USU_NUMEMP = :NNUMEMP          \ 
+        AND   USU_TIPCOL = :NTIPCOL          \                                               
+        AND   USU_NUMCAD = :NNUMCAD", NERRO, AERRO);               
+      } 
+      
+      ncontsai = ncontsai + 1;
+      
+      se(ncontsai = 300)
+      {
+        vapara sair;
+      }
+              
+  }
+  sair: 
+  CR034FUN.PROXIMO(); 
+} 
+
+CR034FUN.FECHARCURSOR(); 

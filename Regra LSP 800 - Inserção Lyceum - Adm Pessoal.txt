@@ -1,0 +1,1034 @@
+definir alfa anomfun;    definir alfa anumemp;   definir alfa anomfil;
+definir alfa anumemp;    definir alfa anumcad;   definir alfa apostra;
+definir alfa adespos;    definir alfa anumcad;   definir alfa atitred;
+definir alfa acodfac;    definir alfa anumloc;   definir alfa asitafa;
+definir alfa acolatv;    definir alfa anomfun;   definir alfa aapefun;
+definir alfa aendrua;    definir alfa aendnum;   definir alfa aendcpl;
+definir alfa anombai;    definir alfa acodcid;   definir alfa aendcep;
+definir alfa anumtel;    definir alfa anumcpf;   definir alfa arg;                        
+definir alfa anumcid;    definir alfa adexcid;   definir alfa aestcid;
+definir alfa aemicid;    definir alfa aendcom;   definir alfa anumcom;
+definir alfa acplcom;    definir alfa abaicom;   definir alfa apaicom;                              
+definir alfa acidcom;    definir alfa acepcpm;   definir alfa atelcom;                      
+definir alfa apedeme;    definir alfa aemapar;   definir alfa aemacom;
+definir alfa acodprf;    definir alfa aregcon;   definir alfa adatven;                                  
+definir alfa anumtel2;   definir alfa anumfax;   definir alfa anomemp;                                
+definir alfa aemacom;    definir alfa acodban;   definir alfa acodage;                                  
+definir alfa aconban;    definir alfa atippes;   definir alfa arazsoc;
+definir alfa aendfil;    definir alfa aendnum;   definir alfa acplfil;                                 
+definir alfa anombai;    definir alfa acodcid;   definir alfa aendcep;                                      
+definir alfa anumtel;    definir alfa anumfax;   definir alfa aemafil;
+definir alfa anumcgc;    definir alfa anumcnh;   definir alfa acatcnh;
+definir alfa anumres;    definir alfa adatadm;   definir alfa adatnas;
+definir alfa atipsex;    definir alfa aestciv;   definir alfa adtultt;
+definir alfa afectur;    definir alfa anompai;   definir alfa aobtelre;
+definir alfa aobteco;    definir alfa aurlpar;   definir alfa aurlpro;
+definir alfa anumpis;    definir alfa acodpes;   definir alfa acontra;
+definir alfa atipcon;    definir alfa aoutfac;   definir alfa aprinom;
+definir alfa ameinom;    definir alfa afimnom;   definir alfa acodlat;
+definir alfa awinusu;    definir alfa adatafa;   definir alfa astpatu;
+definir alfa asenalt;    definir alfa aanoing;   definir alfa atipint;
+definir alfa aconcur;    definir alfa acandit;   definir alfa acurcon;
+definir alfa atmppro;    definir alfa atmpmag;   definir alfa atmpead;
+definir alfa atmpges;    definir alfa atmpedu;   definir alfa afild01;
+definir alfa afild02;    definir alfa afild03;   definir alfa afild04;
+definir alfa afild05;    definir alfa afild06;   definir alfa afild07;
+definir alfa afild08;    definir alfa afild09;   definir alfa afild10;
+definir alfa anomsoc;    definir alfa cdados;    definir alfa adados;
+definir alfa anomloc;    definir alfa anmtel2;   definir alfa anumtel;
+definir alfa ajson;      definir alfa acajson;   definir alfa arojson;
+definir alfa ahorenv;    definir alfa adatenv;   definir alfa astatus;
+definir alfa alog;       definir alfa anumloc;   definir alfa acodcar;
+definir alfa apostra;    definir alfa acodccu;   definir alfa aretorno;
+definir alfa anomccu;    definir alfa anumfil;   definir alfa apaifil;
+definir alfa acidfil;    definir alfa abaifil;   definir alfa aestfil;
+definir alfa afaxfil;    definir alfa atelfil;   definir alfa ae_macom;
+definir alfa aemabox;    definir alfa anumcel;   definir alfa avirgula;
+definir alfa avalor;     definir alfa atitula;   definir alfa aatuprof;
+definir alfa aobs;       definir alfa aprofuf;   definir alfa ahabtac	;
+definir alfa aenhadol;   definir alfa aidmat	;  definir alfa afaxcom;
+definir alfa atipcol;    definir alfa acodbai;   definir alfa acodpai;
+definir alfa acodfil;    definir alfa adexcid;   definir alfa adatadm;
+definir alfa adatnas;    definir alfa adatafa;   definir alfa adatven;
+definir alfa acepfil;    definir alfa amsgerro;  definir alfa anomaux;
+definir alfa aprinome;   definir alfa ameinome;  definir alfa aultnome;
+definir alfa amsgerro;   definir alfa alink;     definir alfa AHTTP;
+definir alfa ATOKEN;     definir alfa AINFJSON;  definir alfa alinkauth;
+definir alfa AAUX;       definir alfa AINFINAL;  definir alfa AORIGINAL;
+definir alfa ahttpget;   definir alfa alinkdoc;  definir alfa adatcpl;
+definir alfa adexcidlyc; definir alfa adatadmlyc;definir alfa adatnaslyc; 
+definir alfa adatafalyc; definir alfa adatvenlyc;definir alfa adathablyc;
+definir alfa astpatulyc; definir alfa adatcnh;   definir alfa alinkhub;
+definir alfa arethub;    definir alfa ahttphub;  definir alfa ajsonhub;
+definir alfa apragma;    definir alfa avary;     definir alfa aNEL;
+definir alfa aexpires;   definir alfa altsvc;    definir alfa aCFRAY;
+definir alfa alocation;  definir alfa aServer;   definir alfa aConnection;
+definir alfa aReportTo;  definir alfa adate;     definir alfa arequestUrl;                                     
+definir alfa anumfunc;   definir alfa are;       definir alfa aid;
+definir alfa anomcom;    definir alfa adesgra;   definir alfa adesprf;
+definir alfa aregcon;    definir alfa adatexp;   definir alfa agrains;
+definir alfa aestctp;    definir alfa atippes;   definir alfa adescon;
+definir alfa adathoj;    definir alfa aanoadm;   definir alfa ausuad;
+definir alfa adatexplyc; definir alfa adathojlyc;
+definir alfa arequestBody;         definir alfa arequestHeaders;
+definir alfa arequestMethod;       definir alfa axframeoptions;                                         
+definir alfa aresponseBody;        definir alfa aresponseHeaders;
+definir alfa aresponseStatus;      definir alfa aCFCacheStatus;
+definir alfa aContentType;         definir alfa aTransferEncoding;     
+definir alfa axxssprotection;      definir alfa aCacheControl;       
+definir alfa axcontenttypeoptions; definir alfa acodcidj; 
+definir alfa anestciverif;         definir alfa anomusu;                                                                   
+definir alfa alink_cidade;         definir alfa alink_docente;
+definir alfa acep;                 definir alfa alink_cidade_resto;
+definir alfa AHTTP_cidade;         definir alfa atoken_cidade; 
+definir alfa acoderro_cidade;      definir alfa atoken_aux;
+definir alfa AHTTP_docente;        definir alfa alink_docente;
+definir alfa atoken_docente;       definir alfa acoderro_docente;
+definir alfa atoken_aux_docente;   definir alfa a_ret_pessoa;
+definir alfa a_ret_numFunc;        definir alfa a_ret_re;
+definir alfa a_ret_json;           definir alfa atokenpes; 
+definir alfa atokenfunc;           definir alfa verificador;
+definir alfa ajsoncolbret;         definir alfa afaculdade;
+definir alfa a_pessoa;             definir alfa a_numFunc;
+definir alfa a_faculdades;         definir alfa a_faculdade;
+definir alfa aativo;               definir alfa alinkfilial;
+definir alfa alinkfilial2;         definir alfa a_data;
+definir alfa abarra;               definir alfa AHTTP_faculdade;
+definir alfa a_ativo;              definir alfa alink_faculdade;
+definir alfa atoken_faculdade;     definir alfa alink_faculdade;
+definir alfa ajson_cadfacul;       definir alfa atoken_facul;
+definir alfa AHTTP_F;              definir alfa aposfunc;
+
+definir numero nnumemp; definir numero nnumcad; definir numero ntipcol;
+definir numero ncodfac; definir numero nnumloc; definir numero ncodloc; 
+definir numero ncodbai; definir numero ncodcid; definir numero nendcep;
+definir numero nnumtel; definir numero nnumcpf; definir numero ntiporg; 
+definir numero nnumcid; definir numero ndexcid; definir numero nestcid; 
+definir numero nemicid; definir numero nendcom; definir numero nnumcom;
+definir numero ncplcom; definir numero nbaicom; definir numero npaicom;
+definir numero ncidcom; definir numero ncepcom; definir numero ntelcom;
+definir numero npedeme; definir numero ncodpro; definir numero nregcon;
+definir data ddatenv;   definir numero nnumcel; definir numero nnomemp;
+definir numero nconban; definir numero ncodage; definir numero nconban;
+definir numero nrazsoc; definir numero nendfil; definir numero nnumfil;
+definir numero ncplfil; definir numero nbaifil; definir numero ncidfil;
+definir numero ncepfil; definir numero nemafil; definir numero nnumcgc;
+definir numero nhabdol; definir numero ncodcat; definir numero nobsvre;
+definir numero ndatadm; definir numero ndatnas; definir numero ntipsex;
+definir numero nestciv; definir numero ndtultt; definir numero nfectur;                  
+definir numero ncodpai; definir numero nnumpis; definir numero ncodpes;
+definir numero ncontra; definir numero ntipcon; definir numero noutfac;
+definir numero nprinom; definir numero nmeinom; definir numero nultnom;
+definir numero ncodlat; definir numero nwinusu; definir numero ndatafa;
+definir numero nstpatu; definir numero nsenalt; definir numero nanoing;
+definir numero ntipint; definir numero nconcur; definir numero ncandit;
+definir numero ncurcon; definir numero ntmppro; definir numero ntmpmag;
+definir numero ntmpead; definir numero ntmpges; definir numero ntmpedu;
+definir numero nfild01; definir numero nfild02; definir numero nfild03;
+definir numero nfild04; definir numero nfild05; definir numero nfild06;
+definir numero nfild07; definir numero nfild08; definir numero nfild09;
+definir numero nfild10; definir numero nhorenv; definir numero nerro;
+definir numero ncidfil; definir numero nbaifil; definir numero npaifil;
+definir numero ncont;   definir numero ncepfil; definir numero ncoderro;
+definir numero nhorint; definir numero nposnome;definir numero ntamnome;  
+definir numero NCODIGO; definir numero nnumpis; definir numero nestciverif; 
+definir numero grains;               definir numero ncoderro_cidade; 
+definir numero nPosicao_cidade;      definir numero nPosicao_docente;
+definir numero ncoderro_docente;     definir numero ndencep; 
+definir numero nposfil;              definir numero nvalor;   
+definir numero posicao_pessoa;       definir numero posicao_numFunc;
+definir numero posicao_faculdade;    definir numero posicao_ativo; 
+definir numero tamanho_total;        definir numero ntamfil;  
+definir numero posicao_cidade;       definir numero posicao_cidadev;                   
+definir numero pos_numcad;           definir numero nposre;
+definir numero nposfunc; 
+
+definir data ddatadm;  definir data ddatafa;   definir data ddexcid;
+definir data ddatint;  definir data ddathab;   definir data ddatstp;
+definir data ddatcnh;  definir alfa acoderro;  definir data ddatexp;
+definir data ddatnas;  definir data ddathoj;
+
+definir alfa ajson2;   definir alfa atoken2;   definir alfa atoken2;
+definir alfa abody2;   definir alfa pulahub;
+definir alfa aposicao_numfunc;                definir alfa aposre;
+
+definir cursor curfil; definir cursor curestciv;
+
+definir cursor curfil;
+
+definir alfa ageral;  
+
+ageral = "GERAL";
+ddathoj = dathoj;  
+atoken2 = "\"\"";
+@ALIMENTANDO VARIAVEIS @
+
+convertemascara(3,datsis,aanoing,"YYYY");
+
+@adbuscaentidade()@
+
+@nomeusuariowindows@ 
+
+nposfunc = 0;
+nposre = 0;
+aposfunc = "";
+aposre = "";
+aprofuf = "";
+ahabtac = "";
+aenhadol = "";
+afaxcom = "";
+@adatcpl = "T12:00:00.360Z";@
+adatcpl = "";
+apedeme = "100";
+ddatint = datsis;                   
+nhorint = horsis;
+ncont = 0;
+ajson = "";
+atmppro = "0";
+atmpmag = "0";                                                 
+atmpead = "0";
+atmpges = "0";
+atmpedu = "0";
+atippes = "PS";
+
+posicao_pessoa = 0;
+posicao_numFunc = 0;
+posicao_faculdade = 0;
+posicao_ativo = 0;
+posicao_cidade = 0;
+
+
+
+@End Point@
+@alink = "https://homologacao.maristabrasil.org/api/v2/tabela/docente";@
+@alink = "https://homologacao.maristabrasil.org/lyceum-api-rest/v2/tabela/docente";  removido 01/12/2025 @
+
+/*
+                    
+hml 
+
+alink = "https://homologacao.maristabrasil.org/lyceum-api-rest/comum/tipo/API/titulo/API_Custom_Insere_Docente/consultaDinamica";
+alinkfilial = "https://homologacao.maristabrasil.org/lyceum-api-rest/v2/tabela/unidade-ensino?pk%5BunidadeEns%5D=";
+alink_faculdade = "https://homologacao.maristabrasil.org/lyceum-api-rest/v2/tabela/docente-unidade";
+*/
+
+
+alinkhub = "https://apihub.maristabrasil.org/senior/hmg/monitoramento";
+
+@produção@
+
+@https://conectado.maristabrasil.org/aonline-api/comum/tipo/API/titulo/API_Custom_Insere_Docente/consultaDinamica@
+
+alink = "https://conectado.maristabrasil.org/aonline-api/comum/tipo/API/titulo/API_Custom_Insere_Docente/consultaDinamica";   
+alink = "https://conectado.maristabrasil.org/aonline-api/comum/tipo/API/titulo/API_Custom_Insere_Docente/consultaDinamica";
+alinkfilial = "https://conectado.maristabrasil.org/aonline-api/v2/tabela/unidade-ensino?pk%5BunidadeEns%5D=";
+alink_faculdade = "https://conectado.maristabrasil.org/aonline-api/tabela/docente-unidade";
+
+
+
+
+@               tipo de contrato = 10  @                                                                 
+
+/*
+3       UNIAO BRASILEIRA DE EDUCACAO E ENSINO
+4       UNIAO NORTE BRASILEIRA EDUCACAO CULTURA 
+2 - somente filial 2046 e 2048  */ 
+                                                                                
+
+												
+adados="select fun.numemp, fun.tipcol, fun.numcad, fun.numcpf,                \
+               fun.datadm, fun.datnas, fun.codcar, fun.postra,                \
+               fun.sitafa, fun.apefun, cpl.codcid, cpl.codest,                \
+               cpl.codbai, cpl.endnum, cpl.endrua, cpl.endcep,                \
+               cpl.endnum, cpl.endcpl, cpl.numtel, cpl.nmtel2,                \
+               cpl.numcid, cpl.dexcid, cpl.estcid, cpl.emicid,                \
+               cpl.emacom, cpl.emapar, cpl.codprf, cpl.regcon,                \
+               cpl.datven, fun.codban, fun.codage, fun.conban,                \
+               cid.nomcid, bai.nombai, emp.nomemp, cpl.datcnh,                \
+               cpl.numcnh, cpl.catcnh, cpl.numres, fun.grains,                \
+               fun.tipsex, fun.estciv, cpl.codpai, fun.numpis,                \
+               fun.codfil, fun.codpes, cpl.nomsoc, fun.tipcon,                \
+               fun.datafa,             fun.codccu, ccu.nomccu,                \
+               pos.despos, car.titred, orn.nomloc, fun.nomfun,                \                            
+               pai.nompai, fun.numloc, emp.nomemp, cpl.nomcom,                \
+               gra.desgra, cpl.datexp, fun.estctp                             \    
+               from                                                           \       
+               r034fun fun, r034cpl cpl, r030fil fil, r017pos pos,            \
+               r024car car, r018ccu ccu, r016hie hie, r074bai bai,            \
+               r074pai pai, r074cid cid, r074est est, r030emp emp,            \
+               r016orn orn, r022gra gra, usu_tfilleg leg                      \
+               where                                                          \
+               fun.numcpf > 0 and                                             \
+               fun.sitafa <> 7 and                                            \                             
+               fun.tipcol = 1 and                                             \
+               cpl.emacom <> '' and                                           \
+               ((fun.numemp in (3,4) and                                      \
+               fun.numemp = leg.usu_numemp and                                \
+               fun.codfil = leg.usu_codfil and                                \
+               leg.usu_legado = 'L') or                                       \
+               (fun.numemp = 2 and fun.codfil in(2043,2046,2048) and          \
+               fun.numemp = leg.usu_numemp and                                \
+               fun.codfil = leg.usu_codfil and                                \
+               leg.usu_legado = 'L')) and                                     \
+               fun.grains = gra.grains and                                    \         
+               fun.numemp = cpl.numemp and                                    \
+               fun.tipcol = cpl.tipcol and                                    \
+               fun.numcad = cpl.numcad and                                    \
+               fun.numemp = emp.numemp and                                    \
+               fun.numemp = fil.numemp and                                    \
+               fun.codfil = fil.codfil and                                    \
+               fun.numemp = emp.numemp and                                    \
+               fun.postra = pos.postra and                                    \
+               fun.estpos = pos.estpos and                                    \
+               fun.numemp = ccu.numemp and                                    \
+               fun.codccu = ccu.codccu and                                    \
+               fun.estcar = car.estcar and                                    \
+               fun.codcar = car.codcar and                                    \
+               fun.taborg = hie.taborg and                                    \
+               fun.numloc = hie.numloc and                                    \
+               cpl.codcid = cid.codcid and                                    \
+               cpl.codbai = bai.codbai and                                    \
+               cpl.codpai = pai.codpai and                                    \
+               cpl.codest = est.codest and                                    \
+               est.codpai = pai.codpai and                                    \
+               cid.codcid = bai.codcid and                                    \
+               hie.taborg = orn.taborg and                                    \
+               hie.numloc = orn.numloc and                                    \
+               ((fun.tipcon = 10) or                                          \
+                (car.usu_intlyc = 'S')) and                                   \
+               hie.datini = (select max(dat.datini) from r016hie dat          \
+                             where                                            \                          
+                             dat.numloc = hie.numloc  and                     \
+                             dat.taborg = hie.taborg) and                     \
+               not exists (select usu_numcpf from usu_tintlyc                 \ 
+                            where usu_numemp = fun.numemp and                 \ 
+                                  usu_tipcol = fun.tipcol and                 \ 
+                                  usu_numcad = fun.numcad and                 \ 
+                                  usu_status = 'OK' and                       \ 
+               usu_datenv = (select max(dat.usu_datenv) from usu_tintlyc dat  \ 
+								                where                                         \ 
+												dat.usu_numemp = usu_tintlyc.usu_numemp and           \ 
+												dat.usu_tipcol = usu_tintlyc.usu_tipcol and           \ 
+												dat.usu_numcad = usu_tintlyc.usu_numcad and           \ 
+												dat.usu_status = 'OK') and                            \ 
+               usu_horenv = (select max(hor.usu_horenv) from usu_tintlyc hor  \ 
+								                where                                         \ 
+												hor.usu_numemp = usu_tintlyc.usu_numemp and           \
+												hor.usu_tipcol = usu_tintlyc.usu_tipcol and           \
+												hor.usu_numcad = usu_tintlyc.usu_numcad and           \ 
+												hor.usu_datenv = usu_tintlyc.usu_datenv and           \ 
+												hor.usu_status = 'OK'))";                   
+              /* fun.numcad = 40007437   and                             
+               fil.usu_lyceum = 'S' and */
+               
+               
+               
+
+												
+												
+                                          
+SQL_Criar(cdados); 
+SQL_UsarSQLSenior2(cdados, 0); 
+SQL_UsarAbrangencia(cdados, 0);
+SQL_DEFINIRCOMANDO(cdados, adados);
+SQL_AbrirCursor(cdados); 
+ENQUANTO (SQL_EOF(cdados) = 0) 
+{ 
+  SQL_RetornarAlfa(cdados,"numloc",anumloc);
+  SQL_RetornarAlfa(cdados,"nomcom",anomcom);
+  SQL_RetornarAlfa(cdados,"nomloc",anomloc);
+  SQL_RetornarAlfa(cdados,"sitafa",asitafa);
+  SQL_RetornarAlfa(cdados,"nomfun",anomfun);
+  SQL_RetornarAlfa(cdados,"apefun",aapefun);
+  SQL_RetornarAlfa(cdados,"endrua",aendrua);
+  SQL_RetornarAlfa(cdados,"endnum",aendnum);
+  SQL_RetornarAlfa(cdados,"endcpl",aendcpl);
+  SQL_RetornarAlfa(cdados,"nombai",anombai);
+  SQL_RetornarAlfa(cdados,"codcid",acodcid);
+  SQL_RetornarAlfa(cdados,"endcep",aendcep);
+  SQL_RetornarAlfa(cdados,"numtel",anumtel);
+  SQL_RetornarAlfa(cdados,"numcpf",anumcpf);
+  SQL_RetornarAlfa(cdados,"numcid",anumcid);  
+  SQL_RetornarAlfa(cdados,"estcid",aestcid);
+  SQL_RetornarAlfa(cdados,"emicid",aemicid);
+  SQL_RetornarAlfa(cdados,"emapar",aemapar);
+  SQL_RetornarAlfa(cdados,"emacom",aemacom);
+  SQL_RetornarAlfa(cdados,"emacom",aemabox);
+  SQL_RetornarAlfa(cdados,"codprf",acodprf);
+  SQL_RetornarAlfa(cdados,"regcon",aregcon);    
+  SQL_RetornarAlfa(cdados,"nmtel2",anumcel);
+  SQL_RetornarAlfa(cdados,"nomemp",anomemp);
+  SQL_RetornarAlfa(cdados,"emacom",aemacom);
+  SQL_RetornarAlfa(cdados,"codban",acodban);
+  SQL_RetornarAlfa(cdados,"codage",acodage);
+  SQL_RetornarAlfa(cdados,"conban",aconban);
+  SQL_RetornarAlfa(cdados,"endnum",aendnum);
+  SQL_RetornarAlfa(cdados,"nombai",anombai);
+  SQL_RetornarAlfa(cdados,"codcid",acodcid);
+  SQL_RetornarAlfa(cdados,"numtel",anumtel);
+  SQL_RetornarAlfa(cdados,"numcnh",anumcnh);
+  SQL_RetornarAlfa(cdados,"catcnh",acatcnh);
+  SQL_RetornarAlfa(cdados,"numres",anumres);  
+  SQL_RetornarAlfa(cdados,"tipsex",atipsex);
+  SQL_RetornarAlfa(cdados,"estciv",aestciv);
+  SQL_RetornarAlfa(cdados,"nompai",anompai);
+  SQL_RetornarAlfa(cdados,"numpis",anumpis);
+  SQL_RetornarAlfa(cdados,"codpes",acodpes);
+  SQL_RetornarAlfa(cdados,"tipcon",atipcon);  
+  SQL_RetornarAlfa(cdados,"postra",apostra);
+  SQL_RetornarAlfa(cdados,"codcar",acodcar);
+  SQL_RetornarAlfa(cdados,"codccu",acodccu);
+  SQL_RetornarAlfa(cdados,"despos",adespos);
+  SQL_RetornarAlfa(cdados,"titred",atitred);
+  SQL_RetornarAlfa(cdados,"nomccu",anomccu);
+  SQL_RetornarAlfa(cdados,"nomemp",anomemp);
+  SQL_RetornarAlfa(cdados,"nomsoc",anomsoc);                                        
+  SQL_RetornarAlfa(cdados,"desgra",adesgra);
+  @SQL_RetornarAlfa(cdados,"desprf",adesprf);@
+  SQL_RetornarAlfa(cdados,"grains",agrains);
+  SQL_RetornarAlfa(cdados,"estctp",aestctp);
+  @SQL_RetornarAlfa(cdados,"noment",anomusu);@
+  
+  SQL_RetornarInteiro(cdados,"numemp",nnumemp);
+  SQL_RetornarInteiro(cdados,"numcad",nnumcad);
+  SQL_RetornarInteiro(cdados,"tipcol",ntipcol);
+  SQL_RetornarInteiro(cdados,"codbai",ncodbai);
+  SQL_RetornarInteiro(cdados,"codpai",ncodpai);
+  SQL_RetornarInteiro(cdados,"sitafa",nsitafa);
+  SQL_RetornarInteiro(cdados,"codfil",ncodfil);
+  SQL_RetornarInteiro(cdados,"numcpf",nnumcpf);
+  SQL_RetornarInteiro(cdados,"numpis",nnumpis);
+  SQL_RetornarInteiro(cdados,"endcep",nendcep);
+  
+  intparaalfa(nnumemp,anumemp);
+  intparaalfa(nnumcad,anumcad);
+  intparaalfa(ntipcol,atipcol);
+  intparaalfa(ncodbai,acodbai);
+  intparaalfa(ncodpai,acodpai);
+  intparaalfa(nsitafa,asitafa);
+  intparaalfa(ncodfil,acodfil);
+  
+  SQL_RetornarData(cdados,"dexcid",ddexcid);
+  SQL_RetornarData(cdados,"datadm",ddatadm);
+  SQL_RetornarData(cdados,"datnas",ddatnas);
+  SQL_RetornarData(cdados,"datafa",ddatafa);
+  SQL_RetornarData(cdados,"datven",ddatven);
+  SQL_RetornarData(cdados,"datcnh",ddatcnh);
+  SQL_RetornarData(cdados,"datexp",ddatexp);
+  
+  convertemascara(3,ddexcid, adexcid, "DD/MM/YYYY");
+  convertemascara(3,ddatadm, adatadm, "DD/MM/YYYY");        
+  convertemascara(3,ddatnas, adatnas, "DD/MM/YYYY");        
+  convertemascara(3,ddatafa, adatafa, "DD/MM/YYYY");        
+  convertemascara(3,ddatven, adatven, "DD/MM/YYYY");
+  convertemascara(3,ddatcnh, adatcnh, "DD/MM/YYYY");
+  convertemascara(3,ddatexp, adatexp, "DD/MM/YYYY"); 
+  convertemascara(1,nnumcpf, anumcpf, "99999999999");
+  convertemascara(1,nnumpis, anumpis, "99999999999");
+  convertemascara(1,nendcep, aendcep, "99999999");
+  acep = aendcep; 
+  alog = "";
+  @ DIVIDINDO O NOME EM 3 VARÁVEIS@
+  posicaoalfa(" ", anomfun, nposnome);
+  tamanhoalfa(anomfun, ntamnome);
+  
+  anomaux = anomfun;
+  aprinome = anomfun;
+  ameinome = anomfun;
+  aultnome = anomfun;
+  nposfil = 0; 
+  copiaralfa(aprinome, 0, nposnome);
+  tiraespacos(aprinome,aprinome);
+  copiaralfa(ameinome,nposnome,ntamnome);
+  tiraespacos(ameinome,ameinome);
+  aultnome = ameinome;
+  nposnome = 0;
+  posicaoalfa(" ",ameinome,nposnome);
+  se(nposnome > 0)
+  {
+    copiaralfa(ameinome,0,nposnome); 
+  }  
+   
+  posicaoalfa(" ", aultnome, nposnome);
+  tamanhoalfa(aultnome, ntamnome);
+  copiaralfa(aultnome,nposnome,ntamnome);
+  tiraespacos(aultnome,aultnome);
+       
+  @DENIFE EM ATIVO = 'S' DEMITIDO = 'N' @
+  se(nsitafa = 7)
+  {
+    acolatv = "N";                                                       
+  }
+  senao
+  {
+    acolatv = "S"; 
+  } 
+  
+  curestciv.sql "select keynam, valkey from r996lsf where lstnam = 'lestciv' and keynam = :aestciv";
+  curestciv.abrircursor();
+  se(curestciv.achou)
+  {
+    @aestciv = curestciv.valkey; @
+    anestciverif = curestciv.valkey;
+    se(aestciv = "5")
+    {
+      aestciv = "Não Informado";  
+    }
+  } 
+  curestciv.fecharcursor();
+  
+  
+  curestciv.sql "select keynam, valkey from r996lsf where lstnam = 'ltipcom' and keynam = :atipcon";
+  curestciv.abrircursor();
+  se(curestciv.achou)
+  {
+    adescon = curestciv.valkey;
+  }    
+  curestciv.fecharcursor();
+     
+           
+  @BUSCA DADOS DA FILIAL@
+  curfil.sql"select r030fil.razsoc, r030fil.cplfil, r030fil.endfil, \
+                    r030fil.endnum, r030fil.codpai, r030fil.codest, \
+                    r030fil.codcid, r030fil.codbai, r030fil.codcep, \
+                    r030fil.numtel, r030fil.numcgc, r030fil.numfax, \
+                    r074pai.nompai, r074cid.nomcid, r074bai.nombai, \
+                    r074cid.estcid, r030fil.numfax, r030fil.numtel, \
+                    r030fil.emafil                                  \
+                    from                                            \
+                    r030fil, r074cid, r074pai, r074bai              \
+                    where                                           \
+                    r030fil.numemp = :nnumemp and                   \
+                    r030fil.codfil = :ncodfil and                   \
+                    r030fil.codcid = r074cid.codcid and             \
+                    r030fil.codcid = r074bai.codcid and             \
+                    r030fil.codbai = r074bai.codbai and             \
+                    r030fil.codpai = r074pai.codpai";
+                    
+  curfil.abrircursor();
+  se(curfil.achou)
+  {
+    arazsoc = curfil.razsoc;  
+    acplfil = curfil.cplfil;
+    aendfil = curfil.endfil;
+    anumfil = curfil.endnum;
+    apaifil = curfil.nompai;
+    ncepfil = curfil.codcep;
+    acidfil = curfil.nomcid;
+    abaifil = curfil.nombai;
+    aestfil = curfil.estcid;
+    afaxfil = curfil.numfax;
+    atelfil = curfil.numtel;
+    ae_macom = curfil.emafil;
+    ncidfil = curfil.codcid;
+    nbaifil = curfil.codbai;
+    npaifil = curfil.codpai;
+  
+  }
+  curfil.fecharcursor();
+                    
+  intparaalfa(ncepfil, acepfil);                    
+  
+  @TRATAMENTO DE DATA CONFORME LYCEUM@
+  
+  convertemascara(3,ddexcid, adexcidlyc, "YYYY-MM-DD");
+  convertemascara(3,ddatadm, adatadmlyc, "YYYY-MM-DD");        
+  convertemascara(3,ddatnas, adatnaslyc, "YYYY-MM-DD");        
+  convertemascara(3,ddatafa, adatafalyc, "YYYY-MM-DD");                                              
+  convertemascara(3,ddatven, adatvenlyc, "YYYY-MM-DD"); 
+  convertemascara(3,ddatstp, astpatulyc, "YYYY-MM-DD");
+  convertemascara(3,ddatcnh, adathablyc, "YYYY-MM-DD");
+  convertemascara(3,ddatexp, adatexplyc, "YYYY-MM-DD");
+  convertemascara(3,ddathoj, adathojlyc, "YYYY-MM-DD");
+  convertemascara(1,nnumcpf, anumcpf, "99999999999");
+  convertemascara(1,nnumpis, anumpis, "99999999999");
+  
+  convertemascara(3,ddathoj, adathoj, "YYYY-MM-DD");
+  
+  desmontadata(ddatadm, ndiaadm,nmesadm,nanoadm);
+  intparaalfa(nanoadm, aanoadm);
+  
+  
+  se(nsitafa = 7)
+  {
+    acolatv = "N";
+  }
+  senao @SE DEMITIDO DATA DE DEMISSÃO É ZERO@
+  {
+    acolatv = "S"; 
+    adatafa = "0000-00-00";
+  }                                                     
+  
+  arg = "RG";    
+
+  @MONTA CORPO JSON@    
+  
+  acodcidj = "0000000000"; 
+  anomusu = aprinome+"_"+anumcad;
+  
+  @  ================  Pega Cidade  ===============================  @
+  alink_cidade = "";
+  alink_cidade_resto = "";
+  @alink_cidade = "https://homologacao.maristabrasil.org/lyceum-api-rest/pessoas/cep/"; @
+  alink_cidade = "https://conectado.maristabrasil.org/aonline-api/pessoas/cep/";
+  @alink_cidade = "https://cq.dev.lyceum.com.br/api/pessoas/cep/";@
+  alink_cidade_resto = "/obterEndereco";
+  alink_cidade = alink_cidade + acep + alink_cidade_resto;
+  
+  HTTPOBJETO(AHTTP_cidade);
+  HttpHabilitaSNI(AHTTP_cidade);
+  HTTPDESABILITAERRORESPOSTA(AHTTP_cidade);
+  HTTPALTERACODIFCARACPADRAO(AHTTP_cidade, "UTF-8"); 
+  
+  HTTPALTERACABECALHOREQUISICAO(AHTTP_cidade, "Accept", "*//*"); 
+  HTTPALTERACABECALHOREQUISICAO(AHTTP_cidade, "Content-Type", "application/json"); 
+    
+  HTTPALTERACABECALHOREQUISICAO(AHTTP_cidade, "Accept-encoding", "gzip, deflate, br, zstd"); 
+  HTTPALTERACABECALHOREQUISICAO(AHTTP_cidade, "Authorization", "Basic YXBpdXNlcjphcGl1c2VyQDEyMw=="); 
+ 
+
+  HTTPGET(AHTTP_cidade, alink_cidade, atoken_cidade);           
+  HTTPLECODIGORESPOSTA(AHTTP_cidade,ncoderro_cidade);
+  intparaalfa(ncoderro_cidade, acoderro_cidade);
+  se(ncoderro_cidade = 200)
+  {
+    posicao_cidade = 0;
+    @getJSONString(atoken_cidade,"municipio",atoken_aux);@
+    posicaoalfa("municipio",atoken_cidade,posicao_cidade);
+    /*posicao_cidadev = posicao_cidade + 12;
+    copiaralfa(atoken_cidade,posicao_cidadev,8);
+    
+    trocastring(atoken_cidade,",","");
+    trocastring(atoken_cidade,"\"","");
+    trocastring(atoken_cidade,":",""); */
+    
+    
+    se(posicao_cidade = 0)
+    {
+      atoken_aux = "0000000000";
+    }
+    se(atoken_aux = "null")
+    {
+      atoken_aux = "0000000000";
+    }
+    se(posicao_cidade > 1)
+    {
+     getJSONString(atoken_cidade,"municipio",atoken_aux);
+    }
+    
+    
+    acodcidj = atoken_aux;  
+   }
+   @  ================  Fim Pega Cidade  ===============================  @ 
+   
+   @  ================  Pega Docente  ===============================  @ 
+  /*atoken_aux = "00000000";
+  acodcidj = atoken_aux;*/
+  posicao_pessoa = 0;
+  posicao_numFunc = 0;
+  posicao_faculdade = 0;
+  posicao_ativo = 0;
+   
+  alink_docente = ""; 
+  @alink_docente = "https://homologacao.maristabrasil.org/lyceum-api-rest/v2/tabela/docente/info-cadastro?cpf=";@
+  alink_docente = "https://conectado.maristabrasil.org/aonline-api/v2/tabela/docente/info-cadastro?cpf=";
+  
+  x=3;
+  alink_docente = alink_docente + anumcpf;
+  a_pessoa = "null";
+  a_numfunc = "null";
+  a_faculdade = "null";
+  a_ret_re = anumcad;
+  alog = "";  
+  tamanho_total = 0;
+  nposfunc = 0;
+  nposre = 0;
+  nposfunc = 0;
+  
+  HTTPOBJETO(AHTTP_docente);
+  HttpHabilitaSNI(AHTTP_docente);
+  HTTPDESABILITAERRORESPOSTA(AHTTP_docente);
+  HTTPALTERACODIFCARACPADRAO(AHTTP_docente, "UTF-8"); 
+  HTTPALTERACABECALHOREQUISICAO(AHTTP_docente, "Accept", "*/*");  
+  HTTPALTERACABECALHOREQUISICAO(AHTTP_docente, "Accept-encoding", "gzip, deflate, br, zstd"); 
+  @HTTPALTERACABECALHOREQUISICAO(AHTTP_docente, "Authorization", "Basic bWFyaXN0YXBpeGFwaTp3NU1nYkJGITFNUnNw");@ 
+  HTTPALTERACABECALHOREQUISICAO(AHTTP_docente, "Authorization", "Basic YXBpdXNlcjphcGl1c2VyQDEyMw==");   @Cidade@
+  HTTPALTERACABECALHOREQUISICAO(AHTTP_docente, "Content-Type", "application/json"); 
+  
+
+  HTTPGET(AHTTP_docente, alink_docente, atoken_docente);           
+  HTTPLECODIGORESPOSTA(AHTTP_docente,ncoderro_docente);
+  intparaalfa(ncoderro_docente, acoderro_docente);
+  posicao_numfunc = 0;
+  se(ncoderro_docente = 200)
+  {
+    getJSONString(atoken_docente, "data", a_data);
+    @getJSONString(atoken_docente, "pessoa", a_data);@
+    a_pessoa = atoken_docente;
+    aposicao_numfunc = atoken_docente; 
+    posicao_pessoa = 0;
+                                                                     
+    PosicaoAlfa ("pessoa",a_data,posicao_pessoa);     
+    posicao_pessoa = posicao_pessoa + 16;      
+    copiaralfa(a_pessoa,posicao_pessoa,9);
+    
+    
+    PosicaoAlfa ("numFunc",atoken_docente,nposfunc);
+    PosicaoAlfa ("re",atoken_docente,nposre);
+             
+    copiaralfa(aposicao_numfunc,nposfunc,(nposre-nposfunc)); 
+    
+    trocastring(aposicao_numfunc,",","",aposicao_numfunc);
+    trocastring(aposicao_numfunc,":","",aposicao_numfunc);
+    trocastring(aposicao_numfunc,"\"","",aposicao_numfunc);
+     trocastring(aposicao_numfunc,"numFunc","",aposicao_numfunc);        
+    
+    
+      
+    trocastring(a_pessoa,",","",a_pessoa);
+    trocastring(a_pessoa,"\"","",a_pessoa);
+    trocastring(a_pessoa,"f","",a_pessoa);
+    trocastring(a_pessoa,"c","",a_pessoa);
+    trocastring(a_pessoa,"p","",a_pessoa);
+    trocastring(a_pessoa,"n","",a_pessoa);
+    
+       
+    a_numfunc = anumcad;
+    a_faculdade = acodfil;
+    PosicaoAlfa (anumcad,a_data,pos_numcad); 
+    
+    pulahub = "N"; 
+    arequestBody = "";
+    atoken = "";
+    ncoderro = 0; 
+    atoken2 = "";
+    ajson2 = ""; 
+    arequestHeaders = "";
+    arequestMethod = "";
+    arequestUrl = "";  
+    aresponseBody = "";
+    ajsonhub = "";
+    aresponseHeaders = "";                               
+    aresponseStatus = "";
+     
+    se(aposicao_numfunc = anumcad)
+    {
+      alog = "Cadastro já existe - ";
+      pulahub = "S";
+      ncoderro = 200;
+      vapara jacadastro; @Alterado por Rafael @
+    }    
+  }  
+  
+  a_numfunc = anumcad;
+  a_faculdade = acodfil;
+     
+  ajson ="";
+  ajson = ajson + "{\"num_func\":\""+a_numFunc+"\","; @----@
+  ajson = ajson + "\"faculdade\":\""+a_faculdade+"\",";        @@
+  ajson = ajson + "\"depto\":\""+ageral+"\",";        @@
+  ajson = ajson + "\"ativo\":\""+acolatv+"\",";        @@
+  ajson = ajson + "\"nome_compl\":\""+anomfun+"\",";   @@
+  ajson = ajson + "\"nome_abrev\":\""+anomfun+"\",";   @@
+  ajson = ajson + "\"endereco\":\""+aendrua+"\",";     @@
+  ajson = ajson + "\"end_num\":\""+aendnum+"\",";      @@
+  ajson = ajson + "\"end_compl\":\""+aendcpl+"\",";    @@
+  ajson = ajson + "\"bairro\":\""+anombai+"\",";       @@
+  ajson = ajson + "\"municipio\":\""+acodcidj+"\","; @------------@
+  ajson = ajson + "\"cep\":\""+acep+"\",";          @-------------@
+  ajson = ajson + "\"fone\":\""+anumtel+"\",";         @@
+  ajson = ajson + "\"cpf\":\""+anumcpf+"\",";          @@
+  ajson = ajson + "\"rg_tipo\":\""+arg+"\",";          @@
+  ajson = ajson + "\"rg_num\":\""+anumcid+"\",";       @@
+  @ajson = ajson + "\"rg_dtexp\":\""+adexcidlyc+"\",";@  @@
+  ajson = ajson + "\"rg_uf\":\""+aestcid+"\",";        @@
+  ajson = ajson + "\"rg_emissor\":\""+aemicid+"\",";   @@
+  ajson = ajson + "\"perc_dedic_mens\":"+apedeme+",";  @@
+  ajson = ajson + "\"email\":\""+aemapar+"\",";        @@
+  ajson = ajson + "\"mailbox\":\""+aemacom+"\",";      @@
+  ajson = ajson + "\"titulacao\":\""+adesgra+"\",";    @@
+  ajson = ajson + "\"atuacao_profis\":\""+adesprf+"\",";@@
+  ajson = ajson + "\"cprof_num\":\""+aregcon+"\",";    @@
+  @ajson = ajson + "\"cprof_dataexp\":\""+adatexplyc+"\",";@@@
+  ajson = ajson + "\"cprof_uf\":\""+aestctp+"\",";     @@
+  ajson = ajson + "\"senha_dol\":\""+anumcpf+"\",";    @@
+  ajson = ajson + "\"banco\":null,";           @@
+  ajson = ajson + "\"agencia\":null,";      @@
+  ajson = ajson + "\"conta_banco\":null,";  @@
+  ajson = ajson + "\"razao_social\":\""+arazsoc+"\","; @@
+  ajson = ajson + "\"endemp\":\""+aendfil+"\",";       @@
+  ajson = ajson + "\"endemp_num\":\""+anumfil+"\",";   @@
+  ajson = ajson + "\"endemp_compl\":\""+acplfil+"\","; @@
+  ajson = ajson + "\"endemp_bairro\":\""+abaifil+"\",";@@
+  ajson = ajson + "\"endemp_municipio\":\""+acidfil+"\",";@@
+  ajson = ajson + "\"endemp_cep\":\""+acepfil+"\",";    @@
+  ajson = ajson + "\"fone_emp\":\""+anumtel+"\",";      @@
+  ajson = ajson + "\"cgc_emp\":null,";                  @@
+  @ajson = ajson + "\"dt_habilit_dol\":\"2000-04-02T12:00:00.360Z\",";@@@
+  ajson = ajson + "\"tipo_pessoa\":\""+atippes+"\",";   @@
+ @ajson = ajson + "\"re\":\""+a_ret_re+"\",";@           @  Nullo @
+  ajson = ajson + "\"dt_admissao\":\""+adatadmlyc+"\",";@@
+  ajson = ajson + "\"dt_nasc\":\""+adatnaslyc+"\",";    @@
+  ajson = ajson + "\"sexo\":\""+atipsex+"\",";          @@
+  ajson = ajson + "\"est_civil\":\""+anestciverif+"\",";@@
+  ajson = ajson + "\"fechar_turma_internet\":\"N\",";   @@
+  ajson = ajson + "\"pais_res\":\""+anompai+"\",";      @@
+  ajson = ajson + "\"pispasep\":\""+anumpis+"\",";      @@
+  ajson = ajson + "\"pessoa\":\""+a_pessoa+"\",";   @--------------------@
+  ajson = ajson + "\"contrato_trabalho\":\"null\",";    @@
+  ajson = ajson + "\"regime_trabalho\":null,";          @@
+  ajson = ajson + "\"outra_faculdade\":null,";        @@
+  ajson = ajson + "\"winusuario\":null,";     @-----Leomar Nunes da Mata (Externo) 09/12/2025 09:36---------------@
+  se(nsitafa = 7)
+  {
+    ajson = ajson + "\"dt_demissao\":\""+adatafalyc+"\","; @@
+  }
+  ajson = ajson + "\"stamp_atualizacao\":\""+adathojlyc+"\","; @@  
+  ajson = ajson + "\"matricula\":\""+anumcad+"\",";    @_________@                                 
+  ajson = ajson + "\"senha_alterada\":\"N\",";         @@
+  ajson = ajson + "\"ano_ingresso\":"+aanoadm+",";     @@
+  ajson = ajson + "\"fl_field01\":"+anumemp+",";       @_________@
+  ajson = ajson + "\"fl_field02\":"+a_numFunc+",";     @_________@
+  ajson = ajson + "\"nome_social\":null}";
+
+  ajson2 = ajson;
+               
+ 
+  HTTPOBJETO(AHTTP);
+  HttpHabilitaSNI(AHTTP);
+  HTTPDESABILITAERRORESPOSTA(AHTTP);
+  HTTPALTERACODIFCARACPADRAO(AHTTP, "UTF-8"); 
+  alink = "https://conectado.maristabrasil.org/aonline-api/comum/tipo/API/titulo/API_Custom_Insere_Docente/consultaDinamica";
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "Accept", "*/*");  
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "Accept-encoding", "gzip, deflate, br, zstd"); 
+  @HTTPALTERACABECALHOREQUISICAO(AHTTP, "Authorization", "Basic c2VuaW9yYXBpOlNlbmlvckAyMDI1");@
+  @HTTPALTERACABECALHOREQUISICAO(AHTTP, "Authorization", "Basic bWFyaXN0YXBpeGFwaTp3NU1nYkJGITFNUnNw");@
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "Authorization", "Basic YXBpdXNlcjphcGl1c2VyQDEyMw==");   @Cidade@  
+  HTTPALTERACABECALHOREQUISICAO(AHTTP, "Content-Type", "application/json"); 
+
+  HTTPPOST(AHTTP, alink, ajson, atoken); 
+  atoken2 = atoken;          
+  HTTPLECODIGORESPOSTA(AHTTP,ncoderro);
+  intparaalfa(ncoderro, acoderro);
+  atokenpes = atoken;
+  atokenfunc = atoken;
+  @Pega o ID@
+
+  anumfunc = a_numFunc;
+  acodpes = a_pessoa; 
+  
+  @Pegando dados Cabeçalho PARA O HUB@
+  HttpLeCabecalhoResposta(AHTTP, "Date", adate);
+  HttpLeCabecalhoResposta(AHTTP, "Content-Type", aContentType);
+  HttpLeCabecalhoResposta(AHTTP, "Transfer-Encoding", aTransferEncoding);
+  HttpLeCabecalhoResposta(AHTTP, "Connection", aConnection);
+  HttpLeCabecalhoResposta(AHTTP, "vary", avary);
+  HttpLeCabecalhoResposta(AHTTP, "location", alocation);
+  HttpLeCabecalhoResposta(AHTTP, "x-content-type-options", axcontenttypeoptions);
+  HttpLeCabecalhoResposta(AHTTP, "x-xss-protection", axxssprotection);
+  HttpLeCabecalhoResposta(AHTTP, "Cache-Control", aCacheControl);
+  HttpLeCabecalhoResposta(AHTTP, "pragma", apragma);
+  HttpLeCabecalhoResposta(AHTTP, "expires", aexpires);
+  HttpLeCabecalhoResposta(AHTTP, "x-frame-options", axframeoptions);
+  HttpLeCabecalhoResposta(AHTTP, "CF-Cache-Status", aCFCacheStatus);
+  HttpLeCabecalhoResposta(AHTTP, "Report-To", aReportTo);
+  HttpLeCabecalhoResposta(AHTTP, "NEL", aNEL);
+  HttpLeCabecalhoResposta(AHTTP, "Server", aServer);
+  HttpLeCabecalhoResposta(AHTTP, "CF-RAY", aCFRAY);
+  HttpLeCabecalhoResposta(AHTTP, "alt-svc", altsvc);
+  
+  TROCASTRING(aReportTo,"\"","",aReportTo);
+  TROCASTRING(aNEL,"\"","",aNEL);
+  TROCASTRING(altsvc,"\"","",altsvc);
+  TROCASTRING(atoken,"\"","",atoken);
+  atoken = atoken+"\""; 
+  
+                                                 
+  jacadastro:
+  iniciartransacao(); 
+  se((ncoderro = 200) ou (ncoderro = 201))   
+  {
+    alog = alog + "Integrado com sucesso! "+atoken;
+    astatus= "OK";
+    
+    definir numero Posicao;
+    definir alfa aPosicao;
+    Posicao = 0;
+    aPosicao = atoken;
+    PosicaoAlfa ("STATUS_INTEGRACAO",atoken,Posicao);
+    copiaralfa(aPosicao,28,4);
+    
+    se(aposicao = "Erro")
+    {
+      alog = "";
+      alog = alog + "Erro: " +atoken;
+      astatus= "Erro";    
+    }      
+        
+    execsqlex("insert into usu_tintlyc                                        \
+            (usu_numemp, usu_tipcol, usu_numcad, usu_nomfun, usu_codfil,      \
+             usu_apefun, usu_numloc, usu_postra, usu_codcar, usu_codccu,      \
+             usu_catcnh, usu_codage, usu_codban, usu_codcid, usu_emabox,      \
+             usu_codpes, usu_codprf, usu_conban, usu_cplfil, usu_datadm,      \
+             usu_datafa, usu_datnas, usu_datven, usu_dexcid,                  \
+             usu_emacom, usu_emafil, usu_emapar, usu_emicid, usu_baifil,      \
+             usu_endcep, usu_endcpl, usu_endfil, usu_endnum, usu_cidfil,      \
+             usu_endrua, usu_estcid, usu_estciv, usu_colatv, usu_cepfil,      \
+             usu_nomsoc, usu_codbai, usu_telfil, usu_faxfil, usu_codpai,      \
+             usu_numcgc, usu_numcid, usu_numcnh, usu_numcpf, usu_nomemp,      \
+             usu_numfax, usu_numpis, usu_numres, usu_numtel, usu_numcel,      \
+             usu_nmtel2, usu_razsoc, usu_regcon, usu_sitafa, usu_tipcon,      \
+             usu_tipsex, usu_datenv, usu_horenv, usu_numfil, usu_status,      \
+             usu_grains, usu_log, usu_numfunc, usu_re)                        \
+             values                                                           \
+            (:nnumemp, :ntipcol, :nnumcad, :anomfun, :ncodfil,                \
+             :aapefun, :anumloc, :apostra, :acodcar, :acodccu,                \
+             :acatcnh, :acodage, :acodban, :acodcid, :aemabox,                \
+             :acodpes, :acodprf, :aconban, :acplfil, :ddatadm,                \
+             :ddatafa, :ddatnas, :ddatven, :ddexcid,                          \
+             :aemacom, :aemafil, :aemapar, :aemicid, :nbaifil,                \                              
+             :aendcep, :aendcpl, :aendfil, :aendnum, :ncidfil,                \
+             :aendrua, :aestcid, :aestciv, :acolatv, :acepfil,                \
+             :anomsoc, :ncodbai, :atelfil, :afaxfil, :npaifil,                \
+             :anumcgc, :anumcid, :anumcnh, :anumcpf, :anomemp,                \
+             :anumfax, :anumpis, :anumres, :anumtel, :anumcel,                \
+             :anumcel, :arazsoc, :aregcon, :nsitafa, :atipcon,                \
+             :atipsex, :ddatint, :nhorint, :anumfil, :astatus,                \
+             :agrains, :alog,    :anumfunc, :are)", nerro, aretorno);
+    
+   
+    finalizartransacao(); 
+  }
+  senao
+  {
+    desfazertransacao();
+    
+    @Armazena dodos do erro em uma tabela de log@
+    definir alfa atokenaux;
+    copiaralfa(atoken, 0, 490);
+    alog = "Erro: "+atoken;
+    astatus= "ERRO";
+    
+    execsqlex("insert into usu_tintlyc                                        \
+            (usu_numemp, usu_tipcol, usu_numcad, usu_nomfun, usu_codfil,      \
+             usu_apefun, usu_numloc, usu_postra, usu_codcar, usu_codccu,      \
+             usu_catcnh, usu_codage, usu_codban, usu_codcid, usu_emabox,      \
+             usu_codpes, usu_codprf, usu_conban, usu_cplfil, usu_datadm,      \
+             usu_datafa, usu_datnas, usu_datven, usu_dexcid,                  \
+             usu_emacom, usu_emafil, usu_emapar, usu_emicid, usu_baifil,      \
+             usu_endcep, usu_endcpl, usu_endfil, usu_endnum, usu_cidfil,      \
+             usu_endrua, usu_estcid, usu_estciv, usu_colatv, usu_cepfil,      \
+             usu_nomsoc, usu_codbai, usu_telfil, usu_faxfil, usu_codpai,      \
+             usu_numcgc, usu_numcid, usu_numcnh, usu_numcpf, usu_nomemp,      \
+             usu_numfax, usu_numpis, usu_numres, usu_numtel, usu_numcel,      \
+             usu_nmtel2, usu_razsoc, usu_regcon, usu_sitafa, usu_tipcon,      \
+             usu_tipsex, usu_datenv, usu_horenv, usu_numfil, usu_status,      \
+             usu_grains, usu_log, usu_numfunc, usu_re)                        \
+             values                                                           \
+            (:nnumemp, :ntipcol, :nnumcad, :anomfun, :ncodfil,                \
+             :aapefun, :anumloc, :apostra, :acodcar, :acodccu,                \
+             :acatcnh, :acodage, :acodban, :acodcid, :aemabox,                \
+             :acodpes, :acodprf, :aconban, :acplfil, :ddatadm,                \
+             :ddatafa, :ddatnas, :ddatven, :ddexcid,                          \
+             :aemacom, :aemafil, :aemapar, :aemicid, :nbaifil,                \
+             :aendcep, :aendcpl, :aendfil, :aendnum, :ncidfil,                \
+             :aendrua, :aestcid, :aestciv, :acolatv, :acepfil,                \
+             :anomsoc, :ncodbai, :atelfil, :afaxfil, :npaifil,                \
+             :anumcgc, :anumcid, :anumcnh, :anumcpf, :anomemp,                \
+             :anumfax, :anumpis, :anumres, :anumtel, :anumcel,                \
+             :anumcel, :arazsoc, :aregcon, :nsitafa, :atipcon,                \
+             :atipsex, :ddatint, :nhorint, :anumfil, :astatus,                \
+             :agrains, :alog,    :anumfunc, :are)", nerro, aretorno);
+    
+   
+  }
+  
+  @MONTANDO VAREIAVEL QUE ARMAZENA OS DADOS DO CABEÇALHO DE RETRORNO@
+  aresponseHeaders = "";
+  aresponseHeaders = aresponseHeaders + "\"";
+  aresponseHeaders = aresponseHeaders +"Date:"+ adate+",";
+  aresponseHeaders = aresponseHeaders +"Content-Type:"+aContentType+",";
+  aresponseHeaders = aresponseHeaders +"Transfer-Encoding:"+aTransferEncoding+",";
+  aresponseHeaders = aresponseHeaders +"Connection:"+aConnection+",";
+  aresponseHeaders = aresponseHeaders +"vary:"+avary+",";
+  aresponseHeaders = aresponseHeaders +"location:"+alocation+",";
+  aresponseHeaders = aresponseHeaders +"x-content-type-options:"+axcontenttypeoptions+",";
+  aresponseHeaders = aresponseHeaders +"x-xss-protection:"+axxssprotection+",";
+  aresponseHeaders = aresponseHeaders +"Cache-Control:"+aCacheControl+",";
+  aresponseHeaders = aresponseHeaders +"pragma:"+apragma+",";
+  aresponseHeaders = aresponseHeaders +"expires:"+aexpires+",";
+  aresponseHeaders = aresponseHeaders +"x-frame-options:"+axframeoptions+",";
+  aresponseHeaders = aresponseHeaders +"CF-Cache-Status:"+aCFCacheStatus+",";
+  aresponseHeaders = aresponseHeaders +"Report-To:"+aReportTo+",";
+  aresponseHeaders = aresponseHeaders +"NEL:"+aNEL+",";
+  aresponseHeaders = aresponseHeaders +"Server:"+aServer+",";
+  aresponseHeaders = aresponseHeaders +"CF-RAY:"+aCFRAY+",";
+  aresponseHeaders = aresponseHeaders +"alt-svc:"+altsvc;
+  aresponseHeaders = aresponseHeaders + "\""; 
+  
+  
+  arequestHeaders = "";
+  arequestHeaders = arequestHeaders + "Accept:**,"; 
+  arequestHeaders = arequestHeaders + "Accept-encoding:gzip, deflate, br, zstd,"; 
+  arequestHeaders = arequestHeaders + "Authorization:Basic bWFyaXN0YXBpeGFwaTp3NU1nYkJGITFNUnNw,";
+  arequestHeaders = arequestHeaders + "Content-Type: application/json\"";
+  
+  arequestMethod = "PUT\"";
+  arequestUrl = "https://conectado.maristabrasil.org/aonline-api/comum/tipo/API/titulo/API_Custom_Insere_Docente/consultaDinamica";   
+  aresponseBody = atoken;
+  arequestBody = ajson; 
+  
+    @Remove " da string@
+  trocastring(arequestBody,"\"","\\\"",arequestBody);  
+  @trocastring(arequestBody, "\"", "", arequestBody);@
+  /*trocastring(arequestBody, "{", "", arequestBody);
+  trocastring(arequestBody, "}", "", arequestBody); */
+  
+  trocastring(atoken2,"\"","\\\"",atoken2);
+  @trocastring(atoken2, "\"", "",atoken2);@
+  /*trocastring(atoken2, "{", "",atoken2);
+  trocastring(atoken2, "}", "",atoken2); */
+  
+  @arequestBody = "\""+arequestBody+"\"";@
+  @atoken2 = "\""+atoken2+"\""; @
+  
+  
+  
+  aresponseStatus = acoderro;                                                        
+  ajsonhub = "";
+  @MONTANDO O BODY DO HUB@
+  ajsonhub = ajsonhub + "{";
+  ajsonhub = ajsonhub + "\"requestBody\":\""+arequestBody+"\",";
+  ajsonhub = ajsonhub + "\"requestHeaders\":\""+arequestHeaders+",";
+  ajsonhub = ajsonhub + "\"requestMethod\":\""+arequestMethod+",";
+  ajsonhub = ajsonhub + "\"requestUrl\":\""+arequestUrl+"\",";   
+  ajsonhub = ajsonhub + "\"responseBody\":\""+atoken2+"\",";
+  ajsonhub = ajsonhub + "\"responseHeaders\":"+aresponseHeaders+",";                                 
+  ajsonhub = ajsonhub + "\"responseStatus\":"+aresponseStatus;        
+  ajsonhub = ajsonhub + "}";    
+    
+  @CHAMA O HUB@
+  se(pulahub <> "S")
+  {
+    HTTPOBJETO(ahttphub);
+    HttpHabilitaSNI(ahttphub);
+    HTTPDESABILITAERRORESPOSTA(ahttphub);
+    HTTPALTERACODIFCARACPADRAO(ahttphub, "UTF-8"); 
+  
+    HTTPALTERACABECALHOREQUISICAO(ahttphub, "Accept", "*/*"); 
+    HTTPALTERACABECALHOREQUISICAO(ahttphub, "Accept-encoding", "gzip, deflate, br, zstd"); 
+    @HTTPALTERACABECALHOREQUISICAO(ahttphub, "Connection", "keep-alive");@ 
+    HTTPALTERACABECALHOREQUISICAO(ahttphub, "Content-Type", "application/json");
+    HTTPALTERACABECALHOREQUISICAO(ahttphub, "Ocp-Apim-Subscription-Key", "ef9803b2f5d546a18aa134fd0858e0e3");  
+  
+    HTTPPOST(ahttphub,alinkhub,ajsonhub,arethub);           
+    HTTPLECODIGORESPOSTA(ahttphub,ncoderrohub); 
+  }  
+  
+  SQL_PROXIMO(cdados);
+}
+
+SQL_FECHARCURSOR(cdados);
+SQL_DESTRUIR(cdados);  
+
+                   
