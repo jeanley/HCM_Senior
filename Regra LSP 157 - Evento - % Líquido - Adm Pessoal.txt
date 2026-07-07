@@ -1,0 +1,55 @@
+Definir Cursor cur_mov157;
+
+nNumEmp = R034FUN.NumEmp;
+nTipCol = R034FUN.TipCol;
+nNumCad = R034FUN.NumCad;
+nCodCal = CodCal;
+nTotPro = 0;
+nTotVan = 0;
+
+Se ((nNumEmp <> 3) e (nNumEmp <> 4))
+  {
+    RefEvt = 0;
+    ValEvt = 0;
+    VaPara Final157;
+  }
+  
+Se (CodEvt = 5990)
+  {
+    Se (BasEvt < 0)
+    ValEvt = BasEvt * -1;
+    Senao
+    ValEvt = BasEvt;
+  } 
+  
+/*
+Se (CodEvt = 5990)
+  {
+   nValLiq = ValEvt;
+    
+   CodEvt = 5988;
+   BusEvt = 1;
+   nTotPro = ValEv2;
+
+  cur_mov157.sql "select * from r044mov \
+                            where NumEmp = :nNumEmp \
+                              and TipCol = :nTipCol \
+                              and NumCad = :nNumCad \
+                              and CodCal = :nCodCal \
+                              and CodEve = 1701";
+        
+   cur_mov157.AbrirCursor();
+     Se (cur_mov157.Achou)
+       {
+        nTotVan = cur_mov157.ValEve;
+       }
+   
+   Se (nTotPro > 0)
+   {   
+   ValEvt = ((nValLiq + nTotVan) / nTotPro) * 100;
+   }
+   Senao
+   ValEvt = 0;
+  } */
+  
+Final157:  

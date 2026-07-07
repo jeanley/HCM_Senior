@@ -1,0 +1,48 @@
+/* Regra Especial desenvolvida para atender o mínimo de 30% líquido garantido
+ao colaborador. Exclusivo p/ as Empresas "3 - UBEE" e "4 - UNBEC";
+Vinculada no Evento "1701 - ESTOURO DO MÊS";
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 03/11/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@=========== caso o evento tenha sido lançado como fixo ou variável ===========@
+Se ((OriMov = "D") ou (OriMov = "X"))
+  {
+    RefEvt = RefMov;
+    ValEvt = ValMov;
+    VaPara Final158;
+  }
+  Senao
+    {
+      Se ((R034FUN.NumEmp = 3) ou (R034FUN.NumEmp = 4)) @ apenas Centro-Norte @
+        {
+          Se (TipCal = 11)
+            {
+              nDiaFer = 0;
+              
+              BuscaDiaSit (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,IniCmp,
+              FimCmp,2,nDiaFer);
+              
+              Se (nDiaFer = 0)
+                {
+                  BuscaDiaSit (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,IniCmp,
+                  FimCmp,12,nDiaFer);
+                }
+              
+              Se (nDiaFer = 0)
+                {
+                  xBasPro = (AcuCal[9055] + AcuCal[9056]) * 0.3;
+                  xValLiq = (AcuCal[9055] + AcuCal[9056]) - AcuCal[9057];
+                  
+                  Se (xBasPro >= xValLiq)
+                    {
+                      RefEvt = 0;
+                      ValEvt = xBasPro - xValLiq;
+                    }
+                }
+            }
+        }
+    }
+
+Final158:  

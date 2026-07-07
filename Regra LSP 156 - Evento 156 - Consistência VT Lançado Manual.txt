@@ -1,0 +1,37 @@
+/* Regra para tratar situações que o evento 1651-Valor Total VT foi lançado no variável do colaborador
+e o desconto estava sendo maior do que o valor lançado 
+Data: 29/09/2025
+Consultor: Flávio de Simone*/
+
+Definir Cursor Cur_R044Mov;
+
+xNumEmp = R034Fun.NumEmp;
+xTipCol = R034Fun.TipCol;
+xNumCad = R034Fun.NumCad;
+xCodCal = CodCal;
+xCodEve = 1651;
+
+xValTot = 0;
+
+Cur_R044Mov.Sql"Select * from R044Mov \
+                         Where NumEmp =:xNumEmp \
+                         And   TipCol =:xTipCol \
+                         And   NumCad =:xNumCad \
+                         And   CodCal =:xCodCal \
+                         And   CodEve =:xCodEve";
+Cur_R044Mov.AbrirCursor();
+Se (Cur_R044Mov.Achou)
+  Inicio
+    xValTot = Cur_R044Mov.ValEve;
+    Se (ValEvt > xValTot) 
+      Inicio
+        ValEvt = xValTot;
+      Fim;     
+  Fim;
+  Senao
+    Inicio
+      x = 0;
+    Fim;
+Cur_R044Mov.FecharCursor();
+
+  

@@ -1,0 +1,12 @@
+/* Regra Especial desenvolvida para não calcular o evento 3577 na folha mensal;
+Vinculada no Evento "3577";
+Cliente: Marista Brasil;
+Autor: isabella Nassaro;
+Data(s): 19/12/2025;
+Senior Sistemas - Noroeste Paulista     */
+
+Se ((TipCal = 33) ou (TipCal = 11))
+ {
+   RefEvt = 0;
+   ValEvt = 0;
+ }                                                                         

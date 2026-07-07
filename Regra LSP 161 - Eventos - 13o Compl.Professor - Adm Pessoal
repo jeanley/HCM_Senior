@@ -1,0 +1,204 @@
+/* Regra Especial desenvolvida para atender o cálculo 13o Complementar Professor;
+Vinculada no Evento "3446 - 13O SALÁRIO COMPLEM.PROF";
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 19/12/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+Definir Cursor cur_dge161;
+Definir Cursor cur_apf161;
+Definir Cursor cur_ver161;
+Definir Cursor cur_mov161;
+
+Definir Data dDatRef;
+Definir Data dDatZer;
+Definir Data dIni13;
+Definir Data dFim13;
+Definir Data dPerRef;
+
+Se ((TipCal = 11) ou (TipCal = 33))
+  {
+    Se ((R034FUN.TipCon <> 10) e (R034FUN.TipCon <> 13))
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final161;
+      }
+      
+    Se ((TipCal = 11) e ((OriMov = "D") ou (OriMov = "X")))
+      {
+        RefEvt = RefMov;
+        ValEvt = ValMov;
+        VaPara Final161;
+      } 
+
+    nNumEmp = R034FUN.NumEmp;
+    nTipCol = R034FUN.TipCol;
+    nNumCad = R034FUN.NumCad;
+    dPerRef = PerRef;
+    nCodEvt = CodEvt;
+
+    Se (TipCal = 33)
+      {
+        xRefMov = 0;
+        xValMov = 0;
+        nMov33 = 0;
+        
+        cur_mov161.sql "select refeve,valeve \
+                       from r044mov \
+                      where numemp = :nNumEmp \
+                        and tipcol = :nTipCol \
+                        and numcad = :nNumCad \
+                        and codeve = :nCodEvt \
+                        and exists (select 1 \
+                                      from r044cal cal \
+                                     where r044mov.numemp = cal.numemp \
+                                       and r044mov.codcal = cal.codcal \
+                                       and cal.perref = :dPerRef \
+                                       and cal.tipcal = 11)";
+        cur_mov161.AbrirCursor();
+        Se (cur_mov161.Achou)
+          {
+            xRefMov = cur_mov161.refeve;
+            xValMov = cur_mov161.valeve;
+            nMov33 = 1;
+          }
+        cur_mov161.FecharCursor();                                       
+      
+        Se (nMov33 = 1)
+          {
+            RefEvt = xRefMov;
+            ValEvt = xValMov;
+            VaPara Final161;
+          }
+      }
+    
+    Se (TipCal = 11)
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final161;
+      }
+
+    nFatDsr = 0;
+    dDatZer = 0;
+    
+@================== cursor p/ busca do parâmetro DSR professor ================@
+    cur_dge161.sql "select mulmes,muldsr \
+                     from r171dge \
+                    where numemp = :nNumEmp \
+                      and mulmes > 0 \
+                      and muldsr > 0";
+    cur_dge161.AbrirCursor();
+    Se (cur_dge161.Achou)
+    nFatDsr = 1 + (cur_dge161.muldsr / cur_dge161.mulmes);
+    Senao
+    nFatDsr = 1.16666666666667;
+    
+    cur_dge161.FecharCursor();
+    
+    dDatRef = FimCmp;
+    
+    xValEvt = 0;
+    nHorMes = 0;
+    
+    DesmontaData(dDatRef,xDia,xMes,xAno);
+    MontaData(16,01,xAno,dIni13);
+    MontaData(31,12,xAno,dFim13);
+    
+    Se (R034FUN.DatAdm > dIni13)
+    dIni13 = R034FUN.DatAdm;
+    
+    nAvo13 = 0;
+
+@=================== apura direitos de avos do docente ========================@                
+    TempoTrabFun (nNumEmp,nTipCol,nNumCad,dIni13,dFim13,3,nAvo13);
+    
+    Se (nAvo13 <= 0)
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final161;
+      }
+    
+   xValEvt = 0;
+   nHorMes = 0;
+    
+@= Cursor para busca dos valores de atividades e disciplinas da grade do docente =@        
+    cur_apf161.sql "select valapf,hormes \
+                     from r171apf \ 
+                    where numemp = :nNumEmp \
+                      and tipcol = :nTipCol \
+                      and numcad = :nNumCad \
+                      and datini <= :dDatRef \
+                      and (datfim is null \
+                        or datfim = :dDatZer \
+                        or datfim >= :dDatRef) \
+                      and hormes > 0 \
+                      and valapf > 0";
+    cur_apf161.AbrirCursor();
+    Enquanto (cur_apf161.Achou)
+      {
+        nHorMes = cur_apf161.hormes / 60;
+        xValEvt = xValEvt + (cur_apf161.valapf * nHorMes);
+        xBase = BasEvt;
+
+        cur_apf161.Proximo();
+      }
+    cur_apf161.FecharCursor();
+    
+    Se (xValEvt <= 0)
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final161;
+      }
+      Senao
+      xValEvt = xValEvt * nFatDsr;  
+    
+     Se (nAvo13 > 12)
+     nAvo13 = 12;
+     
+     RefEvt = nAvo13;
+     ValEvt = (xValEvt / 12) * nAvo13;
+     
+     cur_ver161.sql "select numemp from r030emp where numemp = 0 union \
+                     select sum(valeve) \
+                       from r046ver \
+                      where numemp = :nNumEmp \
+                        and tipcol = :nTipCol \
+                        and numcad = :nNumCad \
+                        and exists (select 1 \
+                                      from r008evb evb \
+                                     where r046ver.tabeve = evb.codtab \
+                                       and r046ver.codeve = evb.evebas \
+                                       and evb.codeve = :nCodEvt) \
+                        and valeve > 0 \
+                        and exists (select 1 \
+                                      from r044cal cal \
+                                     where r046ver.numemp = cal.numemp \
+                                       and r046ver.codcal = cal.codcal \
+                                       and cal.perref = :dPerRef \
+                                       and cal.tipcal = 32)";
+      cur_ver161.AbrirCursor();
+      Se (cur_ver161.Achou)
+        {
+          @ValEvt = ValEvt - cur_ver161.numemp;@
+          ValEvt = xBase - cur_ver161.numemp; 
+        }
+      cur_ver161.FecharCursor();                                                 
+      
+      Se (ValEvt <= 0)
+        {
+          RefEvt = 0;
+          ValEvt = 0;
+          VaPara Final161;
+        }                            
+  }
+  Senao
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+    
+Final161:    
