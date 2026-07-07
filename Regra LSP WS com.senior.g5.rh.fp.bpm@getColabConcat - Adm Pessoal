@@ -1,0 +1,643 @@
+/*
+    Modificação para trazer descontos       
+    Data: 18/06/2025
+    Consultor: Lucas Ferreira
+    Último Backup: 21/062025 - 12h00
+*/
+
+definir alfa anomfun;
+definir alfa enomfun;
+definir alfa adados;
+definir alfa aretorno;
+definir alfa anumemp;            
+definir alfa atipcol;                      
+definir alfa anumcad;
+definir alfa adados;                     
+definir alfa acodfil; 
+definir alfa anomfil;                        
+definir alfa acodusu;
+definir alfa aResult;
+definir alfa atipcol;                              
+definir alfa anomfun;
+definir alfa agrupo;
+definir alfa acodfilsol;
+definir alfa anumempsol;
+definir alfa atipcolsol;
+definir alfa anumcadsol;
+definir alfa acodcar;
+definir alfa atitred;
+definir alfa anumloc;
+definir alfa anomloc;
+definir alfa acodccu;
+definir alfa anomccu;
+definir alfa apostra;
+definir alfa adespos;
+definir alfa aquadro;
+definir alfa aefetivo;
+definir alfa asaldo;  
+definir alfa cdados; 
+definir alfa apostra;
+definir alfa curplv;
+definir alfa sqlplv;
+definir alfa acodloc;
+definir alfa acodccusol; 
+definir alfa anomsin;   
+definir alfa achsind;
+definir alfa atexto;
+definir alfa asql_docente;
+definir alfa aenter;
+definir alfa avalapf;
+definir alfa adesapf;
+definir alfa adatini;
+definir alfa aseqapf;
+definir alfa ahormes;
+definir alfa ahorsem;
+definir alfa atotmes;
+definir alfa atotsem;
+definir alfa cur_docente;
+Definir Alfa cur_descontos; @Cursor Descontos@
+Definir Alfa asql_descontos;@SQL para pegar Descontos@
+Definir Alfa cur_eveats; @Cursor Eventos@
+Definir Alfa asql_eveats; @SQL para pegar Eventos@
+
+
+definir numero ntotmes;
+definir numero ntotsem;
+definir numero ntotmes_geral; 
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad;
+definir numero ncodfil;
+definir numero cont;
+definir numero ncodusu;
+definir numero nRet;
+definir numero nnumempsol;
+definir numero numcadsol;
+definir numero tipcolsol;
+definir numero ncodfilsol;
+definir numero ncodent;
+definir numero nseqapf;
+definir numero ncodapf;
+definir numero nhormes;
+definir numero nhorsem;
+definir numero nvalapf;
+definir numero ntotvalsal;
+    
+definir cursor cpegafil;
+definir cursor curent;
+definir cursor curgrp;
+definir cursor cultdat; @cursor para ultima data@ 
+
+definir data ddatatu;
+definir data ddataux;
+definir data ddatini;
+definir data ddathoj; @data de hoje para o cur_docente@
+definir data dcmpalt;
+definir data dmesanteior; @Guarda mês anterior@
+                                                          
+definir numero ncodplv;
+definir numero nqtdvag; 
+definir numero nqtdafa;
+definir numero nqtdrqu;
+definir numero nqtdsol;
+definir numero nqtdqpo;
+definir numero nqttppo;
+definir numero ntotalvagas;
+definir numero ntotalocupadas;
+definir numero ntotal; 
+definir numero ncodsin;               
+definir numero ncarhor;
+ 
+definir alfa curefe;
+definir alfa acurefe;
+definir alfa curqpo;
+definir alfa acurqpo; 
+definir alfa agrpccu;  
+definir alfa adatpos; 
+definir alfa aanopos;
+definir alfa amespos;
+definir alfa acodsin;
+definir alfa adatadm;
+definir alfa aultdat; @alfa da ultima data@
+definir data ddatpos; 
+definir data ddatadm;
+definir data ddatzer;  @data 31/12/1900@
+definir data dultdat;  @ultima data@
+definir alfa amotalt;
+definir alfa acmpalt;
+definir alfa adesconto; @Descontos@
+definir alfa adatmesanterior; @Usado nos descontos@
+definir alfa atotaleveats; @ATS@
+definir alfa aestsal; @Cod Est Sal@
+definir alfa atotvalsal; @Valor total do último salário@
+
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+ddathoj = datsis;
+ddatatu = datsis;
+ddataux = datsis;
+ultimodia(ddataux);   
+nret = 0;
+nnumemp = 0;
+anomfun = getColabConcat.enomfun;
+anumempsol = getColabConcat.enumemp;                                                                        
+atipcolsol = getColabConcat.etipcol;
+anumcadsol = getColabConcat.enumcad;
+acmpalt = getColabConcat.ecmpalt;
+acmpalt = "01/" + acmpalt;
+alfaparadata(acmpalt, "DD/MM/YYYY", dcmpalt);     
+
+RETORNAASCII(13, AENTER);
+
+alfaparaint(anumempsol, nnumempsol);
+alfaparaint(atipcolsol, ntipcolsol);
+alfaparaint(anumcadsol, nnumcadsol);
+
+
+cpegafil.sql "select codfil from r034fun              \ 
+              where numemp = :nnumempsol and          \ 
+                    tipcol = :ntipcolsol and          \ 
+                    numcad = :nnumcadsol"; 
+cpegafil.abrircursor(); 
+se(cpegafil.achou) 
+{ 
+  ncodfilsol = cpegafil.codfil; 
+} 
+cpegafil.fecharcursor(); 
+
+intparaalfa(ncodfilsol,acodfilsol);  
+
+
+                                   
+/*adados =  "select r034fun.numemp, r034fun.tipcol, r034fun.numcad,             \
+                 r034fun.nomfun, r034fun.codfil, r030fil.nomfil,             \
+                 r034fun.postra, r016hie.codloc,                             \
+                 r034fun.codcar, r024car.titred,                             \
+                 r034fun.codccu, r018ccu.nomccu,                             \
+                 r034fun.numloc, r016orn.nomloc,                             \
+                 r017pos.despos, r034fun.datadm,                             \
+                 r014sin.codsin, r014sin.nomsin,                             \
+                 r014sin.usu_carhor                                          \
+            from r034fun, r024car, r018ccu, r016orn,                         \
+                 r030fil,r016hie, r017pos, r014sin, r038hsi                  \
+            where                                                            \
+                 r034fun.numemp = :nnumempsol and                            \
+                 r034fun.codfil = :ncodfilsol and                            \
+                 r034fun.tipcon = 10 and                                     \
+                 r034fun.sitafa <> 7 and                                     \
+                 r014sin.codsin = r038hsi.codsin and                         \
+                 r034fun.estpos = r017pos.estpos and                         \
+                 r034fun.postra = r017pos.postra and                         \
+                 r030fil.codfil = r034fun.codfil and                         \
+                 r030fil.numemp = r034fun.numemp and                         \                                  
+                 r034fun.codcar = r024car.codcar and                         \
+                 r034fun.estcar = r024car.estcar and                         \
+                 r034fun.codccu = r018ccu.codccu and                         \
+                 r034fun.numemp = r018ccu.numemp and                         \
+                 r034fun.numloc = r016orn.numloc and                         \
+                 r034fun.taborg = r016orn.taborg and                         \                                             
+                 r034fun.taborg = r016hie.taborg and                         \
+                 r034fun.numloc = r016hie.numloc and                         \
+                 r016hie.datini = (select max(dat.datini) from r016hie dat   \
+                                   where                                     \             
+                                   dat.numloc = r016hie.numloc and           \
+                                   dat.taborg = r016hie.taborg) and          \
+                 r038hsi.numemp = r034fun.numemp and                         \
+                 r038hsi.tipcol = r034fun.tipcol and                         \
+                 r038hsi.numcad = r034fun.numcad and                         \
+                 r038hsi.datalt = (select max(dat.datalt) from r038hsi dat   \
+                                   where                                     \
+                                   dat.numemp = r034fun.numemp and           \
+                                   dat.tipcol = r034fun.tipcol and           \
+                                   dat.numcad = r034fun.numcad)";            */
+                                   
+                                   
+                                   
+                                   
+                                   
+adados = "select r034fun.numemp, r034fun.tipcol, r034fun.numcad,             \
+                 r034fun.nomfun, r034fun.codfil, r030fil.nomfil,             \
+                 r034fun.postra, r034fun.valsal, r016hie.codloc,             \
+                 r034fun.codcar, r024car.titred,                             \                             
+                 r034fun.codccu, r018ccu.nomccu,                             \
+                 r034fun.numloc, r016orn.nomloc,                             \
+                 r017pos.despos, r034fun.datadm,                             \
+                 r014sin.codsin, r014sin.nomsin,                             \
+                 r014sin.usu_carhor, r017sal.estsal                          \
+            from r034fun, r024car, r018ccu, r016orn,                         \
+                 r030fil,r016hie, r017pos, r014sin, r038hsi , r017sal        \
+            where                                                            \
+                 r034fun.numemp = :nnumempsol and                            \
+                 r034fun.codfil = :ncodfilsol and                            \                                          
+                 r034fun.tipcon = 10 and                                     \
+                 r034fun.sitafa <> 7 and                                     \
+                 r014sin.codsin = r038hsi.codsin and                         \
+                 r034fun.estpos = r017pos.estpos and                         \
+                 r034fun.postra = r017pos.postra and                         \
+                 r034fun.estpos = r017sal.estpos and                         \
+                 r034fun.postra = r017sal.postra and                         \
+                 r017sal.datalt = (SELECT MAX(sal.datalt)                    \
+                        FROM r017sal sal                                     \
+                        WHERE sal.estpos = r017sal.estpos                    \
+                          AND sal.postra = r017sal.postra                    \
+                        )   and                                                  \
+                 r030fil.codfil = r034fun.codfil and                         \
+                 r030fil.numemp = r034fun.numemp and                         \                                  
+                 r034fun.codcar = r024car.codcar and                         \
+                 r034fun.estcar = r024car.estcar and                         \
+                 r034fun.codccu = r018ccu.codccu and                         \
+                 r034fun.numemp = r018ccu.numemp and                         \
+                 r034fun.numloc = r016orn.numloc and                         \
+                 r034fun.taborg = r016orn.taborg and                         \                                             
+                 r034fun.taborg = r016hie.taborg and                         \
+                 r034fun.numloc = r016hie.numloc and                         \
+                 r016hie.datini = (select max(dat.datini) from r016hie dat   \
+                                   where                                     \                         
+                                   dat.numloc = r016hie.numloc and           \
+                                   dat.taborg = r016hie.taborg) and          \
+                 r038hsi.numemp = r034fun.numemp and                         \
+                 r038hsi.tipcol = r034fun.tipcol and                         \
+                 r038hsi.numcad = r034fun.numcad and                         \
+                 r038hsi.datalt = (select max(dat.datalt) from r038hsi dat   \
+                                   where                                     \
+                                   dat.numemp = r034fun.numemp and           \
+                                   dat.tipcol = r034fun.tipcol and           \
+                                   dat.numcad = r034fun.numcad)               \
+                                   and                                        \                                     
+not exists (select * from usu_tempatv where usu_numemp = r034fun.numemp     \
+                                         and usu_tipcol = r034fun.tipcol     \
+                                         and usu_numcad = r034fun.numcad     \     
+                                         and usu_compet = :dcmpalt)";                
+
+
+
+                                   
+                 
+se((anomfun <> "") e (anomfun <> " "))
+{
+  adados = adados +" AND (r034fun.NOMFUN LIKE '%"+ANOMFUN+"%' OR CAST(r034fun.NUMCAD AS VARCHAR(10))= '"+ANOMFUN+"')";
+}  @" and nomfun like '%"+anomfun+"%'"; @ 
+
+adados = adados +" order by nomfun, codfil, numcad";                  
+cont = 0;                   
+SQL_Criar(cdados); 
+SQL_UsarSQLSenior2(cdados, 0); 
+SQL_UsarAbrangencia(cdados, 0);
+SQL_DEFINIRCOMANDO(cdados, adados);
+SQL_DEFINIRINTEIRO(cdados, "nnumempsol", nnumempsol);
+SQL_DEFINIRINTEIRO(cdados, "ncodfilsol", ncodfilsol);
+SQL_DEFINIRDATA(cdados, "dcmpalt", dcmpalt); 
+SQL_AbrirCursor(cdados);
+enquanto (SQL_EOF(cdados) = 0) 
+{
+
+  SQL_RetornarInteiro(cdados, "numemp", nnumemp);
+  SQL_RetornarInteiro(cdados, "tipcol", ntipcol);
+  SQL_RetornarInteiro(cdados, "numcad", nnumcad); 
+  SQL_RetornarInteiro(cdados, "codfil", ncodfil);
+  SQL_RetornarInteiro(cdados, "codsin", ncodsin);
+  SQL_RetornarInteiro(cdados, "usu_carhor", ncarhor);
+  SQL_RetornarData(cdados,"datadm", ddatadm);
+  SQL_RetornarAlfa(cdados, "nomsin", anomsin);
+  SQL_RetornarAlfa(cdados, "codloc", acodloc);
+  SQL_RetornarAlfa(cdados, "nomfil", anomfil);                          
+  SQL_RetornarAlfa(cdados, "nomfun", anomfun);
+  SQL_RetornarAlfa(cdados, "postra", apostra);
+  SQL_RetornarAlfa(cdados, "despos", adespos);
+  SQL_RetornarAlfa(cdados, "codcar", acodcar);
+  SQL_RetornarAlfa(cdados, "titred", atitred);
+  SQL_RetornarAlfa(cdados, "numloc", anumloc);
+  SQL_RetornarAlfa(cdados, "nomloc", anomloc);                                                          
+  SQL_RetornarAlfa(cdados, "codccu", acodccu);
+  SQL_RetornarAlfa(cdados, "nomccu", anomccu);
+  SQL_RetornarAlfa(cdados, "estsal", aestsal);
+  SQL_RetornarFlutuante(cdados, "valsal", ntotvalsal);
+  
+  /*Se (ncarhor > 0) {
+     ncarhor = ncarhor  - 1600 ;
+  
+  } */
+      
+      
+  cultdat.sql "select datini, usu_motres            \
+               from r171apf                         \
+               where                                \       
+               numemp = :nnumemp and                \
+               tipcol = :ntipcol and                \        
+               numcad = :nnumcad and                \
+               ((datfim = :ddatzer) or              \
+                (datfim > :ddatatu))                \
+                order by datini desc";
+  cultdat.abrircursor();
+  se(cultdat.achou) 
+  { 
+    dultdat = cultdat.datini;
+    amotalt = cultdat.usu_motres;
+  } 
+  cultdat.fecharcursor();
+                                                               
+  intparaalfa(nnumemp, anumemp);
+  intparaalfa(ntipcol, atipcol);
+  intparaalfa(nnumcad, anumcad); 
+  intparaalfa(ncodfil, acodfil);
+  intparaalfa(ncodsin, acodsin);
+  
+  convertemascara(3,ddatadm, adatadm, "DD/MM/YYYY");
+  convertemascara(4,ncarhor, achsind, "hh:mm");
+                                                                                                     
+  convertemascara(3,dultdat, aultdat, "DD/MM/YYYY");
+  
+  atexto = "";
+  ntotmes = 0;
+  ntotsem = 0;
+  ntotmes_geral = 0;
+  
+  
+  
+  @aretorno = anumemp +"; "+atipcol+"; "+anumcad+"; "+anomfun+"; "+acodfil;@
+  getColabConcat.tretorno.criarlinha();
+  @getColabConcat.tretorno.sdados = aretorno;@
+  getColabConcat.tretorno.snumemp = anumemp;
+  getColabConcat.tretorno.stipcol = atipcol;                                  
+  getColabConcat.tretorno.snumcad = anumcad;      
+  getColabConcat.tretorno.snomfun = anomfun;
+  getColabConcat.tretorno.spostra = apostra;
+  getColabConcat.tretorno.sdespos = adespos;
+  getColabConcat.tretorno.scodcar = acodcar;
+  getColabConcat.tretorno.stitred = atitred;
+  getColabConcat.tretorno.snumloc = acodloc;
+  getColabConcat.tretorno.snomloc = anomloc;
+  getColabConcat.tretorno.scodccu = acodccu;
+  getColabConcat.tretorno.snomccu = anomccu;
+  getColabConcat.tretorno.scodfil = acodfil;
+  getColabConcat.tretorno.snomfil = anomfil; 
+  getColabConcat.tretorno.sdatadm = adatadm;
+  getColabConcat.tretorno.scodsin = acodsin;
+  getColabConcat.tretorno.snomsin = anomsin; 
+  getColabConcat.tretorno.schsind = achsind;
+  getColabConcat.tretorno.sultdat = aultdat;
+  getColabConcat.tretorno.smotalt = amotalt;
+  getColabConcat.tretorno.sestsal = aestsal;
+  
+  EXECSQL"DELETE USU_TEMPCH1 WHERE                                       \
+                USU_NUMEMP = :ANUMEMP AND                              \
+                USU_TIPCOL = :ATIPCOL AND                              \
+                USU_NUMCAD = :ANUMCAD";
+                  
+                  
+  asql_docente = "select r171apf.seqapf, r171apf.codapf,        \
+                       r171apf.hormes, r171apf.valapf,        \              
+                       r171ati.desapf, r171apf.datini         \
+                         from r171apf, r171ati                \
+                         where                                \
+                         r171apf.codapf = r171ati.codapf and  \
+                         numemp = :anumemp and                \
+                         tipcol = :atipcol and                \
+                         numcad = :anumcad and                \
+                         ((datfim = :ddatzer) or              \
+                         (datfim > :ddathoj))";
+  
+  SQL_Criar(cur_docente); 
+  SQL_UsarSQLSenior2(cur_docente, 0); 
+  SQL_UsarAbrangencia(cur_docente, 0);
+  SQL_DEFINIRCOMANDO(cur_docente, asql_docente);
+  
+  SQL_DEFINIRDATA(cur_docente, "ddatzer", ddatzer);
+  SQL_DEFINIRDATA(cur_docente, "ddathoj", ddathoj);
+  SQL_DEFINIRALFA(cur_docente, "anumemp", anumemp);
+  SQL_DEFINIRALFA(cur_docente, "atipcol", atipcol);  
+  SQL_DEFINIRALFA(cur_docente, "anumcad", anumcad);
+  
+  SQL_AbrirCursor(cur_docente); 
+  ENQUANTO (SQL_EOF(cur_docente) = 0) @Se cursor posição final retorna 1@
+  { 
+    SQL_RetornarInteiro(cur_docente, "seqapf", nseqapf);
+    SQL_RetornarInteiro(cur_docente, "codapf", ncodapf);
+    SQL_RetornarInteiro(cur_docente, "hormes", nhormes);
+    SQL_RetornarFlutuante(cur_docente, "valapf", nvalapf);
+    SQL_RetornarAlfa(cur_docente, "desapf", adesapf);
+    SQL_RetornarData(cur_docente, "datini", ddatini);
+   
+    intparaalfa(nseqapf, aseqapf);
+    intparaalfa(nhormes, ahormes);
+    alfaparaint(anumemp, nnumemp);
+    alfaparaint(atipcol, ntipcol);
+    alfaparaint(anumcad, nnumcad);
+    convertemascara(1, nvalapf, avalapf,"zzz.zzz.zzz.zz9,99");
+    convertemascara(3, ddatini, adatini, "DD/MM/YYYY");
+    TiraEspacos (avalapf, avalapf);
+    
+               
+   
+    @nhormes = nhormes/60;@
+    nhorsem = nhormes /4.5;                    
+    
+    ntotsem = ntotsem + nhorsem;
+    ntotmes = ntotmes + nhormes;
+  
+    convertemascara(4,nhormes, ahormes,"hh:mm");
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    
+    
+    atexto = atexto + "> Atividade: "+adesapf+" | Início: "+adatini+" Hora(s) Semanal: "+ahorsem+" | Hora(s) Mensal:"+ahormes+" | Salário hora: R$"+avalapf+"<"+aenter;
+    
+    EXECSQL "INSERT INTO USU_TEMPCH1                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\             
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL,:NNUMCAD,:NCODAPF,:NHORSEM,:NHORMES)";
+    
+    
+    nhorsem = 0;
+    nhormes = 0;
+    
+      
+    SQL_PROXIMO(cur_docente);
+    }
+  SQL_FECHARCURSOR(cur_docente);
+  SQL_DESTRUIR(cur_docente);
+  
+  convertemascara(4,ntotmes, atotmes,"hh:mm");
+  TiraEspacos(atotmes,atotmes);
+  convertemascara(4,ntotsem, atotsem,"hh:mm");
+  TiraEspacos(atotsem,atotsem);
+
+  convertemascara(1, ntotvalsal, atotvalsal,"zzz.zzz.zzz.zz9,99");
+
+  getColabConcat.tretorno.stexto = atexto;
+  getColabConcat.tretorno.stotmes = atotmes;
+  getColabConcat.tretorno.stotsem = atotsem;
+  getColabConcat.tretorno.stotvalsal = atotvalsal;
+
+  /*
+    ---- INICIO MODIFICAÇÃO (18/06/2025) --- DESCONTOS 
+  */
+
+  adatmesanterior = "01/06/2024"; @ DATA FIXA POIS NÃO HÁ REGISTROS RECENTES @
+  alfaparadata(adatmesanterior, "DD/MM/YYYY", dmesanteior);
+   
+
+  SQL_Criar(cur_descontos);
+
+   /*asql_descontos =  "SELECT                                   \
+                  r046ver.numcad,                              \
+                  r046ver.tipcol,                              \
+                  r046ver.numemp,                              \
+                  SUM(r046ver.valeve) AS atotaleve             \
+              FROM                                             \
+                  r046ver                                      \
+              WHERE                                            \
+                  r046ver.codcal = (                           \
+                      SELECT codcal                            \
+                      FROM r044cal                             \
+                      WHERE tipcal = 11                        \
+                        AND perref = :dmesanteior              \
+                        AND numemp = r046ver.numemp            \
+                  )                                            \
+                  AND r046ver.codeve IN (                      \
+                      SELECT codeve                            \
+                      FROM r008evc                             \
+                      WHERE tipeve = 3                         \
+                  )                                            \
+                  AND r046ver.numcad = :anumcad                \
+              GROUP BY                                         \
+                  r046ver.numcad,                              \
+                  r046ver.tipcol,                              \
+                  r046ver.numemp";      */
+                  
+   asql_descontos = "SELECT                                                    \
+    r.numcad,                                                                  \
+    r.tipcol,                                                                  \
+    r.numemp,                                                                  \
+    SUM(r.valeve) AS total_eventos                                             \
+FROM                                                                           \
+    r046ver r                                                                  \
+    INNER JOIN r044cal c ON r.codcal = c.codcal                                \
+        AND c.tipcal = 11                                                      \
+        AND c.perref = :dmesanteior                                            \
+        AND c.numemp = r.numemp                                                \
+    INNER JOIN r008evc e ON r.codeve = e.codeve                                \
+        AND e.tipeve = 3                                                       \
+WHERE                                                                          \
+    r.numcad = :anumcad                                                        \
+GROUP BY                                                                       \
+    r.numcad,                                                                  \
+    r.tipcol,                                                                  \
+    r.numemp";
+
+    SQL_UsarSQLSenior2(cur_descontos, 0); 
+    SQL_UsarAbrangencia(cur_descontos, 0);
+
+    Sql_DefinirComando(cur_descontos, asql_descontos);
+ 
+    Sql_DefinirData(cur_descontos, "dmesanteior", dmesanteior);
+    Sql_DefinirAlfa(cur_descontos, "anumcad", anumcad);
+    
+    Sql_AbrirCursor(cur_descontos);
+
+    Enquanto(Sql_EOF(cur_descontos) = 0)
+    {
+      Sql_RetornarAlfa(cur_descontos, "total_eventos", adesconto);
+    
+      Sql_Proximo(cur_descontos);
+    }
+    
+    Sql_FecharCursor(cur_descontos);
+    Sql_Destruir(cur_descontos);
+
+
+  getColabConcat.tretorno.svaldes = adesconto;
+
+  /*
+    ---- FIM MODIFICAÇÃO (18/06/2025)
+  */
+
+  /*
+    ---- INICIO MODIFICAÇÃO (20/06/2025) --- EVENTOS ATS 
+  */
+
+    Sql_Criar(cur_eveats);
+    /*
+    asql_eveats = "SELECT                                          \
+                  r046ver.numcad,                                  \
+                  r046ver.tipcol,                                  \
+                  r046ver.numemp,                                  \
+                  SUM(r046ver.valeve) AS atotaleveats              \
+              FROM                                                 \
+                  r046ver                                          \
+              WHERE                                                \
+                  r046ver.codcal = (                               \
+                      SELECT codcal                                \
+                      FROM r044cal                                 \ 
+                      WHERE (tipcal = 11                           \
+                          OR tipcal = 12                           \
+                          OR tipcal = 13                           \
+                          )                                        \  
+                        AND perref = :dmesanteior                  \  
+                        AND numemp = r046ver.numemp                \
+                  )                                                \
+                  AND r046ver.codeve IN (                          \
+                      SELECT codeve                                \
+                      FROM r008evc                                 \
+                      WHERE usu_eveats = 'S'                       \
+                  )                                                \
+                  AND r046ver.numcad = :anumcad                    \
+              GROUP BY                                             \
+                  r046ver.numcad,                                  \
+                  r046ver.tipcol,                                  \    
+                  r046ver.numemp";   */
+                  
+    asql_eveats = " SELECT                                                     \
+    r.numcad,                                                                  \
+    r.tipcol,                                                                  \
+    r.numemp,                                                                  \
+    SUM(r.valeve) AS total_eventos_ats                                         \
+FROM                                                                           \
+    r046ver r                                                                  \
+    INNER JOIN r044cal c                                                       \
+        ON r.codcal = c.codcal                                                 \
+        AND c.tipcal IN (11, 12, 13)                                           \
+        AND c.perref = :dmesanteior                                            \
+        AND c.numemp = r.numemp                                                \
+    INNER JOIN r008evc e                                                       \
+        ON r.codeve = e.codeve                                                 \
+        AND e.usu_eveats = 'S'                                                 \
+WHERE                                                                          \
+    r.numcad = :anumcad                                                        \
+GROUP BY                                                                       \
+    r.numcad,                                                                  \
+    r.tipcol,                                                                  \
+    r.numemp";
+    
+    
+    Sql_usarSqlSenior2(cur_eveats, 0);
+    Sql_usarAbrangencia(cur_eveats, 0);
+    
+    Sql_DefinirComando(cur_eveats, asql_eveats);
+    
+    Sql_DefinirData(cur_eveats, "dmesanteior", dmesanteior);
+    Sql_DefinirAlfa(cur_eveats, "anumcad", anumcad);
+    
+    Sql_AbrirCursor(cur_eveats);
+    
+    
+    Enquanto(Sql_EOF(cur_eveats) = 0)
+    {
+      Sql_RetornarAlfa(cur_eveats, "total_eventos_ats", atotaleveats);
+    
+      Sql_Proximo(cur_eveats);
+    }                                                                                
+    
+    Sql_FecharCursor(cur_eveats);
+    Sql_Destruir(cur_eveats);
+
+    getColabConcat.tretorno.svalats = atotaleveats;
+
+  /*
+    ---- FIM MODIFICAÇÃO (20/06/2025) --- EVENTOS ATS
+  */
+
+ 
+  SQL_Proximo(cdados);
+}
+SQL_FecharCursor(cdados);
+SQL_Destruir(cdados);

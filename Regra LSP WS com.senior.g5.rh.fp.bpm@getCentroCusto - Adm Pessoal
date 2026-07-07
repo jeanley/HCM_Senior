@@ -1,0 +1,67 @@
+
+
+  /*Luis Gustavo Nardello
+  Data de Criação: 11/12/2024
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aNumEmp;
+Definir Alfa aCodCcu;
+Definir Alfa aNomCcu;
+Definir Alfa aCodFil;
+Definir alfa aNuMEmp ;
+
+aNumEmp = getCentroCusto.enumemp;
+aCodFil = getCentroCusto.ecodfil;
+aNomCcu = getCentroCusto.enomccu;
+  /*
+aSQL = "SELECT DISTINCT CCU.CODCCU, CCU.NOMCCU                                 \
+          FROM R017CAR CAR, R018CCU CCU                                        \
+            WHERE CAR.CODCCU = CCU.CODCCU";
+
+Se((aNumEmp <> "") e (aNumEmp <> " "))
+aSQL = aSQL + " AND CAR.NUMEMP = " + aNumEmp;
+                  
+Se((aCodFil <> "") e (aCodFil <> " "))
+aSQL = aSQL + " AND CAR.CODFIL = " + aCodFil;
+
+Se((aNomCcu <> "") e (aNomCcu <> " "))
+aSQL = aSQL + " AND CCU.NOMCCU LIKE '%" + aNomCcu + "%'";   */
+
+
+
+
+aSQL = "SELECT DISTINCT CCU.CODCCU, CCU.NOMCCU ,CCU.NUMEMP                                \
+          FROM  R018CCU CCU                                        \
+            WHERE 1 = 1 ";
+
+Se((aNumEmp <> "") e (aNumEmp <> " "))
+aSQL = aSQL + " AND CCU.NUMEMP = " + aNumEmp;
+                  
+
+Se((aNomCcu <> "") e (aNomCcu <> " "))
+aSQL = aSQL + " AND CCU.NOMCCU LIKE '%" + aNomCcu + "%'";   
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,aSQL);
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{                
+  SQL_RetornarAlfa(cBusca, "CODCCU", aCodCcu);
+  SQL_RetornarAlfa(cBusca, "NOMCCU", aNomCcu);      
+  SQl_RetornarInteiro(cBusca, "NUMEMP", nNumEmp);  
+  IntParaAlfa(nNumEmp,aNuMEmp);  
+  getCentroCusto.ccu.CriarLinha();            
+  getCentroCusto.ccu.scodccu = aCodCcu;
+  getCentroCusto.ccu.snomccu = aNomCcu;   
+    getCentroCusto.ccu.snumemp= aNuMEmp;        
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

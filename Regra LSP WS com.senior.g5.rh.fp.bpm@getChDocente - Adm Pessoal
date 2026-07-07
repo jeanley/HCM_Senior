@@ -1,0 +1,137 @@
+definir alfa anumemp;
+definir alfa atipcol;
+definir alfa anumcad;  
+definir alfa asql_docente;
+definir alfa cur_docente; 
+definir alfa aretorno;
+definir alfa atexto;
+definir alfa aenter;
+definir alfa aseqapf;
+definir alfa adesapf;
+definir alfa ahormes;                              
+definir alfa avalapf;
+definir alfa avalsem;                              
+definir alfa atotmes;
+definir alfa atotsem; 
+definir alfa ahorsem; 
+definir alfa adatini;                                
+
+definir data ddatzer;
+definir data ddathoj;
+definir data ddatini;
+
+definir numero nseqapf;
+definir numero ncodapf;
+definir numero nhormes;
+definir numero nhorsem;
+definir numero nvalapf;
+definir numero nvalsem;
+definir numero ntotmes;
+definir numero ntotsem;
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad;
+definir numero ntotmes_geral;
+
+
+MONTADATA(31,12,1900,DDATZER);
+ddatzer = 0;
+RETORNAASCII(13, AENTER);
+
+ddathoj = datsis;
+
+anumemp = getChDocentes.enumemp; 
+atipcol = getChDocentes.etipcol;
+anumcad = getChDocentes.enumcad;
+atexto ="";
+ntotmes = 0;
+ntotsem = 0;
+ntotmes_geral = 0;
+
+EXECSQL"DELETE USU_TEMPCH1 WHERE                                       \
+                USU_NUMEMP = :ANUMEMP AND                              \
+                USU_TIPCOL = :ATIPCOL AND                              \
+                USU_NUMCAD = :ANUMCAD";
+                  
+                  
+asql_docente = "select r171apf.seqapf, r171apf.codapf,        \
+                       r171apf.hormes, r171apf.valapf,        \              
+                       r171ati.desapf, r171apf.datini         \
+                         from r171apf, r171ati                \
+                         where                                \
+                         r171apf.codapf = r171ati.codapf and  \
+                         numemp = :anumemp and                \
+                         tipcol = :atipcol and                \
+                         numcad = :anumcad and                \
+                         ((datfim = :ddatzer) or              \
+                         (datfim > :ddathoj))";
+
+SQL_Criar(cur_docente); 
+SQL_UsarSQLSenior2(cur_docente, 0); 
+SQL_UsarAbrangencia(cur_docente, 0);
+SQL_DEFINIRCOMANDO(cur_docente, asql_docente);
+
+SQL_DEFINIRDATA(cur_docente, "ddatzer", ddatzer);
+SQL_DEFINIRDATA(cur_docente, "ddathoj", ddathoj);
+SQL_DEFINIRALFA(cur_docente, "anumemp", anumemp);
+SQL_DEFINIRALFA(cur_docente, "atipcol", atipcol); 
+SQL_DEFINIRALFA(cur_docente, "anumcad", anumcad);
+
+SQL_AbrirCursor(cur_docente); 
+ENQUANTO (SQL_EOF(cur_docente) = 0) @Se cursor posição final retorna 1@
+{ 
+  SQL_RetornarInteiro(cur_docente, "seqapf", nseqapf);
+  SQL_RetornarInteiro(cur_docente, "codapf", ncodapf);
+  SQL_RetornarInteiro(cur_docente, "hormes", nhormes);
+  SQL_RetornarFlutuante(cur_docente, "valapf", nvalapf);
+  SQL_RetornarAlfa(cur_docente, "desapf", adesapf);
+  SQL_RetornarData(cur_docente, "datini", ddatini);
+ 
+  intparaalfa(nseqapf, aseqapf);
+  intparaalfa(nhormes, ahormes);
+  alfaparaint(anumemp, nnumemp);
+  alfaparaint(atipcol, ntipcol);
+  alfaparaint(anumcad, nnumcad);
+  convertemascara(1, nvalapf, avalapf,"zzz.zzz.zzz.zz9,99");
+  convertemascara(3, ddatini, adatini, "DD/MM/YYYY");
+  TiraEspacos (avalapf, avalapf);
+  
+
+                  
+ 
+  @nhormes = nhormes/60;@
+  nhorsem = nhormes /4.5;                    
+  
+  ntotsem = ntotsem + nhorsem;
+  ntotmes = ntotmes + nhormes;
+
+  convertemascara(4,nhormes, ahormes,"hh:mm");
+  convertemascara(4,nhorsem, ahorsem,"hh:mm");
+  
+  
+  atexto = atexto + "> Atividade: "+adesapf+" | Início: "+adatini+" Hora(s) Semanal: "+ahorsem+" | Hora(s) Mensal:"+ahormes+" | Salário hora: R$"+avalapf+"<"+aenter;
+  
+  EXECSQL "INSERT INTO USU_TEMPCH1                                                \
+          (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+          VALUES                                                                  \
+          (:NNUMEMP, :NTIPCOL,:NNUMCAD,:NCODAPF,:NHORSEM,:NHORMES)";
+  
+  
+  nhorsem = 0;
+  nhormes = 0;
+  
+    
+  SQL_PROXIMO(cur_docente);
+  }
+SQL_FECHARCURSOR(cur_docente);
+SQL_DESTRUIR(cur_docente);
+
+convertemascara(4,ntotmes, atotmes,"hh:mm");
+TiraEspacos(atotmes,atotmes);
+convertemascara(4,ntotsem, atotsem,"hh:mm");
+TiraEspacos(atotsem,atotsem);
+
+getChDocentes.tabela.stexto = atexto;
+getChDocentes.tabela.stotmes = atotmes;
+getChDocentes.tabela.stotsem = atotsem;
+getChDocentes.tabela.ecarregar = "Carregado";

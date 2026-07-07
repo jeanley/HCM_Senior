@@ -1,0 +1,58 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 11/12/2024         
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aEstCar;
+Definir Alfa aCodCar;
+Definir Alfa aTitRed;
+Definir Alfa aTitCar;
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+
+aNumEmp = getCargo.enumemp;
+aCodFil = getCargo.ecodfil;
+aTitCar = getCargo.etitcar;
+
+aSQL = "SELECT DISTINCT CA.CODCAR, CA.ESTCAR, CA.TITRED, CA.TITCAR             \      
+          FROM R017CAR CAR, R024CAR CA                                         \
+            WHERE CAR.ESTCAR = CA.ESTCAR                                       \
+              AND CAR.CODCAR = CA.CODCAR";
+
+Se((aNumEmp <> "") e (aNumEmp <> " "))
+aSQL = aSQL + " AND CAR.NUMEMP = " + aNumEmp;
+                  
+Se((aCodFil <> "") e (aCodFil <> " "))
+aSQL = aSQL + " AND CAR.CODFIL = " + aCodFil;
+
+Se((aTitCar <> "") e (aTitCar <> " "))
+aSQL = aSQL + " AND CA.TITCAR LIKE '%" + aTitCar + "%'";
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,aSQL);
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarInteiro(cBusca, "ESTCAR", nEstCar);
+  SQL_RetornarAlfa(cBusca, "CODCAR", aCodCar);
+  SQL_RetornarAlfa(cBusca, "TITRED", aTitRed);
+  SQL_RetornarAlfa(cBusca, "TITCAR", aTitCar);
+  
+  IntParaAlfa(nEstCar, aEstCar);
+  
+  getCargo.cargos.CriarLinha();  
+  getCargo.cargos.sestcar = aEstCar;
+  getCargo.cargos.scodcar = aCodCar;
+  getCargo.cargos.stitred = aTitRed;
+  getCargo.cargos.stitcar = aTitCar;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

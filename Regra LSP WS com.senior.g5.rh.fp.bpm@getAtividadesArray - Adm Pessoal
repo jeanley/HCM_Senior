@@ -1,0 +1,303 @@
+                                
+@Objetos Cursores@
+Definir Alfa cAtividades;
+
+@Variáveis Numéricas@
+Definir Numero nCodApf;
+
+Definir Funcao RetornaSQLTIPO();
+
+
+
+@Variáveis Alfa@
+Definir Alfa aNumEmp;
+Definir Alfa aTipCol;
+Definir Alfa aNumCad;
+Definir Alfa aDesPaf;
+Definir Alfa aCodApf;
+Definir Alfa aCodOpe;
+Definir Alfa aEstSal;
+Definir Alfa aDatIni;
+Definir Alfa aSeqApf;
+Definir alfa aCodRat;
+
+@Variáveis Data@
+Definir Data dDatZer;
+Definir Data dDatHoj;
+Definir Data dDatini ;
+Definir Alfa aSQlAux;
+Definir Alfa aHorMes; 
+Definir Alfa aHorSem;
+Definir Alfa aValApf ;
+Definir Alfa aEmpSub;
+Definir Alfa aCadSub;
+Definir Alfa aCodFil ;
+
+Definir Alfa aSqlAu2;
+Definir ALfa aCurAux;
+Definir Alfa aHorEnt;
+Definir Alfa aMotSub ; 
+Definir ALfa aTipCon ;
+Definir Alfa atipmov ;
+Definir Alfa aForAtu ;
+Definir Cursor cR076DES;
+Definir Cursor cR076DES;
+Definir Alfa atipmov ;
+Definir Alfa aMotivo;
+Definir Alfa aEmpSub;
+Definir Alfa aFilSub;
+Definir Alfa aCodRat;
+Definir Alfa aDesRat ;
+
+
+
+Definir Cursor cR034FN ;
+
+dDatHoj = DatSis;
+
+aNumEmp = getAtividadesArray.enumemp;
+aTipCol = getAtividadesArray.etipcol;
+aNumCad = getAtividadesArray.enumcad;
+aEstSal = getAtividadesArray.estsal;
+aCodOpe = getAtividadesArray.operacao;  
+aHorEnt = getAtividadesArray.HorSem;
+aMotivo =    getAtividadesArray.motivo;
+
+atipmov   = getAtividadesArray.TipMov ;
+aTipCon =   getAtividadesArray.tipcon;   
+aCodFil  = getAtividadesArray.codfil;
+nConNum = VerificaNumeroAlfa(aTipCon);
+
+aEmpSub = getAtividadesArray.empsub;
+aFilSub = getAtividadesArray.filsub;
+/*
+Se (nConNum = 1) {
+
+  Se (aTipCon = "10")
+    aForAtu = "D";
+  Senao 
+    aForAtu = "A" ; 
+}
+Senao  {
+   Se (aTipCon = "Professor")
+     aForAtu = "D";
+   Senao
+    aForAtu  = "A"  ;
+} */
+
+
+aForAtu = "D"; 
+
+AlfaParaint(aNumEmp,nNumEmp);
+AlfaParaint(aCodFil,nCodFil);
+AlfaParaInt(aNumEmp, nNumEmp);
+AlfaParaInt(aTipCol, nTipCol);
+AlfaParaInt(aNumCad, nNumCad);
+AlfaParaint(aEstSal,nCodEst);
+
+
+Se ((aCodOpe ="") ou (aCodOpe = " "))
+ aCodOpe = "Inserir";
+ 
+ 
+Se (aCodOpe = "Inserir") {
+   EstaNulo (aEmpSub,nEmpNull);
+   EstaNulo (aFilSub,nFilNull);
+
+
+   @Movimentação de Substituição, assume empresa e filial Substituido@
+   Se ((nEmpNull = 0) e (nFilNull = 0)) {
+ 
+    ListaItem(aEmpSub, "-", 1, aNumEmp);
+    ListaItem(aFilSub, "-", 1, aCodFil);
+  
+  }
+
+
+  Se (nCodEst = 0)  {
+     cR076DES.Sql "SELECT CODEST FROM R076DES \
+                  WHERE USU_NUMEMP = :nNumEmp \
+                    AND USU_CODFIL = :nCodFil \
+                    AND USU_FORATU = :aForAtu" ;
+  
+   cR076DES.AbrirCursor();
+   Se (cR076DES.Achou) {
+      nCodEst =  cR076DES.CODEST ;  
+   }
+   cR076DES.FecharCursor();
+  
+  }
+
+}
+ 
+                                
+RetornaSQLTIPO();
+Sql_Criar(aCurAux);
+
+Sql_UsarAbrangencia(aCurAux,0);
+Sql_UsarSqlSenior2(aCurAux,0);
+
+Sql_DefinirComando(aCurAux,aSQlAux);
+Sql_DefinirInteiro(aCurAux,"NUMEMP",nNumEmp);
+Sql_DefinirInteiro(aCurAux,"TIPCOL",nTipCol);
+Sql_DefinirInteiro(aCurAux,"NUMCAD",nNumCad);
+Sql_DefinirData   (aCurAux,"DATZER",dDatZer);
+Sql_DefinirData   (aCurAux,"DATATU",dDatHoj);
+
+Se (aCodOpe = "Inserir") { 
+   Sql_DefinirData   (aCurAux,"DATALT",dDatHoj);
+   Sql_DefinirInteiro(aCurAux,"CODEST",nCodEst);
+}   
+   
+Sql_AbrirCursor(aCurAux);
+Enquanto (SQL_eof(aCurAux) = 0) {
+
+   Sql_RetornarInteiro   (aCurAux,"CODAPF", nCodApf);
+   Sql_RetornarAlfa      (aCurAux,"DESAPF", aDesPaf);
+   Sql_RetornarFlutuante (aCurAux,"HORSEM",nHorSem);
+   Sql_RetornarFlutuante (aCurAux,"HORMES",nHorMes);
+   Sql_RetornarFlutuante (aCurAux,"VALAPF",nValApf);
+   Sql_RetornarInteiro   (aCurAux,"SEQAPF" ,nSeqApf);
+   Sql_RetornarData      (aCurAux,"DATINI" ,dDatini);
+   Sql_RetornarInteiro   (aCurAux,"CODRAT", nCodrat);
+   Sql_RetornarAlfa      (aCurAux,"DESRAT", aDesRat);
+   
+   IntParaAlfa(nCodApf,aCodApf);
+   IntParaAlfa(nCodRat,aCodRat);
+
+   convertemascara(4,nHorSem, aHorSem,"hh:mm"); 
+   convertemascara(4,nHorMes, aHorMes,"hhh:mm");
+   convertemascara(2,nValApf, aValApf, "zzz.zzz.zz9,99");
+   convertemascara(3,dDatini, aDatini, "DD/MM/YYYY");
+   
+   IntParaAlfa(nSeqApf,aSeqApf);
+   TiraEspacos (aValApf, aValApf);
+   
+   getAtividadesArray.atividadessaida.CriarLinha() ;
+   getAtividadesArray.atividadessaida.CodApf = aCodApf;
+   getAtividadesArray.atividadessaida.DesApf = aDesPaf;
+   getAtividadesArray.atividadessaida.HorSem = aHorSem;
+   getAtividadesArray.atividadessaida.HorMes = aHorMes;
+   getAtividadesArray.atividadessaida.valapf = aValApf; 
+   getAtividadesArray.atividadessaida.atiope = aCodOpe+"|"+aCodApf+"|"+aSeqApf+"|"+aDatini+"|"+aCodRat+"|"+aHorEnt;
+   
+   Se(nCodrat > 0) 
+     getAtividadesArray.atividadessaida.rateio =  aCodRat + " - " + aDesRat  ; 
+   Senao
+      getAtividadesArray.atividadessaida.rateio = ""; 
+     
+   Se(nCodrat > 0)   
+     getAtividadesArray.atividadessaida.codrat =  aCodRat ;
+   Senao
+      getAtividadesArray.atividadessaida.codrat = "" ;
+   
+   Sql_Proximo(aCurAux);
+
+}
+Sql_FecharCursor(aCurAux);
+Sql_Destruir(aCurAux);
+
+  
+Funcao RetornaSQLTIPO(); {
+
+  aSQlAux ="" ;
+  
+  Se (aCodOpe = "Inserir") {
+  
+      aSQlAux =  "SELECT                                                  \
+                ATI.CODAPF,                                                     \
+                ATI.DESAPF,                                                     \
+                NIV.VALSAL AS VALAPF,                                                    \
+                0 AS HORSEM,                                                    \        
+                0 AS HORMES,                                                     \
+                0 AS SEQAPF,                                                     \
+                CONVERT(DATE, '31/12/1900', 103) AS DATINI,                \
+                ATI.USU_CODRAT  AS CODRAT, \
+                RAT.DESRAT                                  \
+            FROM                                                                \
+                R171ATI ATI                                                     \
+                                                                                \
+                left JOIN R076CLA CLA                                          \
+                    ON ATI.USU_CLASAL = CLA.CLASAL                               \
+                   AND CLA.CODEST = :CODEST                                          \
+                    AND cla.datalt = (SELECT MAX(TAB2.DATALT) FROM R076CLA TAB2     \
+                    WHERE CLA.codest = TAB2.CODEST                                  \
+                     AND  CLA.tipest = TAB2.TIPEST)                                 \
+                left JOIN R020RAT RAT ON (ATI.USU_CODRAT =  RAT.CODRAT)            \                                                       
+                left JOIN R076NIV NIV                                             \
+                    ON NIV.CODEST = CLA.CODEST                                    \
+                   AND NIV.TIPEST = CLA.TIPEST                                    \
+                   AND NIV.DATALT = CLA.DATALT                                    \
+                   AND NIV.SEQCLA = CLA.SEQCLA                                    \
+                   AND NIV.TIPEST = 1                                             \
+                   AND NIV.DATALT = (                                             \
+                        SELECT MAX(TAB.DATALT)                                    \
+                        FROM R076NIV TAB                                          \
+                        WHERE                                                     \
+                            NIV.CODEST = TAB.CODEST                               \
+                            AND NIV.TIPEST = TAB.TIPEST                           \
+                            AND NIV.SEQCLA = TAB.SEQCLA                           \
+                            AND NIV.SEQNIV = TAB.SEQNIV                           \
+                            AND TAB.DATALT <= :DATALT   \
+                   )                                                              \
+                   AND NIV.SEQNIV = (                                             \
+                        SELECT MIN(TAB2.SEQNIV)                                   \
+                        FROM R076NIV TAB2                                         \
+                        WHERE                                                     \
+                            TAB2.CODEST = NIV.CODEST                              \
+                            AND TAB2.TIPEST = NIV.TIPEST                          \
+                            AND TAB2.DATALT = NIV.DATALT                          \
+                            AND TAB2.SEQCLA = NIV.SEQCLA                          \
+                   )                                                              \
+                                                                                  \
+            WHERE                                                                 \
+                (                                                                 \
+                    ATI.FIMAPF = :DATZER                 \
+                    OR ATI.FIMAPF > :DATALT             \
+                )                                                                 \
+                AND ATI.USU_CONBMP = 'S'                                          \
+                AND (                                                             \
+                       (:NUMEMP = 1 AND ATI.USU_CONE01 = 'S')                      \
+                    OR (:NUMEMP = 2 AND ATI.USU_CONE02 = 'S')                      \
+                    OR (:NUMEMP = 3 AND ATI.USU_CONE03 = 'S')                      \
+                )                                                                 \
+                AND NOT EXISTS (                                                  \
+                    SELECT 1                                                      \
+                    FROM R171APF APF ,R171ATI AT2                                                \
+                    WHERE                                                         \
+                        APF.NUMEMP =  :NUMEMP                                           \
+                        AND APF.TIPCOL = :TIPCOL                                        \
+                        AND APF.NUMCAD = :NUMCAD                                 \
+                        AND ATI.CODAPF = APF.CODAPF                               \
+                        AND APF.DATFIM = :DATZER                                 \
+                        AND APF.DATINI <= :DATATU                                \
+                        AND APF.codapf = AT2.codapf   \
+                        AND (at2.usu_dutati = 'N' OR at2.usu_dutati is null OR  at2.usu_dutati = ''  ))" ;
+                
+  }
+  Senao {
+     aSQlAux = "SELECT ATI.CODAPF,                                   \
+                       ATI.DESAPF,                                              \
+                       APF.VALAPF,                                              \
+                       ISNULL(NULLIF(APF.HORMES, 0) / 4.5, 0) AS HORSEM,        \
+                       ISNULL(APF.HORMES, 0) AS HORMES,        \
+                       APF.SEQAPF,                                   \
+                       APF.DATINI,  \
+                       APF.CODRAT, \
+                       RAT.DESRAT   FROM R171APF APF \
+                INNER JOIN R171ATI ATI ON (APF.CODAPF = ATI.CODAPF)             \
+                 left JOIN R020RAT RAT ON (APF.CODRAT =  RAT.CODRAT)  \ 
+                WHERE APF.NUMEMP = :NUMEMP \                                           \
+                  AND APF.TIPCOL = :TIPCOL \                                           \
+                  AND APF.NUMCAD = :NUMCAD \
+                  AND (APF.DATFIM = :DATZER OR APF.DATFIM >= :DATATU ) \
+                  AND APF.DATINI <= :DATATU";
+
+
+  
+  
+  
+  }
+
+
+}   

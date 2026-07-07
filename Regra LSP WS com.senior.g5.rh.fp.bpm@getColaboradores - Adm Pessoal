@@ -1,0 +1,1050 @@
+Definir Alfa   cR034FUN;
+Definir Alfa   aNomFun;
+Definir Alfa   aFiltro;
+Definir Alfa   aWheAux;
+Definir Alfa   aSqlAux;
+Definir Alfa   aNumCad;
+Definir Alfa   aResHie;
+Definir Alfa   aFilEmpresa;
+Definir Alfa   aCodccu;
+Definir Alfa   aNomCcu;
+Definir Alfa   aCodFil;
+Definir Alfa   aNomFil;
+
+Definir Data dDatAtu;
+Definir Alfa aPostra;
+Definir Alfa aLisDem;
+Definir Alfa aCodCar;
+Definir Alfa aTipMov;
+Definir Alfa aTipBud;
+
+@Lista pARAMETROS UNIDADE@
+Definir Lista LstparUnidade;
+LstparUnidade.DefinirCampos();
+LstparUnidade.AdicionarCampo("NumEmp", Numero);
+LstparUnidade.AdicionarCampo("CodFil", Numero);
+LstparUnidade.AdicionarCampo("notmin_sga_dentro", Numero);
+LstparUnidade.AdicionarCampo("absmax_sga_dentro", Numero);
+LstparUnidade.AdicionarCampo("notmin_custo_dentro", Numero);
+LstparUnidade.AdicionarCampo("absmax_custo_dentro", Numero);
+LstparUnidade.AdicionarCampo("notmin_fora_custo", Numero);
+LstparUnidade.AdicionarCampo("absmax_fora_custo", Numero);
+LstparUnidade.AdicionarCampo("notmin_fora_sga", Numero);
+LstparUnidade.AdicionarCampo("absmax_fora_sga", Numero);
+LstparUnidade.EfetivarCampos();
+
+
+
+Definir  Funcao ParametrosDeUnidade();
+Definir  Funcao ParametrosDeUnidade2();
+
+Definir Funcao TrataCodigo(Numero _nTipReg);
+Definir Alfa _VarTrt;
+Definir Alfa _RetAlf;
+
+
+@TIPOS DE MOVIMENTAÇÃO@
+MOTIVO_SUBSTITUICAO   = 1;
+MOTIVO_AUMENTO_QUADRO = 2;
+MOTIVO_PROMOCAO       = 3;
+MOTIVO_TRANSFERENCIA  = 4;
+MOTIVO_CENTROCUSTO    = 5;
+
+@TIPOS DE ORÇAMENTO@
+BUDGET_DENTRO = 1;
+BUDGET_FORA   = 2;
+
+Definir Alfa CLASSICACAO_CUSTO;
+Definir Alfa CLASSICACAO_SGEA;
+
+@CLASSIFICAÇÃO ORÇAMENTARIA@
+
+CLASSICACAO_CUSTO = "C" ;
+CLASSICACAO_SGEA = "G";
+
+
+
+Definir Alfa aEmpSub;
+Definir Alfa aCadSub;
+
+
+nNumEmp     = getColaboradores.numemp;
+aFiltro     = getColaboradores.filtro;
+aFilEmpresa = getColaboradores.Empresa;
+aResHie =     getColaboradores.ResHie;
+aLisDem =     getColaboradores.lisdem;
+aTipMov =     getColaboradores.tipmov;
+nTipPes =     getColaboradores.tippes;
+aTipBud =     getColaboradores.tipbud;
+aEmpSub =     getColaboradores.empsub;
+aCadSub =     getColaboradores.cadsub;
+nFilSub =     getColaboradores.filsub;
+
+
+
+@filtros substituição@
+nEmpCol =    getColaboradores.empcol;
+nCodfil =    getColaboradores.filcol;
+nTabOrg =    getColaboradores.taborg;
+nNumLoc =    getColaboradores.numloc;
+nEstCar =    getColaboradores.estcar;
+aCodCar =    getColaboradores.codcar;
+
+dDatAtu = DatSis;
+
+@Tipo Movimentação@
+Se (aTipMov = "Substituição")
+{
+   MOTIVO_MOVIMENTACAO  = MOTIVO_SUBSTITUICAO;
+}
+Senao Se (aTipMov = "Aumento de Quadro")
+{
+   MOTIVO_MOVIMENTACAO = MOTIVO_AUMENTO_QUADRO;
+}
+Senao Se (aTipMov = "Promoção")
+{
+   MOTIVO_MOVIMENTACAO = MOTIVO_PROMOCAO;
+}
+Senao Se (aTipMov = "Transferência")
+{                           
+   MOTIVO_MOVIMENTACAO = MOTIVO_TRANSFERENCIA;
+}
+Senao Se (aTipMov = "Centro de Custo")
+{
+   MOTIVO_MOVIMENTACAO = MOTIVO_CENTROCUSTO;
+}
+Senao
+{
+   MOTIVO_MOVIMENTACAO = -1;
+}
+
+@tipo orçamento@
+Se (aTipBud = "Dentro do Orçamento")
+{
+   TIPO_BUDGET = BUDGET_DENTRO;
+}
+Senao Se (aTipBud = "Fora do Orçamento")
+{
+   TIPO_BUDGET = BUDGET_FORA ;
+}
+Senao
+{
+   TIPO_BUDGET = -1 ;
+}
+
+
+RetColabPorCodUsu(codusu, nEmpSol, nTipSol, nCadSol);
+ConverteParaMaiusculo(aFiltro,aFiltro);
+bflgNum = VerificaNumeroAlfa(aFiltro); 
+
+EstaNulo (aFiltro,nFilNull);
+
+Se (nFilNull = 0)
+{
+  Se (bflgNum = 0)
+  {
+      aWheAux =   " AND UPPER(NF.NOMFUN) LIKE '%"+aFiltro+"%'"; 
+  }
+  Senao
+  {
+     aWheAux =   " AND UPPER(NF.NUMCAD) LIKE '%"+aFiltro+"%'"; 
+  }
+   
+}
+
+
+
+EstaNulo (aLisDem,nDemNull);
+ 
+Se (aLisDem = "N")
+{
+  aWheAux = aWheAux + " AND NF.SITAFA <> 7";
+}
+ 
+ 
+TiraEspacos (aFilEmpresa,aFilEmpresa);
+Se (aFilEmpresa <> "")
+{
+   PosicaoAlfa ("-",aFilEmpresa, nPos);
+   nPos --;
+   CopiarAlfa(aFilEmpresa,1,nPos);
+   AlfaParaint(aFilEmpresa,nNumEmp);
+}
+
+Se (nNumEmp > 0)
+{
+   nEmpFiltro = nNumEmp ;
+}
+
+Se ((nEmpCol > 0) e (ncodFil > 0) e (nNumLoc > 0))
+{
+    Definir Alfa aEstCar;
+    Definir Alfa aTabOrg;
+    Definir Alfa aNumLoc;
+    
+    IntParaAlfa(nEstCar,aEstcar);
+    IntParaAlfa(nTabOrg,aTabOrg);
+    IntParaAlfa(nNumLoc,aNumLoc);
+    
+    aWheAux  = aWheAux +" AND NF.ESTCAR = " + aEstcar + " AND NF.CODCAR ='" +aCodCar + "'" + " AND NF.TABORG = " + aTabOrg  + " AND NF.NUMLOC = "  + aNumLoc;
+}
+
+/*Se (MOTIVO_MOVIMENTACAO = MOTIVO_SUBSTITUICAO;)
+{
+    
+ aWheAux = aWheAux + " AND NOT EXISTS (SELECT * FROM R126RQU WHERE NF.ESTPOS = R126RQU.ESTPOS AND NF.POSTRA = R126RQU.POSTRA) ";
+} */
+
+
+/*
+Se ((MOTIVO_MOVIMENTACAO = MOTIVO_TRANSFERENCIA) ou    (MOTIVO_MOVIMENTACAO = MOTIVO_PROMOCAO))  
+
+{
+   aResHie = "P";
+}*/
+
+Se (MOTIVO_MOVIMENTACAO = MOTIVO_PROMOCAO)  
+
+{
+   aResHie = "P";
+}
+
+
+
+    @ AND ((SUBSTR(HF.POSPOS,0,LENGTH(HF.POSPOS)-2) = HC.POSPOS) OR (SUBSTR(HF.POSPOS,0,LENGTH(HF.POSPOS)-4) = HC.POSPOS))   \    @
+@AND NF.SITAFA <> 7 \ tirado para apercer demitdos@
+Se (aResHie = "P")  @hierarquia de postos@
+{
+   aSqlAux= "SELECT MOT.NOMMOT,NF.datsal,NF.codmot,NF.valsal,NF.CODCAR, EMP.NOMEMP, L.CODFIL,L.NOMFIL, NF.NUMEMP, NF.TIPCOL, NF.NUMCAD, NF.NOMFUN, CCF.CODCCU, CCF.NOMCCU,  NF.POSTRA, \
+              POS.DESRED , ORF.NUMLOC, ORF.NOMLOC ,\
+              (                                                                  \
+                    SELECT                                                         \
+                        TINDABS1.USU_INDABS                                        \
+                    FROM                                                           \
+                        USU_TINDABS TINDABS1                                       \
+                    WHERE                                                          \
+                        TINDABS1.USU_NUMEMP =  NF.NUMEMP AND                 \
+                        TINDABS1.USU_TIPCOL =  NF.TIPCOL AND                 \
+                        TINDABS1.USU_NUMCAD =  NF.NUMCAD AND                 \
+                        TINDABS1.USU_CMPIND =                                      \
+                        (                                                          \
+                            SELECT                                                 \
+                                MAX(TINDABS2.USU_CMPIND)                           \
+                            FROM                                                   \
+                                USU_TINDABS TINDABS2                               \
+                            WHERE                                                  \
+                                TINDABS2.USU_NUMEMP =  TINDABS1.USU_NUMEMP AND     \
+                                TINDABS2.USU_TIPCOL =  TINDABS1.USU_TIPCOL AND     \
+                                TINDABS2.USU_NUMCAD =  TINDABS1.USU_NUMCAD         \
+                        )                                                          \
+                ) ABSIND ,                                                         \
+                (                                                                  \
+                    SELECT                                                         \
+                        TAVADES1.USU_NOTDES                                        \
+                    FROM                                                           \
+                        USU_TAVADES TAVADES1                                       \
+                    WHERE                                                          \
+                        TAVADES1.USU_NUMEMP =  NF.NUMEMP AND                 \
+                        TAVADES1.USU_TIPCOL =  NF.TIPCOL AND                 \
+                        TAVADES1.USU_NUMCAD =  NF.NUMCAD AND                 \
+                        TAVADES1.USU_CMPNOT =                                      \
+                        (                                                          \
+                            SELECT                                                 \
+                                MAX(TAVADES2.USU_CMPNOT)                           \
+                            FROM                                                   \
+                                USU_TAVADES TAVADES2                               \
+                            WHERE                                                  \
+                                TAVADES2.USU_NUMEMP =  TAVADES1.USU_NUMEMP AND     \
+                                TAVADES2.USU_TIPCOL =  TAVADES1.USU_TIPCOL AND     \
+                                TAVADES2.USU_NUMCAD =  TAVADES1.USU_NUMCAD         \
+                        )                                                          \
+                ) NOTDES                                                           \
+          FROM R034FUN NC, R017HIE HC, \
+           R017HIE HF, R034FUN NF, R030FIL L, R024CAR C,   \ 
+          R017RHP RRF, R017RHP RRC, R018CCU CCC, R018CCU CCF, R016ORN ORF, R016ORN ORC, R017POS POS,  R030EMP EMP , R076MOT MOT\
+          WHERE NC.NUMEMP = :EMPSOL \
+          AND NC.TIPCOL = :TIPSOL \ 
+          AND NC.NUMCAD = :CADSOL \
+          AND NF.NUMEMP = :NUMEMP \
+          AND HC.ESTPOS = NC.ESTPOS \
+          AND HC.POSTRA = NC.POSTRA \
+          AND HF.CODTHP   = 1 \
+          AND HC.CODTHP = HF.CODTHP \ 
+          AND NF.ESTPOS = HF.ESTPOS \
+          AND NF.POSTRA = HF.POSTRA \
+          AND NC.SITAFA <> 7 \
+          AND L.NUMEMP = NF.NUMEMP \
+          AND L.CODFIL = NF.CODFIL \
+          AND C.ESTCAR = NF.ESTCAR \
+          AND C.CODCAR = NF.CODCAR \
+          AND HF.ESTPOS = RRF.ESTPOS \
+          AND HF.CODTHP = RRF.CODTHP \
+          AND HF.REVHIE = RRF.REVHIE \
+          AND RRF.DATREV =                                              \
+                      (                                                              \
+                         SELECT                                                      \
+                             MAX(R017RHP2.DATREV)                                    \
+                         FROM                                                        \
+                             R017RHP R017RHP2                                        \
+                         WHERE                                                       \
+                             R017RHP2.ESTPOS =  RRF.ESTPOS AND                       \
+                             R017RHP2.CODTHP =  RRF.CODTHP AND                       \
+                             R017RHP2.DATREV <= :DATATU                              \
+                      ) 							 								   \
+          AND CCF.NUMEMP = NF.NUMEMP 												   \
+          AND CCF.CODCCU = NF.CODCCU 												   \
+          AND ORF.TABORG = NF.TABORG 												   \
+          AND ORF.NUMLOC = NF.NUMLOC 												   \	
+          AND HC.ESTPOS = RRC.ESTPOS 												   \
+          AND HC.CODTHP = RRC.CODTHP 												   \
+          AND HC.REVHIE = RRC.REVHIE 												   \
+          AND RRC.DATREV =                                                           \
+                      (                                                              \
+                         SELECT                                                      \
+                             MAX(R017RHP2.DATREV)                                    \
+                         FROM                                                        \
+                             R017RHP R017RHP2                                        \
+                         WHERE                                                       \
+                             R017RHP2.ESTPOS =  RRC.ESTPOS AND                       \
+                             R017RHP2.CODTHP =  RRC.CODTHP AND                       \
+                             R017RHP2.DATREV <= :DATATU                              \
+                      )                                                              \
+          AND CCC.NUMEMP = NC.NUMEMP 												   \
+          AND CCC.CODCCU = NC.CODCCU 												   \
+          AND ORC.TABORG = NF.TABORG 												   \
+          AND ORC.NUMLOC = NF.NUMLOC                           \
+          AND NF.ESTPOS = POS.ESTPOS                           \
+          AND NF.POSTRA = POS.POSTRA                           \
+          AND NF.NUMEMP = EMP.NUMEMP                            \
+          /*and SUBSTR(HF.POSPOS,0,LENGTH(HF.POSPOS)-4) = HC.POSPOS */ \
+          AND  HF.POSPOS like HC.POSPOS   || '%'         \
+          AND  HF.POSPOS <>  HC.POSPOS                    \
+          AND NF.NUMEMP NOT IN (19,20,300,40)                \
+          AND NF.CODFIL NOT IN (4,13,15,16,17)        \
+          AND NF.CODMOT = MOT.CODMOT    \
+          "+aWheAux+"  \
+          ORDER BY NF.NOMFUN " ;
+   
+}
+Senao
+Se (aResHie = "A") @ABRANGENCIA DEFIDA NO SISTEMA@
+{
+    aSqlAux =  "SELECT MOT.NOMMOT,NF.datsal,NF.codmot,NF.valsal, NF.NUMEMP,\
+                      NF.TIPCOL,\
+                      NF.NUMCAD,\
+                      NF.NOMFUN ,\
+                      NF.CODCAR,\
+                      NF.POSTRA, \
+                      POS.DESRED, \
+                      CCF.CODCCU,\
+                      CCF.NOMCCU,  \
+                      L.CODFIL, \
+                      EMP.NOMEMP, \
+                      L.NOMFIL,                      \
+                      (                                                                  \
+                    SELECT                                                         \
+                        TINDABS1.USU_INDABS                                        \
+                    FROM                                                           \
+                        USU_TINDABS TINDABS1                                       \
+                    WHERE                                                          \
+                        TINDABS1.USU_NUMEMP =  NF.NUMEMP AND                 \
+                        TINDABS1.USU_TIPCOL =  NF.TIPCOL AND                 \
+                        TINDABS1.USU_NUMCAD =  NF.NUMCAD AND                 \
+                        TINDABS1.USU_CMPIND =                                      \
+                        (                                                          \
+                            SELECT                                                 \
+                                MAX(TINDABS2.USU_CMPIND)                           \
+                            FROM                                                   \
+                                USU_TINDABS TINDABS2                               \
+                            WHERE                                                  \
+                                TINDABS2.USU_NUMEMP =  TINDABS1.USU_NUMEMP AND     \
+                                TINDABS2.USU_TIPCOL =  TINDABS1.USU_TIPCOL AND     \
+                                TINDABS2.USU_NUMCAD =  TINDABS1.USU_NUMCAD         \
+                        )                                                          \
+                ) ABSIND ,                                                         \
+                (                                                                  \
+                    SELECT                                                         \
+                        TAVADES1.USU_NOTDES                                        \
+                    FROM                                                           \
+                        USU_TAVADES TAVADES1                                       \
+                    WHERE                                                          \
+                        TAVADES1.USU_NUMEMP =  NF.NUMEMP AND                 \
+                        TAVADES1.USU_TIPCOL =  NF.TIPCOL AND                 \
+                        TAVADES1.USU_NUMCAD =  NF.NUMCAD AND                 \
+                        TAVADES1.USU_CMPNOT =                                      \
+                        (                                                          \
+                            SELECT                                                 \
+                                MAX(TAVADES2.USU_CMPNOT)                           \
+                            FROM                                                   \
+                                USU_TAVADES TAVADES2                               \
+                            WHERE                                                  \
+                                TAVADES2.USU_NUMEMP =  TAVADES1.USU_NUMEMP AND     \
+                                TAVADES2.USU_TIPCOL =  TAVADES1.USU_TIPCOL AND     \
+                                TAVADES2.USU_NUMCAD =  TAVADES1.USU_NUMCAD         \
+                        )                                                          \
+                ) NOTDES , ORF.NUMLOC, ORF.NOMLOC  \
+                       FROM R034FUN NF, R018CCU CCF, R017POS POS, R030FIL L , R030EMP EMP, R016ORN ORF  ,R076MOT MOT\
+               WHERE  NF.SITAFA <> 7  AND NF.TIPCOL = 1 \
+                  AND NF.NUMEMP = CCF.NUMEMP \
+                  AND NF.CODCCU = CCF.CODCCU \
+                  AND NF.ESTPOS = POS.ESTPOS \
+                  AND NF.POSTRA = POS.POSTRA \
+                  AND L.NUMEMP = NF.NUMEMP \
+                  AND L.CODFIL = NF.CODFIL \
+                  AND ORF.TABORG = NF.TABORG \ 										
+                  AND ORF.NUMLOC = NF.NUMLOC  \
+                  AND NF.NUMEMP NOT IN (19,20,300,40)  \
+                  AND NF.CODFIL NOT IN (4,13,15,16,17)  \
+                  AND NF.NUMEMP = EMP.NUMEMP \
+                   AND NF.CODMOT = MOT.CODMOT    \
+                     "+aWheAux+" \
+               ORDER BY NF.NOMFUN";
+}
+Senao
+{
+    aSqlAux =  "SELECT  MOT.NOMMOT, NF.datsal,NF.codmot,NF.valsal, NF.NUMEMP,\
+                      NF.TIPCOL,\
+                      NF.NUMCAD,\
+                      NF.NOMFUN, \
+                      NF.CODCAR,\
+                      CCF.CODCCU,\
+                      CCF.NOMCCU, \
+                      NF.POSTRA,\
+                      EMP.NOMEMP, \
+                      POS.DESRED ,\
+                      L.CODFIL, \
+                      L.NOMFIL, \
+                      (                                                                  \
+                    SELECT                                                         \
+                        TINDABS1.USU_INDABS                                        \
+                    FROM                                                           \
+                        USU_TINDABS TINDABS1                                       \
+                    WHERE                                                          \
+                        TINDABS1.USU_NUMEMP =  NF.NUMEMP AND                 \
+                        TINDABS1.USU_TIPCOL =  NF.TIPCOL AND                 \
+                        TINDABS1.USU_NUMCAD =  NF.NUMCAD AND                 \
+                        TINDABS1.USU_CMPIND =                                      \
+                        (                                                          \
+                            SELECT                                                 \
+                                MAX(TINDABS2.USU_CMPIND)                           \
+                            FROM                                                   \
+                                USU_TINDABS TINDABS2                               \
+                            WHERE                                                  \
+                                TINDABS2.USU_NUMEMP =  TINDABS1.USU_NUMEMP AND     \
+                                TINDABS2.USU_TIPCOL =  TINDABS1.USU_TIPCOL AND     \
+                                TINDABS2.USU_NUMCAD =  TINDABS1.USU_NUMCAD         \
+                        )                                                          \
+                ) ABSIND ,                                                         \
+                (                                                                  \
+                    SELECT                                                         \
+                        TAVADES1.USU_NOTDES                                        \
+                    FROM                                                           \
+                        USU_TAVADES TAVADES1                                       \
+                    WHERE                                                          \
+                        TAVADES1.USU_NUMEMP =  NF.NUMEMP AND                 \
+                        TAVADES1.USU_TIPCOL =  NF.TIPCOL AND                 \
+                        TAVADES1.USU_NUMCAD =  NF.NUMCAD AND                 \
+                        TAVADES1.USU_CMPNOT =                                      \
+                        (                                                          \
+                            SELECT                                                 \
+                                MAX(TAVADES2.USU_CMPNOT)                           \
+                            FROM                                                   \
+                                USU_TAVADES TAVADES2                               \
+                            WHERE                                                  \
+                                TAVADES2.USU_NUMEMP =  TAVADES1.USU_NUMEMP AND     \
+                                TAVADES2.USU_TIPCOL =  TAVADES1.USU_TIPCOL AND     \
+                                TAVADES2.USU_NUMCAD =  TAVADES1.USU_NUMCAD         \
+                        )                                                          \
+                ) NOTDES,ORF.NUMLOC, ORF.NOMLOC \
+                       FROM R034FUN NF, R018CCU CCF,R017POS POS, R030FIL L, R030EMP EMP, R016ORN ORF,R076MOT MOT\    \
+               WHERE NF.NUMEMP = :NUMEMP \
+               AND   NF.TIPCOL = 1        \
+               AND   NF.SITAFA <> 7 \
+               AND NF.NUMEMP = CCF.NUMEMP \
+               AND NF.CODCCU = CCF.CODCCU \
+               AND NF.ESTPOS = POS.ESTPOS \
+               AND NF.POSTRA = POS.POSTRA \
+               AND L.NUMEMP = NF.NUMEMP \
+               AND L.CODFIL = NF.CODFIL \
+               AND NF.NUMEMP = EMP.NUMEMP \
+               AND ORF.TABORG = NF.TABORG \										
+               AND ORF.NUMLOC = NF.NUMLOC \
+               AND NF.NUMEMP NOT IN (19,20,300,40)   \
+               AND NF.CODFIL NOT IN (4,13,15,16,17) \
+                AND NF.CODMOT = MOT.CODMOT    \
+               "+aWheAux+" \
+               ORDER BY NF.CODFIL";
+}
+
+              
+Sql_Criar(cR034FUN);
+
+Se (aResHie = "A")
+{
+      
+  Sql_UsarSqlSenior2(cR034FUN,1);
+  Sql_UsarAbrangencia(cR034FUN,1);
+}
+Sql_UsarSqlSenior2(cR034FUN,0);
+Sql_UsarAbrangencia(cR034FUN,0);
+Sql_DefinirComando(cR034FUN,aSqlAux);
+
+Se (aResHie <> "A")   
+{
+   Se ((aResHie = "T") e (nEmpCol > 0))
+   {
+      nEmpSol = nEmpCol;
+   }
+   
+ 
+}
+
+Se (aResHie = "A")
+{
+   SQl_DefinirInteiro(cR034FUN,"NUMEMP",nEmpSol);
+}
+
+senao Se (aResHie = "P")
+{
+  
+   SQl_DefinirInteiro(cR034FUN,"EMPSOL",nEmpSol);
+   SQl_DefinirInteiro(cR034FUN,"TIPSOL",nTipSol);
+   Sql_DefinirInteiro(cR034FUN,"CADSOL",nCadSol);
+   Sql_DefinirData   (cR034FUN,"DATATU",dDatAtu);
+   SQl_DefinirInteiro(cR034FUN,"NUMEMP",nEmpFiltro); 
+}
+Senao
+{
+    SQl_DefinirInteiro(cR034FUN,"NUMEMP",nEmpFiltro);
+}       
+
+
+Sql_AbrirCursor(cR034FUN) ;
+Enquanto(SQL_EOF(cR034FUN) = 0)
+{
+
+   Definir Alfa aDesRed;
+   Definir Alfa aCodEmp;
+   Definir aLFA aNomEmp;
+   Definir Alfa aCodcar;
+   Definir Alfa aNomLoc;
+   Definir Alfa aCodLoc;
+   Definir Data dDatSal;
+   
+   Definir Alfa aDatSal;
+   Definir Alfa aValSal;
+   Definir Alfa aCodMot;
+   Definir ALfa aNomMot;
+
+   Sql_RetornarInteiro(cR034FUN, "NUMEMP",nNumEmp);  
+   Sql_RetornarInteiro(cR034FUN, "TIPCOL",nTipCol);
+   Sql_RetornarInteiro(cR034FUN, "NUMCAD",nNumCad);
+   Sql_RetornarInteiro(cR034FUN, "CODFIL",nCodFil);
+   Sql_RetornarAlfa   (cR034FUN, "NOMFUN",aNomFun);
+   Sql_RetornarAlfa   (cR034FUN, "CODCCU",aCodccu);
+   Sql_RetornarAlfa   (cR034FUN, "NOMCCU",aNomCcu);
+   Sql_RetornarAlfa   (cR034FUN, "POSTRA",aPostra);
+   Sql_RetornarAlfa   (cR034FUN, "DESRED",aDesRed);
+   Sql_RetornarAlfa   (cR034FUN, "NOMFIL",aNomFil);
+   Sql_RetornarAlfa   (cR034FUN, "NOMEMP",aNomEmp);
+   Sql_RetornarAlfa   (cR034FUN, "CODCAR",aCodCar);
+   Sql_RetornarAlfa   (cR034FUN, "nomloc",aNomLoc);
+   Sql_RetornarFlutuante   (cR034FUN, "ABSIND",nABSIND);
+   Sql_RetornarFlutuante   (cR034FUN, "NOTDES",nNOTDES);
+   Sql_RetornarInteiro(cR034FUN, "NUMLOC",nNumLoc);
+    Sql_RetornarAlfa   (cR034FUN, "NomMot",aNomMot);
+   
+   Sql_RetornarData(cR034FUN,"DATSAL",dDatSal);
+   sql_RetornarInteiro(cR034FUN,"codmot",nCodMot);
+   sql_RetornarFlutuante(cR034FUN,"valsal",nValSal);
+   
+   ConverteMascara(3,dDatSal,aDatSal,"DD/MM/YYYY");
+   ConverteMascara(2,nValSal,aValSal,"ZZZ.ZZZ.ZZ9,99");
+   IntParaAlfa(nCodMot,aCodMot);
+   
+   
+   
+   RetornaCodLoc (nNumLoc,aCodLoc);
+    
+   
+   IntParaAlfa(nNumEmp,aCodEmp);
+   IntParaAlfa(nNumCad,aNumCad);
+   IntParaAlfa(nCodFil,aCodFil);
+   
+   Definir Alfa aEmpSub;
+   Definir aLFA aCadSub;
+ 
+
+   NotMin_custo = 0;
+   NotMin_SGA = 0;
+   @substiruiução e pesquisa for no substitiuto@
+   Se ((MOTIVO_MOVIMENTACAO = MOTIVO_SUBSTITUICAO)  e (nTipPes = 2))
+   {
+       nTipSub = 1;
+      _VarTrt = aEmpSub;          TrataCodigo(1); nEmpSub =  _RetNum;
+     @ _VarTrt = aCadSub;          TrataCodigo(1); nCadSub =  _RetNum;  @
+      
+      LstparUnidade.Chave("NumEmp;CodFil");
+      LstparUnidade.SetarChave();
+      LstparUnidade.NumEmp = nEmpSub ;
+      LstparUnidade.CodFil = nFilSub;
+      Se (LstparUnidade.VaiParaChave()= 1)
+      {
+          notmin_sga_dentro =     LstparUnidade.notmin_sga_dentro;
+          absmax_sga_dentro =    LstparUnidade.absmax_sga_dentro;
+          notmin_custo_dentro =    LstparUnidade.notmin_custo_dentro;
+          absmax_custo_dentro =    LstparUnidade.absmax_custo_dentro;
+          notmin_fora_custo =    LstparUnidade.notmin_fora_custo;
+          absmax_fora_custo =    LstparUnidade.absmax_fora_custo;
+          notmin_fora_sga =    LstparUnidade.notmin_fora_sga;
+          absmax_fora_sga =    LstparUnidade.absmax_fora_sga;
+         
+      }
+      Senao
+      {
+         ParametrosDeUnidade();
+         LstparUnidade.Adicionar();
+         LstparUnidade.numemp = nEmpSub;
+         LstparUnidade.codfil = nFilSub;
+         LstparUnidade.notmin_sga_dentro   = notmin_sga_dentro;
+         LstparUnidade.absmax_sga_dentro    = absmax_sga_dentro;
+         LstparUnidade.notmin_custo_dentro  = notmin_custo_dentro;
+         LstparUnidade.absmax_custo_dentro  = absmax_custo_dentro;
+         LstparUnidade.notmin_fora_custo    = notmin_fora_custo;
+         LstparUnidade.absmax_fora_custo   = absmax_fora_custo;
+         LstparUnidade.notmin_fora_sga      = notmin_fora_sga;
+         LstparUnidade.absmax_fora_sga     = absmax_fora_sga;
+         LstparUnidade.Gravar();
+      
+      }
+      @TRATEI AS INFORMAÇÕES NOTA E aBseTEIMSO NO MESMN CAMPO PARA NÃO PRECISAR CRIAR MAIS CAMPOS NO FORMULAIO DO BPM@
+      Se (TIPO_BUDGET = BUDGET_DENTRO)
+      {
+          Se (nABSIND > absmax_sga_dentro)
+          {
+              NotMin_SGA = 2 ;
+          } 
+          Senao Se(nNOTDES < notmin_sga_dentro)
+          {
+             NotMin_SGA = 1 ;   
+          }
+     
+          Se (nABSIND > absmax_custo_dentro)
+          {
+            NotMin_custo = 2 ;   
+          }
+          Senao Se(nNOTDES < notmin_custo_dentro)
+          {
+             NotMin_custo = 1 ;   
+          }
+          
+    
+      }
+      Senao Se  (TIPO_BUDGET = BUDGET_FORA)
+      {
+          
+          Se (nABSIND > absmax_fora_sga)
+          {
+               NotMin_SGA = 2 ;
+          }
+          Senao Se(nNOTDES < notmin_fora_sga)
+          {
+             NotMin_SGA = 1 ;   
+          }
+          
+          
+          Se (nABSIND > absmax_fora_custo)
+          {
+             NotMin_custo = 2 ;
+          }
+          Senao Se(nNOTDES < notmin_fora_custo)
+          {
+             NotMin_custo = 1 ;   
+          }
+      }  
+   
+   }
+   
+   Definir Alfa aEnter;
+   RetornaAscii(13,aEnter);
+   Definir Alfa ainfCol;
+   Definir Alfa aNomcar;
+   
+   getColaboradores.Colaboradores.CriarLinha();
+   getColaboradores.Colaboradores.numemp = nNumEmp;
+   getColaboradores.Colaboradores.tipcol = nTipCol;
+   getColaboradores.Colaboradores.numcad = nNumcad;
+   getColaboradores.Colaboradores.nomfun = aNomFun;
+   getColaboradores.Colaboradores.codccu = aCodccu;
+   getColaboradores.Colaboradores.nomccu = aNomCcu;
+   getColaboradores.Colaboradores.postra = aPosTra;
+   getColaboradores.Colaboradores.codfil = nCodFil;
+   getColaboradores.Colaboradores.filial = aCodFil + " - " + aNomFil ;
+   getColaboradores.Colaboradores.colaborador = aNumCad + " - " + aNomFun ;
+   getColaboradores.Colaboradores.centrocusto = aCodccu + " - " + aNomCcu ;  
+   getColaboradores.Colaboradores.posto = aPostra + " - " + aDesRed ; 
+   getColaboradores.Colaboradores.absind =  nABSIND; 
+   getColaboradores.Colaboradores.notdes =  nNOTDES;
+   getColaboradores.Colaboradores.empresa =  aCodEmp + " - " + aNomEmp;
+   getColaboradores.Colaboradores.notmin_sga =   NotMin_SGA;
+   getColaboradores.Colaboradores.notmin_custo =   NotMin_custo; 
+  
+    RetNomCarNiv (nNumEmp,aCodCar,2, DatSis, aNomcar);
+    ainfCol = "";
+    
+    Se ((MOTIVO_MOVIMENTACAO <> MOTIVO_TRANSFERENCIA) e  (MOTIVO_MOVIMENTACAO <> MOTIVO_PROMOCAO))
+    {
+      ainfCol =            "Empresa: " + aCodEmp + " - " + aNomEmp + aEnter;
+    }
+      
+    ainfCol = ainfCol+  "Filial: " + aCodFil + " - " + aNomfil + aEnter;
+    ainfCol = ainfCol+  "Posto: " + aPosTra + " - " + aDesRed + aEnter;
+    ainfCol = ainfCol + "Cargo: " + aCodcar  + " - " + aNomcar + aEnter;
+    ainfCol = ainfCol + "Local: " + aCodLoc + " - " + aNomLoc + aEnter;
+    ainfCol = ainfCol + "Centro de Custo: " + aCodccu + " - " + aNomCcu + aEnter;
+    Definir Alfa ainfCol2;
+    
+    ainfCol2 =  ainfCol;
+    
+    
+    Se (((MOTIVO_MOVIMENTACAO = MOTIVO_SUBSTITUICAO)  e (nTipPes = 2)) ou (MOTIVO_MOVIMENTACAO = MOTIVO_TRANSFERENCIA) ou (MOTIVO_MOVIMENTACAO = MOTIVO_PROMOCAO ) )
+    {
+       Definir Alfa aABSIND;
+       Definir Alfa aNOTDES;
+       converteMascara(1,nABSIND,aABSIND,"Z9,99");
+       converteMascara(1,nNOTDES,aNOTDES,"Z9,99");
+                                                      
+       ainfCol = ainfCol + "Notas Performance: "  + aNOTDES + aEnter;
+       ainfCol = ainfCol + "Absenteísmo: " + aABSIND + aEnter;
+       
+       
+       Se (MOTIVO_MOVIMENTACAO = MOTIVO_PROMOCAO)
+       {
+           ainfCol = ainfCol + "Salário Atual: " + aValSal  +  aEnter;  
+           ainfCol = ainfCol + "Data Último Salario: " + aDatSal  +  aEnter; 
+           ainfCol = ainfCol + "Motivo Último Salario: " + aCodMot + " - " + aNomMot+  aEnter; 
+       }
+       
+    } 
+    
+ 
+    
+    getColaboradores.Colaboradores.infcol =   ainfCol;
+    getColaboradores.Colaboradores.infcol2 =   ainfCol2;
+    
+   
+   Sql_Proximo(cR034FUN);
+}
+Sql_FecharCursor(cR034FUN);
+Sql_Destruir(cR034FUN);
+
+
+
+Funcao TrataCodigo(Numero _nTipReg);
+{
+ 
+   PosicaoAlfa (" - ",_VarTrt,nPosStr);
+   Se (nPosStr > 0)
+   {
+       nPosStr --; 
+       CopiarAlfa(_VarTrt,1,nPosStr);
+       Se (_nTipReg = 1)
+       {
+          AlfaParaint(_VarTrt,_RetNum);
+       }
+       Senao
+       {
+           _RetAlf = _VarTrt ;
+          
+       }
+   }
+   Senao
+   {
+       _RetNum = 0;
+       _RetAlf = "";
+          
+   }
+   
+       
+}
+
+Funcao ParametrosDeUnidade();
+{
+   Definir Alfa aParUni ;
+   
+   NOTMIN_SGA_DENTRO = 0;
+   ABSMAX_SGA_DENTRO = 0;
+   NOTMIN_CUSTO_DENTRO = 0;
+   ABSMAX_CUSTO_DENTRO = 0;
+   NOTMIN_FORA_CUSTO = 0;
+   ABSMAX_FORA_CUSTO = 0;
+   NOTMIN_FORA_SGA = 0;
+   ABSMAX_FORA_SGA = 0;
+   
+   
+   Sql_Criar(aParUni);
+   Sql_UsarAbrangencia(aParUni,0);
+   Sql_UsarSqlSenior2 (aParUni,0);                                                 
+   Sql_DefinirComando(aParUni, "SELECT SUM(notmin_sga_dentro)   NOTMIN_SGA_DENTRO,                         \
+                                       SUM(absmax_sga_dentro)   ABSMAX_SGA_DENTRO,                         \
+                                       SUM(notmin_custo_dentro) NOTMIN_CUSTO_DENTRO,                       \
+                                       SUM(absmax_custo_dentro) ABSMAX_CUSTO_DENTRO,                        \
+                                       SUM(notmin_fora_custo)   NOTMIN_FORA_CUSTO,                         \
+                                       SUM(absmax_fora_custo)   ABSMAX_FORA_CUSTO,                         \
+                                       SUM(notmin_fora_sga)     NOTMIN_FORA_SGA,                           \
+                                       SUM(absmax_fora_sga)     ABSMAX_FORA_SGA                            \
+                                FROM   (SELECT 0          NOTMIN_SGA_DENTRO,                               \
+                                               0          ABSMAX_SGA_DENTRO,                               \
+                                               usu_notmin NOTMIN_CUSTO_DENTRO,                             \
+                                               usu_absmax ABSMAX_CUSTO_DENTRO,                             \
+                                               0          NOTMIN_FORA_CUSTO,                               \
+                                               0          ABSMAX_FORA_CUSTO,                               \
+                                               0          NOTMIN_FORA_SGA,                                 \
+                                               0          ABSMAX_FORA_SGA                                  \
+                                        FROM   usu_tbpm030tip TIP                                          \
+                                        WHERE  TIP.usu_numemp = :NUMEMP                                         \
+                                               AND TIP.usu_codfil = :CODFIL                                     \
+                                               AND TIP.usu_tipmov = :TIPMOV                                      \
+                                               AND TIP.usu_tipbud = 1                                      \
+                                               AND TIP.usu_claorc = 'C'                                    \
+                                               AND TIP.usu_datger = (SELECT Max(TIP2.usu_datger)           \
+                                                                     FROM   usu_tbpm030tip TIP2                \  
+                                                                     WHERE  TIP.usu_numemp = TIP2.usu_numemp  \
+                                                                            AND TIP.usu_codfil =              \
+                                                                    TIP2.usu_codfil)                          \
+                                        UNION ALL                                                             \
+                                        SELECT usu_notmin,                                                    \
+                                               usu_absmax,                                                    \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0                                                              \
+                                        FROM  usu_tbpm030tip TIP                                            \
+                                        WHERE  TIP.usu_numemp =  :NUMEMP                                            \
+                                               AND TIP.usu_codfil =  :CODFIL                                        \
+                                               AND TIP.usu_tipmov = :TIPMOV                                        \
+                                               AND TIP.usu_tipbud = 1                                         \
+                                               AND TIP.usu_claorc = 'G'                                       \
+                                               AND TIP.usu_datger = (SELECT Max(TIP2.usu_datger)              \
+                                                                     FROM  usu_tbpm030tip TIP2             \
+                                                                     WHERE  TIP.usu_numemp = TIP2.usu_numemp  \
+                                                                            AND TIP.usu_codfil =              \
+                                                                    TIP2.usu_codfil)                          \
+                                                                                                              \
+                                                                                                              \    
+                                        UNION ALL                                                             \
+                                        SELECT 0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               usu_notmin,                                                    \
+                                               usu_absmax,                                                    \
+                                               0,                                                             \
+                                               0                                                              \
+                                        FROM  usu_tbpm030tip TIP                                               \
+                                        WHERE  TIP.usu_numemp =  :NUMEMP                                            \
+                                               AND TIP.usu_codfil =  :CODFIL                                        \
+                                               AND TIP.usu_tipmov = :TIPMOV                                        \
+                                               AND TIP.usu_tipbud = 2                                         \
+                                               AND TIP.usu_claorc = 'C'                                       \
+                                               AND TIP.usu_datger = (SELECT Max(TIP2.usu_datger)              \
+                                                                     FROM   usu_tbpm030tip TIP2             \
+                                                                     WHERE  TIP.usu_numemp = TIP2.usu_numemp  \
+                                                                            AND TIP.usu_codfil =              \
+                                                                    TIP2.usu_codfil)                          \
+                                        UNION ALL                                                             \
+                                        SELECT 0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               usu_notmin,                                                    \
+                                               usu_absmax                                                     \
+                                        FROM   usu_tbpm030tip TIP                                             \
+                                        WHERE  TIP.usu_numemp =  :NUMEMP                                            \
+                                               AND TIP.usu_codfil =  :CODFIL                                        \
+                                               AND TIP.usu_tipmov = :TIPMOV                                        \
+                                               AND TIP.usu_tipbud = 2                                         \
+                                               AND TIP.usu_claorc = 'G'                                       \
+                                               AND TIP.usu_datger = (SELECT Max(TIP2.usu_datger)              \
+                                                                                                              \
+                                                                     FROM   usu_tbpm030tip TIP2              \
+                                                                     WHERE  TIP.usu_numemp = TIP2.usu_numemp  \
+                                                                            AND TIP.usu_codfil =              \
+                                                                    TIP2.usu_codfil)) TAB ") ; 
+                                                                    
+   Sql_DefinirInteiro(aParUni,"NUMEMP",nEmpSub);
+   Sql_DefinirInteiro(aParUni,"CODFIL",nFilSub); 
+   Sql_DefinirInteiro(aParUni,"TIPMOV",MOTIVO_MOVIMENTACAO);
+   Sql_AbrirCursor(aParUni);
+   Se (Sql_EOF(aParUni) = 0)
+   {
+       Sql_RetornarFlutuante(aParUni,"NOTMIN_SGA_DENTRO", NOTMIN_SGA_DENTRO);
+       Sql_RetornarFlutuante(aParUni,"NOTMIN_FORA_CUSTO",NOTMIN_FORA_CUSTO);
+       Sql_RetornarFlutuante(aParUni,"NOTMIN_FORA_SGA",NOTMIN_FORA_SGA);
+       Sql_RetornarFlutuante(aParUni,"NOTMIN_CUSTO_DENTRO",NOTMIN_CUSTO_DENTRO);
+       Sql_RetornarFlutuante(aParUni,"ABSMAX_SGA_DENTRO",ABSMAX_SGA_DENTRO);
+       Sql_RetornarFlutuante(aParUni,"ABSMAX_CUSTO_DENTRO",ABSMAX_CUSTO_DENTRO);
+   
+       Sql_RetornarFlutuante(aParUni,"ABSMAX_FORA_CUSTO",ABSMAX_FORA_CUSTO);
+       
+       Sql_RetornarFlutuante(aParUni,"ABSMAX_FORA_SGA",ABSMAX_FORA_SGA);
+   }
+   Sql_FecharCursor(aParUni);
+   Sql_Destruir(aParUni);                                                                   
+                                                                                                                                                                                                                                                              
+}
+
+
+Funcao ParametrosDeUnidade2();
+{
+   Definir Alfa aParUni ;
+   
+   NOTMIN_SGA_DENTRO = 0;
+   ABSMAX_SGA_DENTRO = 0;
+   NOTMIN_CUSTO_DENTRO = 0;
+   ABSMAX_CUSTO_DENTRO = 0;
+   NOTMIN_FORA_CUSTO = 0;
+   ABSMAX_FORA_CUSTO = 0;
+   NOTMIN_FORA_SGA = 0;
+   ABSMAX_FORA_SGA = 0;
+   
+   
+   Sql_Criar(aParUni);
+   Sql_UsarAbrangencia(aParUni,0);
+   Sql_UsarSqlSenior2 (aParUni,0);                                                 
+   Sql_DefinirComando(aParUni, "SELECT   max(codfil) CODFIL,                                                  \
+                                       SUM(notmin_sga_dentro)   NOTMIN_SGA_DENTRO,                            \
+                                       SUM(absmax_sga_dentro)   ABSMAX_SGA_DENTRO,                            \
+                                       SUM(notmin_custo_dentro) NOTMIN_CUSTO_DENTRO,                          \
+                                       SUM(absmax_custo_dentro) BSMAX_CUSTO_DENTRO,                           \
+                                       SUM(notmin_fora_custo)   NOTMIN_FORA_CUSTO,                            \
+                                       SUM(absmax_fora_custo)   ABSMAX_FORA_CUSTO,                            \
+                                       SUM(notmin_fora_sga)     NOTMIN_FORA_SGA,                              \
+                                       SUM(absmax_fora_sga)     ABSMAX_FORA_SGA                               \
+                                FROM   (SELECT 0          NOTMIN_SGA_DENTRO,                                  \
+                                               0          ABSMAX_SGA_DENTRO,                                  \
+                                               usu_notmin NOTMIN_CUSTO_DENTRO,                                \
+                                               usu_absmax ABSMAX_CUSTO_DENTRO,                                \
+                                               0          NOTMIN_FORA_CUSTO,                                  \
+                                               0          ABSMAX_FORA_CUSTO,                                  \
+                                               0          NOTMIN_FORA_SGA,                                    \
+                                               0          ABSMAX_FORA_SGA , fun.codfil                                    \
+                                        FROM   usu_tbpm030tip TIP, R034FUN FUN                                \
+                                        WHERE      FUN.NUMEMP = :NUMEMP                                            \
+                                               AND FUN.TIPCOL = :TIPCOL                                            \
+                                               AND FUN.NUMCAD = :NUMCAD                                         \
+                                               AND TIP.usu_numemp = FUN.NUMEMP                                \
+                                               AND TIP.usu_codfil = FUN.CODFIL                                \
+                                               AND TIP.usu_tipmov = :TIPMOV                                        \
+                                               AND TIP.usu_tipbud = 1                                         \
+                                               AND TIP.usu_claorc = 'C'                                       \
+                                               AND TIP.usu_datger = (SELECT Max(TIP2.usu_datger)              \
+                                                                     FROM   usu_tbpm030tip TIP2               \
+                                                                     WHERE  TIP.usu_numemp = TIP2.usu_numemp  \
+                                                                            AND TIP.usu_codfil =              \
+                                                                    TIP2.usu_codfil)                          \
+                                        UNION ALL                                                             \
+                                        SELECT usu_notmin,                                                    \
+                                               usu_absmax,                                                    \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0,                                                             \
+                                               0 , fun.codfil                                                             \
+                                      FROM   usu_tbpm030tip TIP, R034FUN FUN                                  \
+                                        WHERE      FUN.NUMEMP = :NUMEMP                                            \
+                                               AND FUN.TIPCOL = :TIPCOL                                             \
+                                               AND FUN.NUMCAD = :NUMCAD                                          \
+                                               AND TIP.usu_numemp = FUN.NUMEMP                                  \
+                                               AND TIP.usu_codfil = FUN.CODFIL                                   \
+                                               AND TIP.usu_tipmov = :TIPMOV                                           \
+                                               AND TIP.usu_tipbud = 1                                             \
+                                               AND TIP.usu_claorc = 'G'                                           \
+                                               AND TIP.usu_datger = (SELECT Max(TIP2.usu_datger)                  \
+                                                                     FROM   usu_tbpm030tip TIP2                   \
+                                                                     WHERE  TIP.usu_numemp = TIP2.usu_numemp      \
+                                                                            AND TIP.usu_codfil =                  \
+                                                                    TIP2.usu_codfil)                              \
+                                        UNION ALL                                                                 \
+                                        SELECT 0,                                                                 \
+                                               0,                                                                 \
+                                               0,                                                                 \
+                                               0,                                                                 \
+                                               usu_notmin,                                                        \
+                                               usu_absmax,                                                        \
+                                               0,                                                                 \
+                                               0, fun.codfil                                                                  \
+                                      FROM   usu_tbpm030tip TIP, R034FUN FUN                                      \
+                                        WHERE      FUN.NUMEMP = :NUMEMP                                               \
+                                               AND FUN.TIPCOL = :TIPCOL                                                \
+                                               AND FUN.NUMCAD = :NUMCAD                                             \
+                                               AND TIP.usu_numemp = FUN.NUMEMP                                    \
+                                               AND TIP.usu_codfil = FUN.CODFIL                                     \
+                                               AND TIP.usu_tipmov = :TIPMOV                                             \
+                                               AND TIP.usu_tipbud = 2                                              \
+                                               AND TIP.usu_claorc = 'C'                                            \
+                                               AND TIP.usu_datger = (SELECT Max(TIP2.usu_datger)                    \
+                                                                     FROM   usu_tbpm030tip TIP2                     \
+                                                                     WHERE  TIP.usu_numemp = TIP2.usu_numemp        \
+                                                                            AND TIP.usu_codfil =                    \
+                                                                    TIP2.usu_codfil)                                \
+                                        UNION ALL                                                                   \
+                                        SELECT 0,                                                                   \
+                                               0,                                                                   \
+                                               0,                                                                    \
+                                               0,                                                                    \
+                                               0,                                                                    \
+                                               0,                                                                    \
+                                               usu_notmin,                                                           \
+                                               usu_absmax , fun.codfil                                                           \
+                                      FROM   usu_tbpm030tip TIP, R034FUN FUN                                         \
+                                        WHERE      FUN.NUMEMP = :NUMEMP                                                  \
+                                               AND FUN.TIPCOL = :TIPCOL                                                    \
+                                               AND FUN.NUMCAD = :NUMCAD                                                \
+                                               AND TIP.usu_numemp = FUN.NUMEMP                                       \
+                                               AND TIP.usu_codfil = FUN.CODFIL                                       \
+                                               AND TIP.usu_tipmov = :TIPMOV                                                \
+                                               AND TIP.usu_tipbud = 2                                                \
+                                               AND TIP.usu_claorc = 'G'                                              \
+                                               AND TIP.usu_datger = (SELECT Max(TIP2.usu_datger)                     \
+                                                                     FROM   usu_tbpm030tip TIP2                      \
+                                                                     WHERE  TIP.usu_numemp = TIP2.usu_numemp         \
+                                                                            AND TIP.usu_codfil =                     \
+                                                                    TIP2.usu_codfil)) TAB  ") ;                      
+                                                                    
+   Sql_DefinirInteiro(aParUni,"NUMEMP",nEmpSub);
+   Sql_DefinirInteiro(aParUni,"TIPCOL",nTipSub);
+   Sql_DefinirInteiro(aParUni,"NUMCAD",nCadSub); 
+   Sql_DefinirInteiro(aParUni,"TIPMOV",nTipMov);
+   Sql_AbrirCursor(aParUni);
+   Se (Sql_EOF(aParUni) = 0)
+   {
+       Sql_RetornarFlutuante(aParUni,"codfil", nFilSub);
+       Sql_RetornarFlutuante(aParUni,"NOTMIN_SGA_DENTRO", NOTMIN_SGA_DENTRO);
+       Sql_RetornarFlutuante(aParUni,"NOTMIN_FORA_CUSTO",NOTMIN_FORA_CUSTO);
+       Sql_RetornarFlutuante(aParUni,"NOTMIN_FORA_SGA",NOTMIN_FORA_SGA);
+       Sql_RetornarFlutuante(aParUni,"NOTMIN_CUSTO_DENTRO",NOTMIN_CUSTO_DENTRO);
+       Sql_RetornarFlutuante(aParUni,"ABSMAX_SGA_DENTRO",ABSMAX_SGA_DENTRO);
+       Sql_RetornarFlutuante(aParUni,"ABSMAX_CUSTO_DENTRO",ABSMAX_CUSTO_DENTRO);
+   
+       Sql_RetornarFlutuante(aParUni,"ABSMAX_FORA_CUSTO",ABSMAX_FORA_CUSTO);
+       
+       Sql_RetornarFlutuante(aParUni,"ABSMAX_FORA_SGA",ABSMAX_FORA_SGA);
+   }
+   Sql_FecharCursor(aParUni);
+   Sql_Destruir(aParUni); 
+   
+  
+   
+                                                                    
+                                 
+                                                                    
+                                                                                                              
+                                                                                               
+                                                                    
+}
