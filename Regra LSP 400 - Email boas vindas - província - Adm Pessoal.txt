@@ -1,0 +1,125 @@
+/*
+Criado por Marinaldo Domingos - 05/11/2025
+Web service para enviar e-mail para novos admitidos da provincia:
+Login da rede;
+E-mail corporativo;
+Senha para primeiro acesso.
+
+OBSERVAÇÃO
+o posto do gestor do novo colaborador precisa estar ocupado, senao ninguém recebe e-mail de boas vindas
+*/
+
+definir numero nNumemp;
+definir alfa aNumemp;
+definir numero nNumcad;
+definir alfa aNumcad;
+definir alfa aNomfun;
+definir alfa aNomusu;
+definir alfa aEmacom;
+definir alfa aConSen;
+definir alfa aEmapar;
+definir alfa aNomGes;
+definir alfa aEmaGes;
+definir alfa aTxthtm;
+definir cursor c_fun;
+definir data dDatAtu;
+definir alfa aEmacco;                     
+
+aEmacco = "vinicius.portfolio@maristabrasil.org" ;
+
+dDatAtu = datsis; 
+            
+c_fun.SQL "select r034fun.numemp, \
+                  r034fun.tipcol, \
+                  r034fun.numcad, \
+                  r034fun.apefun, \
+                  r034fun.numcpf, \
+                  r034cpl.emapar, \
+                  r034cpl.emacom, \
+                  r034usu.codusu, \
+                  r999usu.nomusu,  \
+                  usu_vhiecol.nomeGestor, \
+                  usu_vhiecol.emailGestor \
+             from r034fun, r034cpl, r034usu, r999usu, usu_vhiecol \
+             where (r034fun.numemp = r034cpl.numemp and r034fun.tipcol = r034cpl.tipcol and r034fun.numcad = r034cpl.numcad) \
+             and   (r034fun.numemp = r034usu.numemp and r034fun.tipcol = r034usu.tipcol and r034fun.numcad = r034usu.numcad) \
+             and   (r034fun.numemp = usu_vhiecol.codigoEmpresaColaborador and r034fun.tipcol = usu_vhiecol.tipoColaborador and r034fun.numcad = usu_vhiecol.matriculaColaborador) \
+             and   (r034usu.codusu = r999usu.codusu)  \
+             and   (r034fun.codfil in (2026,2027,2030,2049,2050,2051,2052,2053,2055,2057) )  \
+             and   (r034fun.datadm > :dDatAtu )        \
+             and   (r034usu.usu_enviad <> 'S' or r034usu.usu_enviad is null) \
+             group by r034fun.numemp, \
+                  r034fun.tipcol, \
+                  r034fun.numcad, \
+                  r034fun.apefun, \
+                  r034fun.numcpf, \
+                  r034cpl.emapar, \
+                  r034cpl.emacom, \
+                  r034usu.codusu, \
+                  r999usu.nomusu,  \
+                  usu_vhiecol.nomeGestor, \
+                  usu_vhiecol.emailGestor "; 
+            
+c_fun.AbrirCursor();
+
+enquanto (c_fun.Achou) 
+{
+  Minusculo(c_fun.apefun, aNomfun, "S");
+  Minusculo(c_fun.emapar, aEmapar, "N");
+  nNumemp = c_fun.numemp;
+  nNumcad = c_fun.numcad;
+  Minusculo(c_fun.nomusu, aNomusu, "N");
+  Minusculo(c_fun.nomusu, aEmaCom, "N"); 
+  aEmaCom = aEmaCom + "@maristabrasil.org";
+  /*aConSen = c_fun.numcpf + "@MB2025"; 
+  aNomGes = c_fun.nomeGestor;
+  aEmaGes = c_fun.emailGestor; */
+  
+  Minusculo(c_fun.nomeGestor, aNomGes, "S");
+  Minusculo(c_fun.emailGestor, aEmaGes, "N"); 
+  
+  IntParaAlfa(nNumemp, aNumemp);
+  IntParaAlfa(nNumcad, aNumcad); 
+  
+  /*montar texto para envio ao novo funcionario 
+  */                               
+  aTxthtm = "<html lang='pt-BR'>";
+  aTxthtm = aTxthtm + "<head>";
+  aTxthtm = aTxthtm + "<meta charset='UTF-8'>";
+  aTxthtm = aTxthtm + "<title>Rede Marista</title>"; 
+  aTxthtm = aTxthtm + "</head>";
+  aTxthtm = aTxthtm + "<body>";
+  aTxthtm = aTxthtm + "<div class='col-md-12 fundo' align='justify'>"; 
+  aTxthtm = aTxthtm + "<P style='font-family: Tahoma, sans-serif; font-size: 11pt;'>Aqui estão as credenciais de rede para o novo colaborador " + aNomfun + ".</P>"; 
+  aTxthtm = aTxthtm + "<P style='font-family: Tahoma, sans-serif; font-size: 11pt;'><b>Login:</b> " + aNomusu + "</P>";
+  aTxthtm = aTxthtm + "<P style='font-family: Tahoma, sans-serif; font-size: 11pt;'><b>E-mail:</b> " + aEmacom + "</P>";
+  aTxthtm = aTxthtm + "<P style='font-family: Tahoma, sans-serif; font-size: 11pt;'><b>Senha para o primeiro acesso:</b> 5 primeiros dígitos do CPF + 'Mb@25', por exemplo: 12345Mb@25.</P>";
+  aTxthtm = aTxthtm + "<P style='font-family: Tahoma, sans-serif; font-size: 11pt;'><b><br>:: Atenção! Este é um e-mail automático. Não responda. ::</b></P>";
+  aTxthtm = aTxthtm + "<P style='font-family: Tahoma, sans-serif; font-size: 11pt;'>Atenciosamente,<br><b>Diretoria de Tecnologia da Informação</b></P>";
+  aTxthtm = aTxthtm + "</div>";
+  aTxthtm = aTxthtm + "</body>";
+  aTxthtm = aTxthtm + "</html>";
+  
+  
+  /*EnviaEmail ("naoresponda@maristabrasil.org", "anderson.felipe@maristabrasil.org", "marinaldo.portfolio@maristabrasil.org", "", "Envia conta AD novos admitidos", "Corpo do e-mail", "", 0);   
+  EnviaEmailHTML ("naoresponda@maristabrasil.org", "marinalddo@gmail.com", "marinaldo.portfolio@maristabrasil.org", "", "Marista Brasil - Credenciais de acesso", aTxthtm, "", 0, 0);
+  */
+  EnviaEmailHTML ("naoresponda@maristabrasil.org", "sede.assessoriadepessoas@maristas.org.br", "", aEmacco, "Rede Marista - Credenciais Marista Brasil", aTxthtm, "", 0, 0);
+  
+  execSql"update r034usu set usu_enviad = 'S' where numemp = :aNumemp and numcad = :aNumcad and tipcol = 1";
+    
+  aNomfun = "";
+  aEmapar = "";
+  nNumemp = 0;
+  aNumemp = "";
+  nNumcad = 0;
+  aNumcad = "";
+  aNomusu = "";
+  aEmaCom = "";
+  aNomGes = "";
+  aEmaGes = "";  
+    
+  c_fun.Proximo();
+}
+
+c_fun.FecharCursor();

@@ -1,0 +1,98 @@
+/* Regra Especial desenvolvida para atender a apropriação da ficha rescisão 
+rateada quando especialmente Professor;
+Vinculada nas Regra por Processo "71 - Inserir Rescisão" e "72 - Alterar Rescisão;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 22/08/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definição das Variáveis Padrões =======================@
+Definir Cursor cur_emp607;
+
+Definir Alfa aErro;
+Definir Alfa aUsaRat;
+
+Definir Data dDatPag;
+
+Se (vExecucaoRegra = 1)
+  {
+    Se ((TipoRescisao = 1) ou (TipoRescisao = 2) ou (TipoRescisao = 4))
+      {
+        Se ((TipoRescisao = 1) ou (TipoRescisao = 4))
+        nNumEmp = R042RCM.NumEmp;
+        Senao
+        nNumEmp = R042RCS.NumEmp;
+        
+        aUsaRat = "";
+
+@================= cursor p/ verificar se usa rotina de rateio ================@
+        cur_emp607.sql "select usarat \
+                          from r030emp \
+                         where numemp = :nNumEmp";
+        cur_emp607.AbrirCursor();
+        Se (cur_emp607.Achou)
+        aUsaRat = cur_emp607.usarat;
+        
+        cur_emp607.FecharCursor();
+        
+        Se ((aUsaRat = "L") ou (aUsaRat = "C"))
+          {
+            Se ((TipoRescisao = 1) ou (TipoRescisao = 4))
+             {
+               nTipCol = R042RCM.TipCol;
+               nNumCad = R042RCM.NumCad;
+               dDatPag = R042RCM.DatPag;
+             }
+             Senao
+              {
+                nTipCol = R042RCS.TipCol;
+                nNumCad = R042RCS.NumCad;
+                dDatPag = R042RCS.DatPag;
+              }
+
+@================= atualiza dados da rescisão rateada =========================@    
+            ExecSqlEx("update r042rcr \
+                          set refeve = (select rcr.usu_refeve \
+                                          from usu_tr042rcr rcr \
+                                         where r042rcr.numemp = rcr.usu_numemp \
+                                           and r042rcr.tipcol = rcr.usu_tipcol \
+                                           and r042rcr.numcad = rcr.usu_numcad \
+                                           and r042rcr.datpag = rcr.usu_datpag \
+                                           and R042RCR.TclRcs = rcr.usu_tclrcs \
+                                           and r042rcr.tabeve = rcr.usu_tabeve \
+                                           and r042rcr.codeve = rcr.usu_codeve \
+                                           and r042rcr.codrat = rcr.usu_codrat),\
+                              valeve = (select rcr.usu_valeve \
+                                          from usu_tr042rcr rcr \
+                                         where r042rcr.numemp = rcr.usu_numemp \
+                                           and r042rcr.tipcol = rcr.usu_tipcol \
+                                           and r042rcr.numcad = rcr.usu_numcad \
+                                           and r042rcr.datpag = rcr.usu_datpag \
+                                           and R042RCR.TclRcs = rcr.usu_tclrcs \
+                                           and r042rcr.tabeve = rcr.usu_tabeve \
+                                           and r042rcr.codeve = rcr.usu_codeve \
+                                           and r042rcr.codrat = rcr.usu_codrat) \ 
+                        where numemp = :nNumEmp \
+                          and tipcol = :nTipCol \
+                          and numcad = :nNumCad \
+                          and datpag = :dDatPag \
+                          and TclRcs = 62 \
+                          and exists (select 1 \
+                                        from usu_tr042rcr rcr \
+                                       where r042rcr.numemp = rcr.usu_numemp \
+                                         and r042rcr.tipcol = rcr.usu_tipcol \
+                                         and r042rcr.numcad = rcr.usu_numcad \
+                                         and r042rcr.datpag = rcr.usu_datpag \
+                                         and R042RCR.TclRcs = rcr.usu_tclrcs \
+                                         and r042rcr.tabeve = rcr.usu_tabeve \
+                                         and r042rcr.codeve = rcr.usu_codeve \
+                                         and r042rcr.codrat = rcr.usu_codrat \
+                                         and (rcr.usu_valeve > 0 or rcr.usu_refeve > 0))",xErro,aErro);
+            Se (xErro <> 0)
+              {
+                Mensagem(Erro,aErro);
+                Cancel(1);
+              }
+          }
+      }
+  }
