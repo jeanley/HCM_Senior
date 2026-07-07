@@ -1,0 +1,260 @@
+definir alfa atipope;
+definir alfa anumemp;
+definir alfa atipcol;
+definir alfa anumcad; 
+definir alfa avalapf;
+definir alfa atipope_adicionar;
+definir alfa atipope_alterar;
+definir alfa atipope_excluir; 
+
+definir numero nvalapf;
+  
+atipope_adicionar = getAtividades.etipope_adicionar;
+atipope_alterar = getAtividades.etipope_alterar;
+atipope_excluir = getAtividades.etipope_excluir;
+atipope = "";
+
+
+
+
+
+se(atipope_adicionar = "true")
+{
+  atipope = "Adicionar";
+}
+
+se(atipope_alterar = "true")
+{
+  atipope = "Alterar";
+}
+
+se(atipope_excluir = "true")
+{
+  atipope = "Excluir";
+} 
+
+anumemp = getAtividades.enumemp; 
+atipcol = getAtividades.etipcol;
+anumcad = getAtividades.enumcad;
+
+AlfaParaint(anumemp,nNumEmp);
+
+Se (nNumEmp = 0){
+    nNumEmp = 3;
+}
+
+se(atipope = "Adicionar")
+{
+  definir alfa acodapf;                              
+  definir alfa adesapf;   
+  definir numero ncodapf;   
+  definir cursor cur_apf;                                                                                                                             
+  definir data ddatzer; 
+  definir data ddathoj;
+  
+  ddathoj = datsis; 
+  ddatzer = 0;
+
+  
+@ Considerando que apenas uma empresa será passada: @
+@usu_cone0X: Se refere a empresa; @
+@usu_conbmp: Se refere se a atividade vai exibir no BPM @
+  se (nNumEmp = 1) 
+  {
+      cur_apf.sql "select codapf, desapf from r171ati         \
+              where ((fimapf = :ddatzer)  or                  \
+                     (fimapf > :ddathoj)) and                 \
+                     usu_cone01 = 'S'  AND                    \
+                     usu_conbmp = 'S' AND                     \  
+              not exists(select codapf from usu_tempch1 where \
+              usu_numemp = :anumemp and                       \
+              usu_tipcol = :atipcol and                       \
+              usu_numcad = :anumcad and                       \
+              usu_codapf = r171ati.codapf)  ";                                       
+  }
+  se (nNumEmp = 2 ) 
+  {
+    cur_apf.sql "select codapf, desapf from r171ati           \
+              where ((fimapf = :ddatzer)  or                  \
+                     (fimapf > :ddathoj)) and                 \
+                     usu_cone02 = 'S'     and                 \
+                     usu_conbmp = 'S' AND                     \   
+              not exists(select codapf from usu_tempch1 where \
+              usu_numemp = :anumemp and                       \
+              usu_tipcol = :atipcol and                       \
+              usu_numcad = :anumcad and                       \
+              usu_codapf = r171ati.codapf)";
+  }
+  se (nNumEmp = 3) 
+  {
+    cur_apf.sql "select codapf, desapf from r171ati           \
+              where ((fimapf = :ddatzer)  or                  \
+                     (fimapf > :ddathoj)) and                 \
+                     usu_cone03 = 'S'     and                 \
+                     usu_conbmp = 'S' AND                     \   
+              not exists(select codapf from usu_tempch1 where \
+              usu_numemp = :anumemp and                       \
+              usu_tipcol = :atipcol and                       \
+              usu_numcad = :anumcad and                       \
+              usu_codapf = r171ati.codapf)";
+  }
+  se (nNumEmp = 4) 
+  {
+    cur_apf.sql "select codapf, desapf from r171ati           \
+              where ((fimapf = :ddatzer)  or                  \
+                     (fimapf > :ddathoj)) and                 \
+                     usu_cone04 = 'S'     and                 \
+                     usu_conbmp = 'S' AND                     \   
+              not exists(select codapf from usu_tempch1 where \
+              usu_numemp = :anumemp and                       \
+              usu_tipcol = :atipcol and                       \
+              usu_numcad = :anumcad and                       \
+              usu_codapf = r171ati.codapf)";
+  }
+  se (nNumEmp = 5) 
+  {
+    cur_apf.sql "select codapf, desapf from r171ati           \
+              where ((fimapf = :ddatzer)  or                  \
+                     (fimapf > :ddathoj)) and                 \ 
+                     usu_cone05 = 'S'     and                 \
+                     usu_conbmp = 'S' AND                     \
+              not exists(select codapf from usu_tempch1 where \
+              usu_numemp = :anumemp and                       \
+              usu_tipcol = :atipcol and                       \
+              usu_numcad = :anumcad and                       \
+              usu_codapf = r171ati.codapf)";
+  }
+              
+
+  cur_apf.abrircursor();
+  enquanto(cur_apf.achou)
+  {
+    ncodapf = cur_apf.codapf;
+    adesapf = cur_apf.desapf;
+    
+    intparaalfa(ncodapf, acodapf);
+    
+    getAtividades.statividades.criarlinha();
+    
+    getAtividades.statividades.scodapf = acodapf;
+    getAtividades.statividades.sdesapf = adesapf;
+    getAtividades.statividades.saida = atipope;
+    cur_apf.proximo();
+  }
+  cur_apf.fecharcursor();
+}
+se((atipope = "Excluir") ou(atipope = "Alterar"))
+{
+
+
+  definir alfa asql_docente;
+  definir alfa cur_docente; 
+  definir alfa aretorno;
+  definir alfa atexto;
+  definir alfa aenter;
+  definir alfa aseqapf;
+  definir alfa adesapf;
+  definir alfa ahormes;
+  definir alfa aminmes; @Minutos das horas mensais@
+  definir alfa aminsem; @Minutos das horas semanais@                               
+  definir alfa avalapf;
+  definir alfa avalsem;                              
+  definir alfa atotmes; @Total de horas no mês formatar como hh:mm@
+  definir alfa atotsem; @Total de horas semanais@
+  definir alfa ahorsem; 
+  definir alfa adatini;                                
+  
+  definir data ddatzer;
+  definir data ddathoj;
+  definir data ddatini;
+  
+  definir numero nseqapf;
+  definir numero ncodapf;
+  definir numero nhormes;
+  definir numero nminmes; @Minutos das horas mensais@
+  definir numero nminsem; @Minutos das horas semanais@  
+  definir numero nhorsem;
+  definir numero nvalapf;
+  definir numero nvalsem;
+  definir numero ntotmes;
+  definir numero ntotsem;
+  definir numero ntotmes_geral;
+  
+  
+  MONTADATA(31,12,1900,DDATZER);
+  ddatzer = 0;
+  RETORNAASCII(13, AENTER);
+  
+  ddathoj = datsis;
+  
+  anumemp = getAtividades.enumemp; 
+  atipcol = getAtividades.etipcol;
+  anumcad = getAtividades.enumcad;
+  atexto ="";
+  ntotmes = 0;
+  ntotsem = 0;
+  ntotmes_geral = 0;
+  asql_docente = "select r171apf.seqapf, r171apf.codapf,        \
+                         r171apf.hormes, r171apf.valapf,        \              
+                         r171ati.desapf, r171apf.datini         \
+                           from r171apf, r171ati                \
+                           where                                \
+                           r171apf.codapf = r171ati.codapf and  \
+                           numemp = :anumemp and                \
+                           tipcol = :atipcol and                \
+                           numcad = :anumcad and                \
+                           ((datfim = :ddatzer) or              \
+                           (datfim > :ddathoj))";                                                
+  
+  SQL_Criar(cur_docente); 
+  SQL_UsarSQLSenior2(cur_docente, 0); 
+  SQL_UsarAbrangencia(cur_docente, 0);
+  SQL_DEFINIRCOMANDO(cur_docente, asql_docente);
+  
+  SQL_DEFINIRDATA(cur_docente, "ddatzer", ddatzer);
+  SQL_DEFINIRDATA(cur_docente, "ddathoj", ddathoj);
+  SQL_DEFINIRALFA(cur_docente, "anumemp", anumemp);
+  SQL_DEFINIRALFA(cur_docente, "atipcol", atipcol); 
+  SQL_DEFINIRALFA(cur_docente, "anumcad", anumcad);
+  
+  SQL_AbrirCursor(cur_docente); 
+  ENQUANTO (SQL_EOF(cur_docente) = 0) @Se cursor posição final retorna 1@
+  { 
+    SQL_RetornarInteiro(cur_docente, "seqapf", nseqapf);
+    SQL_RetornarInteiro(cur_docente, "codapf", ncodapf);
+    SQL_RetornarAlfa(cur_docente, "desapf", adesapf);
+    SQL_RetornarInteiro(cur_docente, "hormes", nhormes);
+    SQL_RetornarInteiro(cur_docente, "valapf", nvalapf);
+       
+    intparaalfa(ncodapf, acodapf);
+    
+    nhorsem = nhormes /4.5;  @Distribui as horas na semana@                 
+  
+    convertemascara(4,nhormes, ahormes,"hh:mm"); 
+    convertemascara(4,nhorsem, ahorsem,"hh:mm");
+    convertemascara(2,nvalapf, avalapf, "zzz.zzz.zz9,99");
+    tiraEspacos(avalapf,avalapf);
+       
+    
+    getAtividades.statividades.criarlinha();
+    
+    getAtividades.statividades.scodapf = acodapf;
+    getAtividades.statividades.sdesapf = adesapf;
+    getAtividades.statividades.stotmes = ahormes;                 
+    getAtividades.statividades.stotsem = ahorsem; 
+    getAtividades.statividades.saida = atipope;
+    getAtividades.statividades.svalapf = avalapf;
+    
+    
+      
+    SQL_PROXIMO(cur_docente);
+    }
+  SQL_FECHARCURSOR(cur_docente);
+  SQL_DESTRUIR(cur_docente);
+}
+se((atipope = "") ou (atipope = " "))
+{
+  getAtividades.statividades.scodapf = "";
+  getAtividades.statividades.sdesapf ="Selecione um Tipo de Operação";
+  getAtividades.statividades.saida = "ERRO";
+}

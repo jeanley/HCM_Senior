@@ -1,0 +1,862 @@
+Definir Alfa aNumEmp ;
+Definir Alfa aCodfil ;
+
+Definir Alfa aTipCol;
+Definir Alfa aNumCad;
+Definir Alfa aCodAti;
+Definir Alfa aCodRat;
+Definir Alfa aCodOpe;
+Definir ALfa aCondAti ; 
+Definir ALfa aCondEnc ; 
+Definir Alfa aCondRat;
+Definir Alfa aCodCcu;
+Definir Alfa aCurSeg;
+Definir Alfa aCondCcu;
+Definir Alfa aObsSeg;
+Definir Alfa cPosSeg; 
+Definir Alfa aCodCcu2;
+Definir Alfa aHorSem; 
+Definir Alfa aHorMes ;
+
+Definir Alfa aSQlIns ;
+Definir Alfa aSqlAlt;
+Definir Alfa aComSql ;
+Definir Alfa aSqlAu2 ;
+Definir alfa aComNov;
+Definir alfa aComAlt;
+Definir Alfa aSqlAux;
+
+Definir Data dDatZer; dDatZer = 0;
+Definir Data dDatSis; dDatSis = DatSis;
+
+
+Definir Funcao CarregaSql(Numero pTipSql) ;
+Definir Funcao CarregaAtividdades();
+@Lista de Retonor@
+Definir Lista lstAtivdades;
+lstAtivdades.DefinirCampos();
+
+
+lstAtivdades.AdicionarCampo("CodOpe", Alfa);
+lstAtivdades.AdicionarCampo("CodAti", Alfa);
+lstAtivdades.AdicionarCampo("CodRat", Alfa);
+lstAtivdades.AdicionarCampo("HorMes", Numero);
+lstAtivdades.EfetivarCampos();
+
+aNumEmp = getAnaliseSegmento.eNumEmp ;
+aTipCol = getAnaliseSegmento.eTipCol ;
+aNumCad = getAnaliseSegmento.eNumCad ; 
+aCodfil = getAnaliseSegmento.eCodFil; 
+
+AlfaParaInt(aNumEmp,nNumEmp);
+AlfaParaInt(aTipCol,nTipCol);
+AlfaParaInt(aNumCad,nNumCad);
+AlfaParaInt(aCodfil,nCodFil);
+
+
+nQtdAlt = 0 ;
+nQtdIns = 0;
+nQtdAEn = 0 ;
+nSeqLst = 0 ;   
+
+CarregaAtividdades();
+nTotLst = lstAtivdades.QtdRegistros;
+lstAtivdades.Primeiro();
+lstAtivdades.Anterior(); 
+
+aCondEnc = "" ; 
+aCondAti = "" ;
+aCondRat = "" ;
+
+Enquanto (lstAtivdades.Proximo() = 1)  {
+
+   nSeqLst++ ;
+ 
+   aCodOpe =  lstAtivdades.CodOpe;
+   aCodAti =  lstAtivdades.CodAti;
+   aCodRat =  lstAtivdades.CodRat;
+   nHorMes =  lstAtivdades.HorMes ;
+   
+  @ nHorMes = nHorMes * 60 ;@
+   IntParaAlfa(nHorMes,aHorMes);
+   
+   Se (aCodOpe = "Alterar") {
+      
+      nQtdAlt ++ ;
+      Se (nQtdAlt = 1) {
+         aCondAti =  " (" + aCodAti;
+         aSqlAlt = "SELECT " + aCodAti + " AS CODAPF," +  aHorMes + " AS HORMES" ;  
+      }   
+      Senao {
+       
+         aCondAti = aCondAti + "," +   aCodAti ;
+         aSqlAlt = aSqlAlt +  " UNION ALL " +   "SELECT " + aCodAti + " AS CODAPF, " +  aHorMes + " AS HORMES" ;
+     }       
+   }
+   Senao Se (aCodOpe = "Inserir") {
+      nQtdIns ++ ;
+      Se (nQtdIns = 1)  {
+          aCondRat =  " (" + aCodRat;
+          aSQlIns = "SELECT " + aCodRat + " AS CODRAT," +  aHorMes + " AS HORMES" ; 
+      }
+      Senao  {
+          aCondRat = aCondRat + "," +   aCodRat ;
+          aSQlIns = aSQlIns +  " UNION ALL " +   "SELECT " + aCodRat + " AS CODRAT, " +  aHorMes + " AS HORMES" ;  
+      
+      }    
+   }
+   Senao Se (aCodOpe = "Encerrar") {
+      nQtdAEn ++ ; 
+      
+      Se (nQtdAEn =  1)
+         aCondEnc =  " (" + aCodAti;
+         
+      Senao
+         aCondEnc = aCondEnc + "," +   aCodAti ;     
+   
+   } 
+   
+   Se (nTotLst = nSeqLst) {
+   
+       aCondAti = aCondAti + ")";
+       aCondRat = aCondRat + ")";
+       aCondEnc = aCondEnc + ")";
+       
+       Se (nQtdAlt = 0)
+          aCondAti = "(0)" ;
+          
+       Se (nQtdIns = 0)
+          aCondRat = "(0)";
+          
+        Se (nQtdAEn = 0)
+          aCondEnc = "(0)";         
+   } 
+}
+
+CarregaSql(3) ;
+
+nQtdSeg = 0 ;
+Sql_Criar(aCurSeg);
+Sql_UsarSqlSenior2(aCurSeg, 0);
+Sql_UsarAbrangencia(aCurSeg, 0);
+Sql_DefinirComando(aCurSeg,aComSql);
+
+SqL_DefinirInteiro(aCurSeg,"NUMEMP",nNumEmp);
+SqL_DefinirInteiro(aCurSeg,"TIPCOL",nTipCol);
+SqL_DefinirInteiro(aCurSeg,"NUMCAD",nNumCad);
+@SqL_DefinirData   (aCurSeg,"DATZER",dDatZer); @
+@SqL_DefinirData   (aCurSeg,"DATATU",dDatSis);@
+Sql_AbrirCursor(aCurSeg);
+Enquanto(SQL_EOF(aCurSeg) = 0) {
+   
+   nQtdSeg ++ ;  
+   
+   Sql_retornarAlfa   (aCurSeg, "CODCCU", aCodCcu);
+  @ Sql_RetornarInteiro(aCurSeg,"QTDSEG", nTotSeg);  @
+   Sql_RetornarAlfa   (aCurSeg,"OBSSEG", aObsSeg);
+   
+   Se (nQtdSeg = 1) {
+      aCondCcu  = "('"+ aCodCcu+"'";
+   }
+   Senao {
+    aCondCcu  =  aCondCcu +  ",'"+ aCodCcu+"'";
+   
+   }
+      
+   Sql_Proximo(aCurSeg);  
+}
+Sql_FecharCursor(aCurSeg);
+Sql_Destruir(aCurSeg);
+aCondCcu = aCondCcu + ")";
+
+Definir Alfa aPosTra;
+Definir Alfa aDespos;
+
+@retorna postos do novo segmento@
+CarregaSql(2); 
+nNovSeg = 0 ;
+Sql_Criar(cPosSeg);
+Sql_UsarSqlSenior2(cPosSeg, 0);
+Sql_UsarAbrangencia(cPosSeg, 0);
+Sql_DefinirComando(cPosSeg,aComSql);
+SqL_DefinirInteiro(cPosSeg,"NUMEMP",nNumEmp);
+SqL_DefinirData   (cPosSeg,"DATZER",dDatZer); 
+SqL_DefinirData   (cPosSeg,"DATATU",dDatSis); 
+SqL_DefinirINTEIRO   (cPosSeg,"CODFIL",nCodFil);
+Sql_AbrirCursor(cPosSeg);
+Enquanto(SQL_EOF(cPosSeg) = 0){
+
+   nNovSeg = 1 ;
+
+   Sql_RetornarAlfa(cPosSeg,"POSTRA",aPosTra);
+   Sql_RetornarAlfa(cPosSeg,"DESPOS",aDespos);
+   
+   getAnaliseSegmento.novosegmento.CriarLinha();
+
+   
+   Se (aObsSeg = "ALTERAÇÃO SEGMENTO") {
+     getAnaliseSegmento.novosegmento.indseg =  "S" ;
+     
+     getAnaliseSegmento.novosegmento.postra =   aPostra + " - " + aDesPos;
+     getAnaliseSegmento.novosegmento.despos =  aDespos; 
+     getAnaliseSegmento.novosegmento.obsseg =  aObsSeg;
+     getAnaliseSegmento.novosegmento.posto = aPostra + " - " + aDesPos;
+     
+   }  
+   senao   {
+      getAnaliseSegmento.novosegmento.indseg = "N";
+      getAnaliseSegmento.novosegmento.postra =  aObsSeg;
+      getAnaliseSegmento.novosegmento.despos =  aObsSeg; 
+      getAnaliseSegmento.novosegmento.obsseg =  aObsSeg;
+      getAnaliseSegmento.novosegmento.posto = "";
+      VaPara FimSeg ;
+   }
+   
+
+      
+      
+        
+   Sql_proximo(cPosSeg);
+
+}
+FimSeg:
+Sql_FecharCursor(cPosSeg);
+Sql_Destruir(cPosSeg);
+
+                                            
+
+getAnaliseSegmento.retorno = "OK" ;
+Se ((nQtdSeg > 0) e (nNovSeg = 0)) {
+   getAnaliseSegmento.retorno = "Novo Segmento - Não foi Encontrado posto com o centro " + aCodCcu  + " na Empresa:" + aNumEmp + "Filial:"+ aCodfil + " Tipo de Contrato 10";
+   getAnaliseSegmento.novosegmento.CriarLinha();
+   getAnaliseSegmento.novosegmento.indseg = "N";
+   getAnaliseSegmento.novosegmento.posto ="" ;
+   getAnaliseSegmento.novosegmento.despos = "" ;
+   getAnaliseSegmento.novosegmento.obsseg  = "Novo Segmento - Não foi Encontrado posto com o centro " + aCodCcu  + " na Empresa:" + aNumEmp + "Filial:"+ aCodfil + " Tipo de Contrato 10";
+   getAnaliseSegmento.novosegmento.postra =  "Novo Segmento - Não foi Encontrado posto com o centro " + aCodCcu  + " na Empresa:" + aNumEmp + "Filial:"+ aCodfil + " Tipo de Contrato 10";
+   
+   
+   
+}
+
+  
+/*  
+getAnaliseSegmento.novosegmento.CriarLinha();
+getAnaliseSegmento.novosegmento.postra =  "";
+getAnaliseSegmento.novosegmento.despos =  "";
+getAnaliseSegmento.novosegmento.indseg =  "N";
+getAnaliseSegmento.novosegmento.obsseg =  "MESMO SEGMENTO";
+getAnaliseSegmento.novosegmento.posto =   "MESMO SEGMENTO"; */
+
+
+@========================FUNÇÕES======================================================@
+
+
+Funcao CarregaSql(Numero pTipSql); {
+
+
+/*
+   O SQL CRIAR NÃO ACEITA O comando  WITH  
+   par trazes os empates de centro de custo
+   faria apenas o WITH TOP 1 
+   ai tratei dentro de uma subqueri pegndo os mairos qtd  WHERE QTD = ( .....
+   
+
+*/          
+
+Se (pTipSql = 1) {
+                     
+    aComSql = "SELECT                                                                                   \
+                  U.CODCCU,                                                                             \
+                  U.QTD AS QTDSEG,                                                                      \
+                  CASE                                                                                  \
+                      WHEN U.CODCCU = F.CODCCU THEN 'MESMO SEGMENTO'                                    \
+                      ELSE 'ALTERAÇÃO SEGMENTO'                                                         \
+                  END AS OBSSEG                                                                         \
+              FROM (                                                                                    \
+                                                                                                        \
+                  SELECT CODCCU, COUNT(*) AS QTD                                                        \
+                  FROM (                                                                                \
+                      SELECT CCU.CODCCU                                                                 \
+                      FROM R020RAT RAT                                                                  \
+                      INNER JOIN R018CCU CCU                                                            \
+                          ON CCU.CODRAT = RAT.CODRAT                                                    \
+                      WHERE CCU.NUMEMP = :NUMEMP                                                        \
+                        AND RAT.CODRAT IN  "+ aCondRat +"                                                           \
+                      UNION ALL                                                                         \
+                      SELECT CCU.CODCCU                                                                 \
+                      FROM R171APF APF                                                                  \
+                      INNER JOIN R018CCU CCU                                                            \
+                          ON CCU.NUMEMP = APF.NUMEMP                                                    \
+                         AND CCU.CODRAT = APF.CODRAT                                                    \
+                      WHERE APF.NUMEMP = :NUMEMP                                                        \
+                        AND APF.TIPCOL = :TIPCOL                                                        \
+                        AND APF.NUMCAD = :NUMCAD                                                        \
+                        AND APF.CODAPF NOT IN  "+ aCondEnc +"                                                       \
+                        AND (APF.DATFIM =  CONVERT(DATE, '31/12/1900', 103) OR APF.DATFIM > getdate())  \
+                  ) T                                                                                   \
+                  GROUP BY CODCCU                                                                       \
+              ) AS U                                                                                    \
+              CROSS JOIN (                                                                              \
+                                                                                                        \
+                  SELECT MAX(QTD) AS MAXQTD                                                             \
+                  FROM (                                                                                \
+                      SELECT CODCCU, COUNT(*) AS QTD                                                    \
+                      FROM (                                                                            \
+                          SELECT CCU.CODCCU                                                             \
+                          FROM R020RAT RAT                                                              \
+                          INNER JOIN R018CCU CCU                                                        \
+                              ON CCU.CODRAT = RAT.CODRAT                                                \
+                          WHERE CCU.NUMEMP = :NUMEMP                                                          \
+                            AND RAT.CODRAT IN  "+ aCondRat +"                                                        \
+                                                                                                        \
+                          UNION ALL                                                                     \
+                                                                                                        \
+                          SELECT CCU.CODCCU                                                             \
+                          FROM R171APF APF                                                              \
+                          INNER JOIN R018CCU CCU                                                        \
+                              ON CCU.NUMEMP = APF.NUMEMP                                                \
+                             AND CCU.CODRAT = APF.CODRAT                                                \
+                          WHERE APF.NUMEMP = :NUMEMP                                                          \
+                            AND APF.TIPCOL = :TIPCOL                                                          \
+                            AND APF.NUMCAD = :NUMCAD                                                   \
+                            AND APF.CODAPF NOT IN "+ aCondEnc +"                                       \
+                            AND (APF.DATFIM = CONVERT(DATE, '31/12/1900', 103) OR APF.DATFIM > getdate()) \
+                      ) T                                                                                 \
+                      GROUP BY CODCCU                                                                     \
+                  ) B                                                                                     \
+              ) AS M                                                                                      \
+              LEFT JOIN R034FUN AS F                                                                      \
+                  ON F.NUMEMP = :NUMEMP                                                                         \
+                 AND F.TIPCOL = :TIPCOL                                                                         \
+                 AND F.NUMCAD = :NUMCAD                                                                  \
+              WHERE                                                                                       \
+                                                                                                          \
+                  U.QTD = M.MAXQTD";
+                              
+                
+    }
+    Senao  se (pTipSql =2) {
+       aComSql = "SELECT                                                       \
+                      POS.ESTPOS,                                              \
+                      POS.DESPOS,                                              \
+                      CAR.CODCAR,                                               \
+                      POS.POSTRA                                                \
+                  FROM                                                         \
+                      R017CAR AS CAR,                                          \
+                      R030POS AS EPO,                                          \
+                      R017POS AS POS                                           \
+                  WHERE                                                        \
+                      CAR.CODCCU IN "+aCondCcu+"                     \
+                      AND CAR.NUMEMP = :NUMEMP                                       \
+                      AND CAR.CODFIL = :CODFIL                                    \
+                      AND CAR.TIPCON = 10                                        \
+                      AND EPO.NUMEMP = CAR.NUMEMP                              \
+                      AND EPO.DATALT = (                                       \
+                          SELECT MAX(TAB.DATALT)                               \
+                          FROM R030POS AS TAB                                  \
+                          WHERE TAB.NUMEMP = CAR.NUMEMP                        \
+                      )                                                        \
+                      AND CAR.ESTPOS = EPO.ESTPOS                              \
+                      AND (                                                    \
+                          CAR.DATFIM > :DATATU                               \
+                          OR CAR.DATFIM = :DATZER                            \
+                      )                                                        \
+                      AND CAR.DATINI = (                                       \
+                          SELECT MAX(TAB2.DATINI)                              \
+                          FROM R017CAR AS TAB2                                 \
+                          WHERE TAB2.ESTPOS = CAR.ESTPOS                       \
+                            AND TAB2.POSTRA = CAR.POSTRA                       \
+                            AND (                                              \
+                                TAB2.DATFIM > :DATATU                        \
+                                OR TAB2.DATFIM > :DATZER                     \
+                            )                                                  \
+                      )                                                        \
+                      AND POS.ESTPOS = CAR.ESTPOS                              \
+                      AND POS.POSTRA = CAR.POSTRA";                            
+                      
+    }
+    Senao {
+        Definir Alfa aSqlPrin ;
+        
+        aSqlPrin = "SELECT APF.CODRAT, \
+                           APF.HORMES FROM r171APF APF    \
+                            WHERE APF.NUMEMP = :NUMEMP  \
+                              AND APF.TIPCOL = :TIPCOL   \
+                              AND APF.NUMCAD = :NUMCAD \
+                              AND APF.codapf NOT IN "+ aCondAti +"       \
+                              AND APF.codapf not IN "+ aCondEnc +"  \
+                              AND (APF.DATFIM =  CONVERT(DATE, '31/12/1900', 103) OR APF.DATFIM > getdate())" ;
+                                    
+         aComAlt = "   \
+                  SELECT                    \
+                      APF.CODRAT,           \
+                      TAB1.HORMES           \
+                  FROM (                    \
+                      ##SQLALT##            \
+                  ) AS TAB1                 \
+                  INNER JOIN R171APF AS APF  \
+                      ON TAB1.CODAPF = APF.CODAPF \
+                  WHERE APF.NUMEMP = :NUMEMP            \
+                    AND APF.TIPCOL = :TIPCOL            \
+                    AND APF.NUMCAD = :NUMCAD           \
+                    AND (APF.DATFIM =  CONVERT(DATE, '31/12/1900', 103) OR APF.DATFIM > getdate())"   ;
+                    
+                    
+        aSqlAux =  aSqlPrin ;
+       
+        Se  (nQtdAlt > 0) {
+           TrocaString(aComAlt, "##SQLALT##", aSqlAlt, aComAlt);
+           aSqlAux = aSqlAux  + " " +  " UNION ALL " +  aComAlt;  
+    
+        }
+        Se (nQtdIns > 0) {
+           @Se (nQtdIns = 1) @
+           aSQlIns = " UNION ALL " +  aSQlIns;
+               
+           aSqlAux = aSqlAux  + " " +   aSQlIns ;
+        } 
+        
+        aComSql = "SELECT                                      \                                                    
+                      Q.CODRAT,                            \
+                      SUM(Q.HORMES) AS TOTAL_HORAS,        \
+                      FUN.ESTPOS,                          \
+                      FUN.POSTRA,                          \
+                      FUN.CODCCU       AS CODCCU_FUN,      \
+                      CCU.CODCCU       AS CODCCU,   \
+                      CASE                                 \
+                          WHEN FUN.CODCCU = CCU.CODCCU      \
+                              THEN 'SEM ALTERAÇÃO DE SEGMENTO' \
+                          ELSE 'ALTERAÇÃO SEGMENTO'      \
+                      END AS OBSSEG                         \
+                  FROM (                                    \
+                     #SQLAUX#                                  \
+                  ) AS Q                                    \
+                  INNER JOIN R034FUN AS FUN                 \
+                      ON FUN.NUMEMP = :NUMEMP                     \
+                     AND FUN.TIPCOL = :TIPCOL                      \
+                     AND FUN.NUMCAD = :NUMCAD               \
+                  INNER JOIN R018CCU AS CCU                  \
+                      ON CCU.NUMEMP = FUN.NUMEMP             \
+                     AND CCU.CODRAT = Q.CODRAT                \
+                  GROUP BY                                    \
+                      Q.CODRAT,                               \
+                      FUN.ESTPOS,                             \
+                      FUN.POSTRA,                              \
+                      FUN.CODCCU,                              \
+                      CCU.CODCCU                               \
+                  HAVING                                       \
+                      SUM(Q.HORMES) = (                        \
+                          SELECT MAX(TOTAL)                     \
+                          FROM (                                \
+                              SELECT                            \
+                                  SUM(Q2.HORMES) AS TOTAL       \
+                              FROM (                            \
+                                  #SQLAUX#                          \
+                              ) AS Q2                           \
+                              GROUP BY Q2.CODRAT              \
+                          ) AS T                       \
+                      )";   
+        
+        
+        TrocaString(aComSql,"#SQLAUX#",aSqlAux,aComSql);        
+    }                                                                             
+}
+
+
+
+Funcao CarregaAtividdades(); {
+  Definir Alfa aAlfAux ;
+  Definir Alfa aCodOpe;
+  Definir Alfa aCodAti;
+  Definir Alfa aHora ;
+  Definir Alfa aMinuto ;
+  Definir Alfa aCodRat;
+  
+  
+  lstAtivdades.limpar();  
+  lstAtivdades.Chave("CodOpe;CodAti;CodRat");
+  
+  @LINHA 1 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAti ;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codope ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+     
+      x = (nHorSem * 4.5);
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRat ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      } 
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;
+         
+       
+      lstAtivdades.Gravar();    
+         
+  } 
+  @LINHA 2 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAt2 ;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codop2 ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRa2 ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      } 
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;
+            
+      lstAtivdades.Gravar();    
+         
+  } 
+  
+    
+  @LINHA 3 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAt3 ;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codop3 ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRa3 ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      }
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;
+             
+      lstAtivdades.Gravar();    
+         
+  } 
+  
+  @LINHA 4 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAt4 ;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codop4 ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRa4 ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      }
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;
+             
+      lstAtivdades.Gravar();    
+         
+  } 
+  
+  @LINHA 5 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAt5 ;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codop5 ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRa5 ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      } 
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;
+            
+      lstAtivdades.Gravar();    
+         
+  } 
+  
+  
+  @LINHA 6 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAt6 ;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codop6 ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRa6 ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      }
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;
+         
+      lstAtivdades.Gravar();    
+         
+  } 
+  @LINHA 7 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAt7;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codop7 ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRa7 ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      }  
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;
+           
+      lstAtivdades.Gravar();    
+         
+  } 
+  
+  @LINHA 8 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAt8;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codop8 ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRa8 ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      } 
+      
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;  
+          
+      lstAtivdades.Gravar();    
+         
+  } 
+  
+  @LINHA 9 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAt9;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codop9 ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRa9 ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      } 
+      
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;
+            
+      lstAtivdades.Gravar();    
+         
+  } 
+  
+  @LINHA 10 ATIVIDADE@
+  aAlfAux = getAnaliseSegmento.CodAt10;
+  EstaNulo (aAlfAux,nSeqNll);
+  Se (nSeqNll = 0){
+      ListaItem(aAlfAux, "|", 1, aCodOpe);
+      ListaItem(aAlfAux, "|", 2, aCodAti);
+      ListaItem(aAlfAux, "|", 5, aCodRat); 
+      
+      aHorSem =   getAnaliseSegmento.codop10 ;
+      ListaItem(aHorSem, ":", 1, aHora); 
+      ListaItem(aHorSem, ":", 2, aMinuto);
+      
+      AlfaParaint(aHora,nHora);
+      AlfaParaint(aMinuto,nMinuto);
+      
+      nHorSem = HoraParaMinuto(nHora, nMinuto);
+     @ AlfaParaInt(aHorSem,nHorSem);@
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorMes = (nHorSem * 4.5); 
+        
+      Se (aCodOpe = "Inserir") {
+      
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " "))
+            lstAtivdades.CodRat  =   getAnaliseSegmento.CodRa10 ;
+         Senao
+           lstAtivdades.CodRat = aCodRat ;    
+      } 
+      Se (aCodOpe = "Alterar")
+          lstAtivdades.CodRat  = aCodRat ;
+            
+      lstAtivdades.Gravar();    
+         
+  } 
+  
+  
+  
+  
+  
+  
+
+
+}

@@ -1,0 +1,86 @@
+  /*                              
+@Objetos Cursores@
+Definir Alfa cAtividades;
+
+@Variáveis Numéricas@
+Definir Numero nCodApf;
+
+a=a;
+
+@Variáveis Alfa@
+Definir Alfa aNumEmp;
+Definir Alfa aTipCol;
+Definir Alfa aNumCad;
+Definir Alfa aDesPaf;
+Definir Alfa aCodApf;
+
+@Variáveis Data@
+Definir Data dDatZer;
+Definir Data dDatHoj;
+
+dDatHoj = DatSis;
+
+
+
+aNumEmp = getAtiTabela.enumemp;
+aTipCol = getAtiTabela.etipcol;
+aNumCad = getAtiTabela.enumcad;
+
+aNumEmp ="3";
+
+AlfaParaInt(aNumEmp, nNumEmp);
+AlfaParaInt(aTipCol, nTipCol);
+AlfaParaInt(aNumCad, nNumCad);
+
+Sql_Criar(cAtividades);
+Sql_USarSqlSenior2(cAtividades, 0);
+Sql_USarAbrangencia(cAtividades, 0);
+Sql_DefinirComando(cAtividades, 
+  "SELECT a.codapf, a.desapf                       \
+     FROM r171ati a                                \
+    WHERE (a.fimapf = :DatZer OR a.fimapf > :DatHoj) \
+      AND a.usu_conbmp = 'S'                       \
+      AND a.codapf = 1 \
+      AND (                                        \
+            (:NumEmp = 1 AND a.usu_cone01 = 'S')  \
+         OR (:NumEmp = 2 AND a.usu_cone02 = 'S')  \
+         OR (:NumEmp = 3 AND a.usu_cone03 = 'S')  \
+          )                                        \
+      AND NOT EXISTS (                             \
+            SELECT 1                               \
+              FROM usu_tempch1 b                   \
+             WHERE b.usu_numemp = :NumEmp         \
+               AND b.usu_tipcol = :TipCol         \
+               AND b.usu_numcad = :NumCad         \
+               AND b.usu_codapf = a.codapf)");
+               
+               
+Sql_DefinirInteiro(cAtividades, "NumEmp",nNumEmp);
+Sql_DefinirInteiro(cAtividades, "TipCol",nTipCol);
+Sql_DefinirInteiro(cAtividades, "NumCad",nNumCad);
+Sql_DefinirData   (cAtividades, "DatZer",dDatZer);
+Sql_DefinirData   (cAtividades, "DatHoj",dDatHoj);
+Sql_AbrirCursor(cAtividades);
+
+Enquanto (SQL_EOF(cAtividades) = 0) {
+
+   Sql_RetornarInteiro(cAtividades, "codapf", nCodApf);
+   Sql_RetornarAlfa   (cAtividades, "desapf", aDesPaf);
+   
+   IntParaAlfa(nCodApf,aCodApf);
+
+   getAtiTabela.AtividadesSaida.CriarLinha();
+   getAtiTabela.AtividadesSaida.codapf = aCodApf;
+   getAtiTabela.AtividadesSaida.desapf = aDesPaf;
+   getAtiTabela.AtividadesSaida.hormes = "10";
+    getAtiTabela.AtividadesSaida.valapf = "10";
+     getAtiTabela.AtividadesSaida.codope = "Inserindo";
+   Sql_Proximo(cAtividades);
+   
+   getAtiTabela.totHor  = "100" ;
+
+}
+
+Sql_FecharCursor(cAtividades);
+Sql_Destruir(cAtividades);*/
+                                

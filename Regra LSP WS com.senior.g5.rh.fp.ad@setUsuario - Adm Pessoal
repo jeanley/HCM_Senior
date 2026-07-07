@@ -1,0 +1,157 @@
+Definir numero nNumEmp;
+Definir numero nTipCol;
+Definir numero nNumCad;
+Definir numero nNumCpf;
+Definir Numero nCodEnt; 
+Definir Numero nTotalGrupos;
+
+Definir alfa aNomFun;                                                       
+Definir alfa aDesCar;
+Definir alfa aEmail;                                                     
+Definir alfa aNumCpf;
+Definir alfa aDia;
+Definir alfa aMes;
+Definir alfa aRetorno;    
+Definir Alfa aResult;   
+Definir alfa aPrimNom;
+Definir alfa aUltNom;
+Definir alfa aNomUsu;
+Definir alfa aDisPon;
+Definir alfa aColGes;
+Definir alfa aSenAce;
+Definir alfa aNomGru;
+Definir alfa aTemUsu;
+Definir alfa aNumCad;
+Definir alfa aMensagem;
+Definir alfa aResult;
+Definir alfa aNomUsuAux;
+Definir alfa ausuario;
+Definir alfa adesusu;
+Definir alfa aMensagem;
+Definir Alfa cur_R034USU;
+Definir alfa aNomUsu;
+Definir alfa aTitCar;
+Definir alfa anumcad;
+Definir alfa aEmaSgu;
+Definir Alfa aCodUsu;
+Definir Alfa aResultado; 
+Definir Alfa atipcol;
+Definir Alfa aNomUsuAnt;
+Definir Alfa aNomUsuNov;
+Definir Alfa aUSU;
+Definir Alfa anumemp;
+definir alfa anomgru2;
+
+definir cursor cur_nome;
+definir cursor cusu;
+definir cursor cdel_usu;
+
+anumemp = setUsuario.enumemp;
+atipcol = setUsuario.etipcol;
+anumcad = setUsuario.enumcad;
+aemasgu = setUsuario.eemasgu;
+anomusu = setUsuario.enomusu;
+asenace = setUsuario.esenace; 
+
+alfaparaint(anumemp, nnumemp);
+alfaparaint(atipcol, ntipcol);
+alfaparaint(anumcad, nnumcad); 
+    
+aUSU = "";
+vCod = 0;
+ausuario = "";
+nCodEnt = 0;
+nCriUsu = 0; 
+anomgru2 = "HCM - Colaborador - Padrao";
+anomgru = "GP - Colaborador Acerta";
+
+
+@ Verifica se usuário já está em uso em colaborador sitafa =7@
+
+cdel_usu.sql"select r999usu.codusu                                         \
+                    from r034usu,r034fun,r999usu                           \
+                    where                                                  \
+                    r034fun.sitafa = 7 and                                 \
+                    r999usu.nomusu = :anomusu and                          \                          
+                    r999usu.codusu = r034usu.codusu and                    \
+                    r034fun.numemp = r034usu.numemp and                    \
+                    r034fun.tipcol = r034fun.tipcol and                    \ 
+                    r034fun.numcad = r034usu.numcad";
+                    
+cdel_usu.abrircursor(); 
+se(cdel_usu.achou)
+{
+  ncodusu = cdel_usu.codusu;  
+  execsql"delete r999usu where codusu = :ncodusu";
+  execsql"delete r034usu where codusu = :ncodusu";   
+}
+cdel_usu.fecharcursor(); 
+
+
+              
+cur_nome.sql"select nomfun from r034fun where   \
+                    numemp = :nnumemp and       \
+                    tipcol = :ntipcol and       \
+                    numcad = :nnumcad";   
+                    
+cur_nome.abrircursor();
+se(cur_nome.achou)
+{
+  anomfun = cur_nome.nomfun;
+}
+cur_nome.fecharcursor();
+  
+SegUsuCria(ausuario);
+SegUsuSetaSenha(ausuario, aSenAce);
+SegEntSetaNome(ausuario, aNomUsu);
+SegUsuSetaExigeAltSenha(ausuario, 1);
+SegUsuSetaNomeComp(ausuario, anomfun);
+SegUsuSetaEmail(ausuario,aemasgu);           
+SegEntSetaDesc(ausuario, adesusu); 
+vGrupoAcesso = SegEntLeCodigo(aNomGru); 
+SegUsuSetaGrpAcs(ausuario, vGrupoAcesso);
+SegEntAdicGrp(ausuario, vGrupoAcesso); 
+SegEntGrava(ausuario); 
+    
+SegEntLePorNome(aNomUsu, aResult);
+vCod = SegEntCodigo(aResult); 
+      
+AssociaUsuColab(nnumemp, ntipcol, nnumcad, 5, vCod);
+          
+
+CUSU.SQL "SELECT R999USU.NOMUSU                              \ 
+                     FROM R034USU, R999USU                   \ 
+                    WHERE R034USU.NUMEMP = :NNUMEMP          \ 
+                      AND R034USU.TIPCOL = :NTIPCOL          \ 
+                      AND R034USU.NUMCAD = :NNUMCAD          \ 
+                      AND R034USU.CODUSU = R999USU.CODUSU"; 
+CUSU.ABRIRCURSOR(); 
+SE(CUSU.ACHOU) 
+{
+  ExecSQL "INSERT INTO R034USU (NUMEMP,                      \
+                                        TIPCOL,              \
+                                        NUMCAD,              \
+                                        CODUSU,              \
+                                        CRIUSU)              \
+                                VALUES(:nNumEmp,             \
+                                       :nTipCol,             \
+                                       :nNumCad,             \
+                                       :nCodEnt,             \
+                                       :nCriUsu)"; 
+                                       
+                                       
+                                       
+  execsql"UPDATE R034CPL SET EMACOM = :aemasgu         \
+           WHERE NUMEMP = :NNUMEMP                     \ 
+             AND TIPCOL = :NTIPCOL                     \ 
+             AND NUMCAD = :NNUMCAD";    
+                                                    
+                                       
+                                       
+                                       
+                                       
+                                       
+                                        
+  setUsuario.sretorno =  "Usuário vinculado com sucesso!";    
+} 
+cusu.fecharcursor();                     
