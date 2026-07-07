@@ -1,0 +1,118 @@
+/* Regra Especial desenvolvida para atender os cálculos de mensalidade sindical;
+Esta regra deve ser vinculada a Eventos de Mensalidade Sindical exclusivos p/ 
+tipos de contrato de professor;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 02/06/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definição das Variáveis Padrões =======================@
+Definir Cursor cur_apf131;
+Definir Cursor cur_pds131;
+
+Definir Data dFimCmp;
+Definir Data dDatZer;
+
+Definir Alfa aSoc;
+Definir Alfa aNSoc;
+
+@===== somente aos tipos de cálculo mensal e saldo de salários em rescisão ====@
+Se ((TipCal = 11) ou (TipCal = 62))
+  {
+    Se ((OriMov = "D") ou (Orimov = "X"))
+      {
+        RefEvt = RefMov;
+        ValEvt = ValMov;
+        VaPara Final131;
+      }
+
+@================ Somente aos tipos de contrato de professor ==================@  
+     Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+       {
+@====== busca sindicato do professor na competência vigente de cálculo ========@
+         RetSinEmp (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,FimCmp);
+         nCodSin = CodSinEmp; @= sindicato do professor =@
+
+@========================= zera variáveis de lógica ===========================@
+         nMesPds = 0;
+         aSoc = "";
+         aNSoc = "";
+         nMes = 0;
+         dDatZer = 0;
+         xValApf = 0;
+
+@=============== quebra data p/ otenção da variável do mês corrente ===========@
+         DesmontaData(FimCmp,xDia,xMes,xAno);
+
+@=== cursor p/ busca dos parâmetros aba "Eventos" do sindicato do professor ===@         
+         cur_pds131.sql "select mespds,tclsoc,tclnso \
+                           from r014pds \
+                          where codsin = :nCodSin \
+                            and tippds = 2 \
+                            and (mespds = 99 or mespds = :xMes)";
+         cur_pds131.AbrirCursor();
+         Se (cur_pds131.Achou)
+           {
+             aSoc = cur_pds131.tclsoc;
+             aNSoc = cur_pds131.tclnso;
+             nMes = 1;
+           }
+         cur_pds131.FecharCursor();                     
+/* não calcula se professor possuir parâmetro diferente de sindicalizado/sócio 
+de seu histórico c/ o sindicato, bem como se o mês não for o vigente =========*/         
+         Se ((nMes = 0) ou ((SocSinEmp = "S") e (aSoc = "N")) ou ((SocSinEmp = "N") e (aNSoc = "N")))
+           {
+             RefEvt = 0;
+             ValEvt = 0;
+             VaPara Final131;
+           }
+
+@====================== variáveis do professor no cálculo vigente =============@        
+         nNumEmp = R034FUN.NumEmp;
+         nTipCol = R034FUN.TipCol;
+         nNumCad = R034FUN.NumCad;
+         dFimCmp = FimCmp; @ final do mês vigente =@
+
+@============ cursor p/ busca do menor valor hora-aula do professor ===========@         
+         cur_apf131.sql "select numemp from r030emp where numemp = 0 union \
+                         select min(valapf) \
+                           from r171apf \
+                          where numemp = :nNumEmp \
+                            and tipcol = :nTipCol \
+                            and numcad = :nNumCad \
+                            and datini <= :dFimCmp \
+                            and (datfim is null \
+                             or datfim >= :dFimCmp \
+                             or datfim = :dDatZer)";
+         cur_apf131.AbrirCursor();
+         Se (cur_apf131.Achou)
+         xValApf = cur_apf131.numemp; @ menor valor hora-aula =@
+
+         cur_apf131.FecharCursor();  
+
+@================= não calcula se não encontrar valor hora-aula ===============@         
+         Se (xValApf = 0) 
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final131;
+          }
+          Senao @ cálculo do evento =@
+            {
+              RefEvt = 1;
+              ValEvt = xValApf;
+            }    
+       }
+       Senao @ não calcula se não for professor =@
+         {
+           RefEvt = 0;
+           ValEvt = 0;
+         }
+  }
+  Senao @ não calcula se não for cálculo mensal ou saldo de salário =@
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+    
+Final131:    

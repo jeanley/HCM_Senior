@@ -1,0 +1,596 @@
+/* Regra Especial desenvolvida para atender os cálculos Horas Extras e Horas 
+Faltas Professor;
+Esta regra deve ser vinculada a todos os Eventos de Horas Extras e Faltas que 
+se fizer necessário;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 30/05/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definição das Variáveis Padrões =======================@
+Definir Cursor cur_cal130;
+Definir Cursor cur_mov130;
+Definir Cursor cur_apf130;
+Definir Cursor cur_emp130;
+Definir Cursor cur_fix130;
+Definir Cursor cur_evc130;
+
+Definir Data dPerRef;
+Definir Data dDatZer;
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+Definir Data dDatZer;
+Definir Data dDatPag;
+Definir Data dIniFix;
+Definir Data dFimFix;
+
+Definir Alfa aErro;
+Definir Alfa aValRat;
+
+@=========== Somente aos tipos de cálculo de folha de pagamento ===============@
+Se ((TipCal = 11) ou (TipCal = 12) ou (TipCal = 13) ou (TipCal = 15) 
+ ou (TipCal = 62) ou (TipCal = 93))
+   {
+@========== Não efetua cálculo se não for colaborador professor ===============@
+     Se ((R034FUN.TipCon <> 10) e (R034FUN.TipCon <> 13))
+       {
+         RefEvt = 0;
+         ValEvt = 0;
+         VaPara Final130;
+       }
+
+@==== não efetua cálculo folha complementar se não tiver movimento lançado ====@
+     Se ((TipCal = 12) e (OriMov <> "D"))
+       {
+         RefEvt = 0;
+         ValEvt = 0;
+         VaPara Final130;
+       }
+
+@========== efetua cálculo se possuir valor lançado no movimento ==============@      
+     Se ((OriMov = "D") ou (OriMov = "X"))
+       {
+         Se (ValMov > 0)
+           {
+             Se ((OriMov = "X") e (TipCal <> 11))
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final130;
+               }
+
+             RefEvt = RefMov;
+             ValEvt = ValMov;
+             VaPara Final130;
+           }
+       }
+     
+     nNumEmp = R034FUN.NumEmp; @ Empresa do Colaborador @
+     nCodCal = CodCal; @ cálculo vigente @
+
+@==== apropriação de cálculo de origem qdo for complementar de dissidio =======@     
+     Se (TipCal = 13)
+       {
+         cur_cal130.sql "select codori \
+                           from r044cal \
+                          where numemp = :nNumEmp \
+                            and codcal = :nCodCal";
+         cur_cal130.AbrirCursor();
+         Se (cur_cal130.Achou)
+         nCodCal = cur_cal130.codori;
+         
+         cur_cal130.FecharCursor();                   
+       }
+     Senao Se ((TipCal = 62) e (TipoRescisao > 0) e (TipoRescisao <> 2))
+       {
+@=== apropriação de cálculo conforme saldo de salários rescisão vigente =======@
+         DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+         MontaData(01,xMes,xAno,dPerRef);
+         
+         cur_cal130.sql "select codcal \
+                           from r044cal \
+                          where numemp = :nNumEmp \
+                            and perref = :dPerRef \
+                            and tipcal = 11";
+         cur_cal130.AbrirCursor();
+         Se (cur_cal130.Achou)
+         nCodCal = cur_cal130.codcal;
+         
+         cur_cal130.FecharCursor();                   
+       }
+     Senao Se ((TipCal = 62) e (TipoRescisao = 2) e (R042RCS.CalRcs > 0)) @ qdo rescisão complementar dissidio @
+     nCodCal = R042RCS.CalRcs; 
+
+@============================ variáveis do colaborador ========================@     
+     nTipCol = R034FUN.TipCol;
+     nNumCad = R034FUN.NumCad;
+     nCodEve = CodEvt; @ evento corrente @
+
+@============================== zera variáveis de cálculo =====================@
+     nTipEve = 0;
+     nRefEve = 0;
+     dPerRef = 0;
+     dDatZer = 0;
+     xValHor = 0; 
+     xRefEvt = 0;
+     xValEvt = 0; 
+     xValRat = 0;   
+     
+      ExecSql "delete usu_tr046ffr \
+                where usu_numemp = :nNumEmp \
+                  and usu_tipcol = :nTipCol \
+                  and usu_numcad = :nNumCad \
+                  and usu_codcal = :nCodCal \
+                  and usu_codeve = :nCodEve";
+                  
+      dFimCmp = FimCmp;
+      
+      Se (TipCal = 62)
+        {
+          Se (TipoRescisao <> 2)
+          dDatPag = R042RCM.DatPag;
+          Senao
+          dDagPag = R042RCS.DatPag;          
+          
+          dFimCmp = R042RCM.DatDem;
+          
+          ExecSql "delete USU_TR042RCR \
+                    where usu_numemp = :nNumEmp \
+                      and usu_tipcol = :nTipCol \
+                      and usu_numcad = :nNumCad \
+                      and usu_datpag = :dDatPag \
+                      and usu_codeve = :nCodEve";
+        }            
+
+       DesmontaData(dFimCmp,xDia,xMes,xAno);
+       MontaData(01,xMes,xAno,dIniCmp);
+       
+@============= qdo for lançamento nos movimentos de rescisão ==================@       
+     Se ((TipCal = 62) e (OriMov = "D") e (RefMov > 0) e (R020RAT.CodRat > 0))
+       {
+          nCodRat = R020RAT.CodRat;
+          nCodEve = CodEvt;     
+          
+          cur_evc130.sql "select r008evc.tipeve \
+                            from r008evc,\
+                                 r030emp \
+                           where r008evc.codtab = r030emp.tabeve \
+                             and r008evc.codeve = :nCodEve \
+                             and r030emp.numemp = :nNumEmp";
+          cur_evc130.AbrirCursor();
+          Se (cur_evc130.Achou)
+          nTipEve = cur_evc130.tipeve;
+          Senao                    
+          AlfaParaInt(TipEve,nTipEve);
+          
+          cur_evc130.FecharCursor();
+            
+          nRefEve = RefMov; @ referência do evento @
+       
+@=========== cursor p/ busca da data final do cálculo vigente =================@          
+          cur_cal130.sql "select inicmp,fimcmp \
+                            from r044cal \
+                           where numemp = :nNumEmp \
+                             and codcal = :nCodCal";
+          cur_cal130.AbrirCursor();
+          Se (cur_cal130.Achou)
+            {
+              dPerRef = cur_cal130.fimcmp;
+              dIniCmp = cur_cal130.inicmp;
+            }
+          cur_cal130.FecharCursor();                     
+
+@======= cursor p/ busca do valor hora-aula conforme rateio do professor ======@          
+          cur_apf130.sql "select numemp from r030emp where numemp = 0 union \
+                          select max(valapf) \
+                            from r171apf \
+                           where numemp = :nNumEmp \
+                             and tipcol = :nTipCol \
+                             and numcad = :nNumCad \
+                             and codrat = :nCodRat \
+                             and datini <= :dPerRef \
+                             and (datfim is null \
+                              or datfim = :dDatZer \
+                              or datfim >= :dIniCmp)";
+          cur_apf130.AbrirCursor();
+          Se (cur_apf130.Achou)
+          xValHor = cur_apf130.numemp;
+          
+          cur_apf130.FecharCursor();
+       
+          Se  (xValHor > 0)
+            {
+              xRefEvt = xRefEvt + nRefEve; 
+
+              Se (nTipEve = 1) @ qdo for evento de hora extra =@
+                {
+                  xValRat = (xValHor * nRefEve) * (1 + (ValCal/100));
+                  ConverteMascara(2,xValRat,aValRat,"999999999,99");
+                  AlfaParaInt(aValRat,xValRat);                  
+                  xValEvt = xValEvt + xValRat;
+                }
+              Senao @ qdo for evento de hora falta =@
+                {
+                  xValRat = (xValHor * nRefEve);
+                  ConverteMascara(2,xValRat,aValRat,"999999999,99");
+                  AlfaParaInt(aValRat,xValRat);                  
+                  xValEvt = xValEvt + xValRat;
+                } 
+            
+              Se (xValRat > 0)
+                {
+                  cur_emp130.sql "select tabeve \
+                                    from r030emp \
+                                   where numemp = :nNumEmp \
+                                     and usarat in ('L','C')";
+                  cur_emp130.AbrirCursor();
+                  Se (cur_emp130.Achou)
+                    {
+                      nTabEve = cur_emp130.tabeve;
+                      
+                      Se (nCodCal = 0)
+                      nCodCal = CodCal;
+
+                      ExecSql "insert into usu_tr046ffr \
+                               (usu_numemp,usu_tipcol,usu_numcad,usu_codcal,\
+                                usu_tabeve,usu_codeve,usu_codrat,usu_refeve,\
+                                usu_valeve) \
+                                values \
+                               (:nNumEmp,:nTipCol,:nNumCad,:nCodCal,\
+                                :nTabEve,:nCodEve,:nCodRat,:nRefEve,\
+                                :xValRat)";  
+                                
+                      Se (TipCal = 62)
+                        {
+                          Se (TipoRescisao = 2)
+                          dDatPag = R042RCS.DatPag;                          
+                          Senao
+                          dDatPag = R042RCM.DatPag;
+                          
+                          ExecSql "insert into USU_TR042RCR \
+                                   (usu_numemp,usu_tipcol,usu_numcad,usu_datpag,\
+                                    USU_TclRcs,usu_tabeve,usu_codeve,usu_codrat,\
+                                    usu_refeve,usu_valeve) \
+                                    values \
+                                   (:nNumEmp,:nTipCol,:nNumCad,:dDatPag,\
+                                    62,:nTabEve,:nCodEve,:nCodRat,\
+                                    :nRefEve,:xValRat)";  
+                        }                    
+                    }
+                  cur_emp130.FecharCursor();                 
+                }
+            }
+       }
+       Senao
+         {
+           Se ((TipCal = 11) ou (TipCal = 62))
+             {
+/*=== cursor p/ busca do lançamento variável com rateio, somente cálculo mensal 
+ou possível saldo de salário residual ========================================*/     
+               cur_mov130.sql "select numemp,tabeve,codpai from r030emp where numemp = 0 union \
+                               select r044mov.codrat,r008evc.tipeve,sum(r044mov.refeve) \
+                                 from r044mov,\
+                                      r008evc \
+                                where r044mov.tabeve = r008evc.codtab \
+                                  and r044mov.codeve = r008evc.codeve \
+                                  and r044mov.numemp = :nNumEmp \
+                                  and r044mov.tipcol = :nTipCol \
+                                  and r044mov.numcad = :nNumCad \
+                                  and r044mov.codcal = :nCodCal \
+                                  and r044mov.codeve = :nCodEve \
+                                  and r008evc.tipeve in (1,3) \
+                                  and r044mov.codrat > 0 \
+                                  and r044mov.refeve > 0 \
+                                  and not exists (select 1 \
+                                                    from r044fix fix \
+                                                   where r044mov.numemp = fix.numemp \
+                                                     and r044mov.tipcol = fix.tipcol \
+                                                     and r044mov.numcad = fix.numcad \
+                                                     and r044mov.tabeve = fix.tabeve \
+                                                     and r044mov.codeve = fix.codeve \
+                                                     and r044mov.codrat = fix.codrat \
+                                                     and (fix.datini <= :dFimCmp \
+                                                       or fix.datini = :dDatZer \
+                                                       or fix.datini is null) \
+                                                     and (fix.datfim >= :dIniCmp \
+                                                       or fix.datfim = :dDatZer \
+                                                       or fix.datfim is null)) \
+                                  and not exists (select 1 \
+                                                    from r042rcd rcd \
+                                                   where r044mov.numemp = rcd.numemp \
+                                                     and r044mov.tipcol = rcd.tipcol \
+                                                     and r044mov.numcad = rcd.numcad \
+                                                     and r044mov.tabeve = rcd.tabeve \
+                                                     and r044mov.codeve = rcd.codeve \
+                                                     and r044mov.codrat = rcd.codrat \
+                                                     and rcd.datpag = :dDatPag) \ 
+                             group by r044mov.codrat,r008evc.tipeve \                    
+                                union \
+                               select r044fix.codrat,r008evc.tipeve,sum(r044fix.valeve) \
+                                from r044fix,\
+                                     r008evc \
+                               where r044fix.tabeve = r008evc.codtab \
+                                 and r044fix.codeve = r008evc.codeve \
+                                 and r044fix.numemp = :nNumEmp \
+                                 and r044fix.tipcol = :nTipCol \
+                                 and r044fix.numcad = :nNumCad \
+                                 and (r044fix.datini <= :dFimCmp \
+                                  or r044fix.datini = :dDatZer \
+                                  or r044fix.datini is null) \
+                                 and (r044fix.datfim >= :dIniCmp \
+                                  or r044fix.datfim = :dDatZer \
+                                  or r044fix.datfim is null) \
+                                 and r044fix.codeve = :nCodEve \
+                                 and r008evc.tipeve in (1,3) \
+                                 and r044fix.codrat > 0 \
+                                 and r044fix.valeve > 0 \
+                                 and not exists (select 1 \
+                                                   from r044mov mov \
+                                                  where r044fix.numemp = mov.numemp \
+                                                    and r044fix.tipcol = mov.tipcol \
+                                                    and r044fix.numcad = mov.numcad \
+                                                    and r044fix.tabeve = mov.tabeve \
+                                                    and r044fix.codeve = mov.codeve \
+                                                    and r044fix.codrat = mov.codrat \
+                                                    and mov.codcal = :nCodCal) \
+                                 and not exists (select 1 \
+                                                    from r042rcd rcd \
+                                                   where r044fix.numemp = rcd.numemp \
+                                                     and r044fix.tipcol = rcd.tipcol \
+                                                     and r044fix.numcad = rcd.numcad \
+                                                     and r044fix.tabeve = rcd.tabeve \
+                                                     and r044fix.codeve = rcd.codeve \
+                                                     and r044fix.codrat = rcd.codrat \
+                                                     and rcd.datpag = :dDatPag) \
+                            group by r044fix.codrat,r008evc.tipeve";
+             }
+             Senao
+               {
+@= cursor p/ busca do lançamento variável com rateio, qdo não for cálculo mensal =@     
+                 cur_mov130.sql "select numemp,tabeve,codpai from r030emp where numemp = 0 union \
+                                 select r044mov.codrat,r008evc.tipeve,sum(r044mov.refeve) \
+                                   from r044mov,\
+                                        r008evc \
+                                  where r044mov.tabeve = r008evc.codtab \
+                                    and r044mov.codeve = r008evc.codeve \
+                                    and r044mov.numemp = :nNumEmp \
+                                    and r044mov.tipcol = :nTipCol \
+                                    and r044mov.numcad = :nNumCad \
+                                    and r044mov.codcal = :nCodCal \
+                                    and r044mov.codeve = :nCodEve \
+                                    and r008evc.tipeve in (1,3) \
+                                    and r044mov.codrat > 0 \
+                                    and r044mov.refeve > 0 \
+                               group by r044mov.codrat,r008evc.tipeve";
+               }
+
+            cur_mov130.AbrirCursor();
+            Enquanto (cur_mov130.Achou)
+              {
+                nCodRat = cur_mov130.numemp; 
+                nTipEve = cur_mov130.tabeve;  
+                nRefEve = cur_mov130.codpai / 60; @ referência do evento @
+                nFixo = 0;
+                
+                cur_fix130.sql "select valeve \
+                                  from r044fix \
+                                 where numemp = :nNumEmp \
+                                   and tipcol = :nTipCol \
+                                   and numcad = :nNumCad \
+                                   and (datini <= :dFimCmp \
+                                    or datini = :dDatZer \
+                                    or datini is null) \
+                                   and (datfim >= :dIniCmp \
+                                    or datfim = :dDatZer \
+                                    or datfim is null) \
+                                   and codeve = :nCodEve \
+                                   and codrat = :nCodRat \
+                                   and valeve > 0";
+                cur_fix130.AbrirCursor();
+                Se (cur_fix130.Achou)
+                nFixo = 1;
+
+                cur_fix130.FecharCursor(); 
+                
+                xValRat = 0;
+                
+@=========== cursor p/ busca da data final do cálculo vigente =================@          
+                cur_cal130.sql "select perref \
+                                  from r044cal \
+                                 where numemp = :nNumEmp \
+                                   and codcal = :nCodCal";
+                cur_cal130.AbrirCursor();
+                Se (cur_cal130.Achou)
+                  {
+                    dPerRef = cur_cal130.perref;
+                    dIniCmp = cur_cal130.perref;
+                  }  
+                
+                cur_cal130.FecharCursor(); 
+                
+                UltimoDia(dPerRef);  
+                
+                Se (nFixo = 1)
+                  {
+                    dIniFix = 0;
+                    dFimFix = 0;
+                    nQtdFix = 0;
+                    
+                    cur_fix130.sql "select datini,datfim \
+                                      from r044fix \
+                                     where numemp = :nNumEmp \
+                                       and tipcol = :nTipCol \
+                                       and numcad = :nNumCad \
+                                       and codeve = :nCodEve \
+                                       and codrat = :nCodRat \
+                                       and (datini between :dIniCmp and :dPerRef \
+                                         or datfim between :dIniCmp and :dPerRef) \
+                                       and valeve > 0";
+                    cur_fix130.AbrirCursor();
+                    Se (cur_fix130.Achou)
+                      {
+                        dIniFix = cur_fix130.datini;
+                        dFimFix = cur_fix130.datfim;
+                      }
+                    cur_fix130.FecharCursor();
+                    
+                    Se (TipCal <> 62)
+                      {
+                        Se (((dIniFix >= dIniCmp) e (dIniFix <= dPerRef))
+                         e ((dFimFix >= dIniCmp) e (dFimFix <= dPerRef)))
+                        nQtdFix = (dFimFix - dIniFix) + 1;
+                        Senao Se (((dIniFix >= dIniCmp) e (dIniFix <= dPerRef)) 
+                         e ((dFimFix = 0) ou (dFimFix > dPerRef)))
+                        nQtdFix = (dPerRef - dIniFix) + 1;
+                        Senao Se (((dIniFix = 0) ou (dIniFix < dIniCmp)) 
+                         e ((dFimFix >= dIniCmp) e (dFimFix <= dPerRef)))
+                        nQtdFix = (dFimFix - dIniCmp) + 1;
+                      }
+                      Senao
+                        {
+                          Se (((dIniFix >= dIniCmp) e (dIniFix <= dPerRef))
+                           e ((dFimFix >= dIniCmp) e (dFimFix <= dPerRef)))
+                            {
+                              Se (dFimFix < R042RCM.DatDem)
+                              nQtdFix = (dFimFix - dIniFix) + 1;
+                              Senao
+                              nQtdFix = (R042RCM.DatDem - dIniFix) + 1;
+                            }
+                          Senao Se (((dIniFix >= dIniCmp) e (dIniFix <= dPerRef)) 
+                           e ((dFimFix = 0) ou (dFimFix > dPerRef)))
+                          nQtdFix = (R042RCM.DatDem - dIniFix) + 1;
+                          Senao Se (((dIniFix = 0) ou (dIniFix < dIniCmp)) 
+                           e ((dFimFix >= dIniCmp) e (dFimFix <= dPerRef)))
+                            {
+                              Se (dFimFix < R042RCM.DatDem)
+                              nQtdFix = (dFimFix - dIniCmp) + 1;
+                              Senao
+                              nQtdFix = (R042RCM.DatDem - dIniCmp) + 1;
+                            }
+                          Senao
+                          DesmontaData(R042RCM.DatDem,nQtdFix,xMes,xAno);
+                        }
+                     
+                     Se (nQtdFix > 0)
+                       {
+                         DesmontaData(dIniCmp,xD,xM,xA);
+                        
+                         Se ((xM = 2) e (xD = 28))
+                         nQtdFix = nQtdFix + 2;
+                         Senao Se ((xM = 2) e (xD = 29))
+                         nQtdFix++;
+
+                         Se (nQtdFix > 30)
+                         nQtdFix = 30;
+
+                         nRefEve = (nRefEve / 30) * nQtdFix;
+                       }
+                     Senao Se (nQtdFix < 0)
+                     nRefEve = 0;  
+                  }                  
+      
+@======= cursor p/ busca do valor hora-aula conforme rateio do professor ======@          
+                cur_apf130.sql "select numemp from r030emp where numemp = 0 union \
+                                select max(valapf) \
+                                  from r171apf \
+                                 where numemp = :nNumEmp \
+                                   and tipcol = :nTipCol \
+                                   and numcad = :nNumCad \
+                                   and codrat = :nCodRat \
+                                   and datini <= :dPerRef \
+                                   and (datfim is null \
+                                    or datfim = :dDatZer \
+                                    or datfim >= :dIniCmp)";
+                cur_apf130.AbrirCursor();
+                Se (cur_apf130.Achou)
+                xValHor = cur_apf130.numemp;
+                
+                cur_apf130.FecharCursor();
+      
+                Se  (xValHor > 0)
+                  {
+                    xRefEvt = xRefEvt + nRefEve; 
+      
+                    Se (nTipEve = 1) @ qdo for evento de hora extra =@
+                      {
+                        xValRat = (xValHor * nRefEve) * (1 + (ValCal/100));
+                        ConverteMascara(2,xValRat,aValRat,"999999999,99");
+                        AlfaParaInt(aValRat,xValRat);                  
+                        xValEvt = xValEvt + xValRat;
+                      }
+                    Senao @ qdo for evento de hora falta =@
+                      {
+                        xValRat = (xValHor * nRefEve);
+                        ConverteMascara(2,xValRat,aValRat,"999999999,99");
+                        AlfaParaInt(aValRat,xValRat);                  
+                        xValEvt = xValEvt + xValRat;
+                      } 
+                  
+                    Se (xValRat > 0)
+                      {
+                        cur_emp130.sql "select tabeve \
+                                          from r030emp \
+                                         where numemp = :nNumEmp \
+                                           and usarat in ('L','C')";
+                        cur_emp130.AbrirCursor();
+                        Se (cur_emp130.Achou)
+                          {
+                            nTabEve = cur_emp130.tabeve;
+                            
+                            Se (nCodCal = 0)
+                            nCodCal = CodCal;
+      
+                            ExecSql "insert into usu_tr046ffr \
+                                     (usu_numemp,usu_tipcol,usu_numcad,usu_codcal,\
+                                      usu_tabeve,usu_codeve,usu_codrat,usu_refeve,\
+                                      usu_valeve) \
+                                      values \
+                                     (:nNumEmp,:nTipCol,:nNumCad,:nCodCal,\
+                                      :nTabEve,:nCodEve,:nCodRat,:nRefEve,\
+                                      :xValRat)";  
+                                      
+                            Se (TipCal = 62)
+                              {
+                                Se (TipoRescisao = 2)
+                                dDatPag = R042RCS.DatPag;                                
+                                Senao
+                                dDatPag = R042RCM.DatPag;
+                                
+                                ExecSql "insert into USU_TR042RCR \
+                                         (usu_numemp,usu_tipcol,usu_numcad,usu_datpag,\
+                                          USU_TclRcs,usu_tabeve,usu_codeve,usu_codrat,\
+                                          usu_refeve,usu_valeve) \
+                                          values \
+                                         (:nNumEmp,:nTipCol,:nNumCad,:dDatPag,\
+                                          62,:nTabEve,:nCodEve,:nCodRat,\
+                                          :nRefEve,:xValRat)";  
+                              }                    
+                          }
+                        cur_emp130.FecharCursor();                 
+                      }
+                  }
+                  
+                cur_mov130.Proximo();   
+              }
+            cur_mov130.FecharCursor();                        
+         }  
+   
+      Se (xValEvt > 0)
+        {
+          RefEvt = xRefEvt;
+          ValEvt = xValEvt;
+        
+        }
+        Senao
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+          }
+   }
+   Senao @ não calcula se não for outro cálculo de folha @
+     {
+       RefEvt = 0;
+       ValEvt = 0;
+     }
+
+Final130:   

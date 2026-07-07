@@ -1,0 +1,531 @@
+/* Regra Especial desenvolvida para atender o cálculo de Adicional por 
+Titulação;
+Deve ser vinculada a todos os Eventos de direito da respectiva verba;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 14/02/2025 e 17/02/2025;
+Data(s) de novas apropriações técnicas: 19/02/2025, 24/02/2025 e 25/02/2025;  
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@======================== Definição das variáveis =============================@
+
+@======================== Definição das variáveis =============================@
+Definir Alfa aCrtEve;
+Definir Alfa aTipExt;
+Definir Alfa aExt;
+
+Definir Cursor cur_ext134;
+Definir Cursor cur_sin134;
+Definir Cursor cur_evc134;
+Definir Cursor cur_cpl134;
+Definir Cursor cur_ver134;
+
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+Definir Data dDatZer;
+Definir Data dIniCal;
+Definir Data dFimCal;
+Definir Data dFimAno;
+Definir Data dTerCon;
+
+nNumEmp = r034fun.numemp;
+
+@== Inserido a variável NumEmp para utilização em eventos distintos por empresa==@
+@==== Consultor Elcio Junior 17/07/2025 =========================================@
+
+     Se (R034FUN.Numemp <> 2)
+       {
+         RefEvt = 0;
+         ValEvt = 0;
+         VaPara Final134;
+       } 
+
+@========== Todos tipos de cálculo de direito da verba "Adic.ExtraClasse" =====@
+Se ((TipCal = 11) ou (TipCal = 62) ou (TipCal = 31) ou (TipCal = 32) ou (TipCal = 33) 
+  ou (TipCal = 34) ou (TipCal = 35) ou (TipCal = 51) ou (TipCal = 52) ou (TipCal = 53)
+  ou (TipCal = 55) ou (TipCal = 63) ou (TipCal = 65) ou (TipCal = 70) ou (TipCal = 71)
+  ou (TipCal = 72) ou (TipCal = 75) ou (TipCal = 76) ou (TipCal = 77) ou (TipCal = 78)
+  ou (TipCal = 79) ou (TipCal = 95) ou (TipCal = 96) ou (TipCal = 97) ou (TipCal = 98)
+  ou (TipCal = 99) ou (TipCal = 69) ou (TipCal = 54))
+   {
+     Se ((TipCal = 11) ou (TipCal = 62) ou (TipCal = 31) ou (TipCal = 32) ou (TipCal = 33))
+       {
+       
+@================= Busca lançamento fixo ou variável qdo existir ==============@
+         Se ((OriMov = "D") ou (OriMov = "X"))
+           {
+             RefEvt = RefMov;
+             ValEvt = ValMov;
+             VaPara Final134;
+           }
+       }
+
+@======================== não calculo se não for professor ======================@
+
+     Se ((R034FUN.TipCon <> 10) e (R034FUN.TipCon <> 13))
+       {
+         RefEvt = 0;
+         ValEvt = 0;
+         VaPara Final134;
+       }
+
+@===== Apropriação de data de referência conforme tipo de cálulo vigente ======@
+     Se ((TipCal = 62) ou (TipCal = 34) ou (TipCal = 63) ou (TipCal = 65) ou (TipCal = 70)
+     ou (TipCal = 71) ou (TipCal = 72) ou (TipCal = 75) ou (TipCal = 76) ou (TipCal = 77) 
+     ou (TipCal = 78) ou (TipCal = 79) ou (TipCal = 95) ou (TipCal = 96) ou (TipCal = 97) 
+     ou (TipCal = 98) ou (TipCal = 99) ou (TipCal = 69))
+     dFimCmp = R042RCM.DatDem;
+     Senao Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53))
+     dFimCmp = R040FEM.IniFer;
+     Senao
+     dFimCmp = FimCmp;  
+     
+     Se (dFimCmp = 0)
+     dFimCmp = FimCmp;
+
+@======== Traz código do Sindicato do(a) colaborador(a) ao cálculo vigente ==========@     
+     RetSinEmp (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dFimCmp);
+     nCodSin = CodSinEmp;
+
+@================== zera lógica das variáveis de cálculo ======================@
+     dDatZer = 0;
+     xRefExt = 0;
+     xValExt = 0;
+     pValExt = 0;
+     aTipExt = "";
+     aExt = "";
+
+@============================ Apropriação do período vigente ==================@     
+     DesmontaData(dFimCmp,xDia,xMes,xAno);
+     MontaData(01,xMes,xAno,dIniCmp);
+     
+     cur_ext134.sql "select usu_tipext,usu_valext \
+                       from usu_tr014ecc \
+                      where usu_codsin = :nCodSin \
+                        and usu_valext > 0 \
+                        and usu_tipext <> ' ' \
+                        and usu_cmpalt = (select max(ecc.usu_cmpalt) \
+                                            from usu_tr014ecc ecc \
+                                           where usu_tr014ecc.usu_codsin = ecc.usu_codsin \
+                                             and ecc.usu_cmpalt <= :dFimCmp)";
+      cur_ext134.AbrirCursor();
+      Se (cur_ext134.Achou)
+        {
+          aTipExt = cur_ext134.usu_tipext;
+          
+          Se ((aTipExt = "PE") ou (aTipExt = "PA")) @ qdo for percentual @
+            {
+              pValExt = BasEvt * (cur_ext134.usu_valext / 100);
+              RefEvt = cur_ext134.usu_valext;
+              xValExt = 0;
+            }
+            Senao @ qdo for valor @
+              {
+                RefEvt = 1;
+                xValExt = cur_ext134.usu_valext;
+                pValExt = 0;
+              }
+          
+          aExt = aTipExt;
+          CopiarAlfa(aExt,2,1);
+        }
+      cur_ext134.FecharCursor();                                             
+
+@======================== início de cálculo do evento =========================@   
+     Se ((xValExt > 0) ou (pValExt > 0))
+       {
+@============ Lógica de apropriação de tipos de cálculo 13o salário ===========@         
+         Se (((TipCal >= 31) e (TipCal <= 35)) ou (TipCal = 71) ou (TipCal = 72))
+           {
+             Se (TipCal = 72)
+               {
+                 Se (((aExt = "E") e (CodEvt <> 1712)) ou ((aExt = "A") e (CodEvt = 1712)))
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                    VaPara Final134;
+                  } 
+                 
+                 dIniCal = R042RCM.DatDem;
+                 DesmontaData(dIniCal,xDia,xMes,xAno);
+                 MontaData(31,12,xAno,dFimAno);
+                 
+                 dFimCal = dIniCal + R042RCM.QtdInd;
+                 
+                 Se (dFimCal > dFimAno)
+                 dFimCal = dFimAno;
+               }
+               Senao
+                 {
+                   Se (TipCal = 31)
+                     {
+                       Se (((aExt = "E") e (CodEvt <> 1714)) ou ((aExt = "A") e (CodEvt = 1714)))
+                        {
+                          RefEvt = 0;
+                          ValEvt = 0;
+                          VaPara Final134;
+                        } 
+                     }
+                   Senao
+                   Se ((TipCal = 32) ou (TipCal = 35))
+                     {
+                       Se (((aExt = "E") e (CodEvt <> 1716)) ou ((aExt = "A") e (CodEvt = 1716)))
+                        {
+                          RefEvt = 0;
+                          ValEvt = 0;
+                          VaPara Final134;
+                        } 
+                     }
+                   Senao
+                     {
+                       Se (((aExt = "E") e (CodEvt <> 1718)) ou ((aExt = "A") e (CodEvt = 1718)))
+                        {
+                          RefEvt = 0;
+                          ValEvt = 0;
+                          VaPara Final134;
+                        } 
+                     }  
+                   
+                   DesmontaData(dFimCmp,xDia,xMes,xAno);
+                   MontaData(16,01,xAno,dIniCal);
+                   
+                   Se (R034FUN.DatAdm > dIniCal)
+                   dIniCal = R034FUN.DatAdm;
+                   
+                   MontaData(31,12,xAno,dFimCal);
+                 }
+             
+             nAvo = 0;
+             TempoTrabFun (nNumEmp,nTipCol,nNumCad,dIniCal,dFimCal,3,nAvo);
+             
+             Se (nAvo <= 0)
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+                 VaPara Final134;
+               }
+               Senao
+                 {
+                   Se (nAvo > 12)
+                   nAvo = 12;
+                   
+                   Se ((nAvo > 3) e (TipCal = 72))
+                   nAvo = 3;
+                   
+                   xValExt = (xValExt / 12) * nAvo;
+                   
+                   Se (TipCal = 31)
+                     {
+                       cur_sin134.sql "select per13s \
+                                         from r014sin \
+                                        where codsin = :nCodSin \
+                                          and per13s > 0";
+                       cur_sin134.AbrirCursor();
+                       Se (cur_sin134.Achou)
+                       ValEvt = (xValExt * (cur_sin134.per13s / 100)) + pValExt;
+                       Senao
+                       ValEvt = 0;
+                       
+                       cur_sin134.FecharCursor();                                            
+                     } 
+                   Senao Se ((TipCal = 32) ou (TipCal = 35) ou (TipCal = 71) ou (TipCal = 72))
+                   ValEvt = xValExt + pValExt;
+                   Senao Se (TipCal = 33)
+                     {
+                       nNumEmp = R034FUN.NumEmp;
+                       nTipCol = R034FUN.TipCol;
+                       nNumCad = R034FUN.NumCad;
+                       dPerRef = PerRef;
+                       nCodEvt = CodEvt;
+                       
+                       cur_ver134.sql "select valeve \
+                                         from r046ver \
+                                        where numemp = :nNumEmp \
+                                          and tipcol = :nTipCol \
+                                          and numcad = :nNumCad \
+                                          and codeve = :nCodEvt \
+                                          and valeve > 0 \
+                                          and exists (select 1 \
+                                                        from r044cal cal \
+                                                       where r046ver.numemp = cal.numemp \
+                                                         and r046ver.codcal = cal.codcal \
+                                                         and cal.perref = :dPerRef \
+                                                         and cal.tipcal = 32)";
+                        cur_ver134.AbrirCursor();
+                        Se (cur_ver134.Achou)
+                          {
+                            ValEvt = ValEvt - cur_ver134.valeve; 
+                          }
+                        cur_ver134.FecharCursor();                                                 
+                     }
+                 }
+           }
+@============== Lógica de apropriação de tipos de cálculo férias ==============@
+           Senao Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 55) ou (TipCal = 54))
+             {
+               Se (TipCal = 55)
+                 {
+                   Se (((aExt = "E") e (CodEvt <> 1720)) ou ((aExt = "A") e (CodEvt = 1720)))
+                    {
+                      RefEvt = 0;
+                      ValEvt = 0;
+                      VaPara Final134;
+                    } 
+                 }
+               
+               Se (TipCal <> 54)
+               dIniCal = R040PER.IniPer;
+               Senao
+               dIniCal = IniCmp;
+               
+               Se ((TipCal = 55) ou (TipCal = 54))
+               dFimCal = FimCmp;
+               Senao
+               dFimCal = R040PER.FimPer;
+               
+               nAvo = 0;
+               TempoTrabFun (nNumEmp,nTipCol,nNumCad,dIniCal,dFimCal,1,nAvo);
+               
+               Se (nAvo <= 0)
+                 {
+                   RefEvt = 0;
+                   ValEvt = 0;
+                   VaPara Final134;
+                 }
+                 Senao
+                   {
+                     xValExt = (xValExt / 12) * nAvo;
+                     
+                     Se ((TipCal = 52) ou (TipCal = 55)) 
+                     ValEvt = xValExt + pValExt;
+                     Senao
+                       {
+                         nCodEvt = CodEvt;
+                         
+@================= Cursor p/ busca da característica do evento ================@                    
+                         cur_evc134.sql "select r008evc.crteve \
+                                           from r008evc,\    
+                                                r030emp \ 
+                                          where r008evc.codtab = r030emp.tabeve \
+                                            and r030emp.numemp = :nNumEmp \
+                                            and r008evc.codeve = :nCodEvt";
+                         cur_evc134.AbrirCursor();
+                         Se (cur_evc134.Achou)
+                           {
+                             aCrtEve = cur_evc134.crteve;
+                             
+                             CopiarAlfa(aCrtEve,1,2);
+                             AlfaParaInt(aCrtEve,nCrtEve);
+
+@=================================== qdo for férias ===========================@                        
+                             Se (nCrtEve = 11)
+                               {
+                                 Se (((aExt = "E") e (CodEvt <> 1720)) 
+                                  ou ((aExt = "A") e (CodEvt = 1720)))
+                                  {
+                                    cur_evc134.FecharCursor();
+                                    RefEvt = 0;
+                                    ValEvt = 0;
+                                    VaPara Final134;
+                                  } 
+                                 Senao
+                                 ValEvt = ((xValExt / 30) * R040FEM.DiaFer) + pValExt;
+                               }  
+                             Senao Se (nCrtEve = 12)  @= qdo for abono pecuniário =@
+                               {
+                                 Se (((aExt = "E") e (CodEvt <> 1722)) 
+                                  ou ((aExt = "A") e (CodEvt = 1722)))
+                                  {
+                                    cur_evc134.FecharCursor();
+                                    RefEvt = 0;
+                                    ValEvt = 0;
+                                    VaPara Final134;
+                                  } 
+                                 Senao
+                                 ValEvt = ((xValExt / 30) * R040FEM.DiaAbo) + pValExt;
+                               }
+                             Senao Se (nCrtEve = 15)  @= qdo for adto 13o nas férias =@
+                               {
+                                 Se (((aExt = "E") e (CodEvt <> 1714)) 
+                                  ou ((aExt = "A") e (CodEvt = 1714)))
+                                  {
+                                    cur_evc134.FecharCursor();
+                                    RefEvt = 0;
+                                    ValEvt = 0;
+                                    VaPara Final134;
+                                  } 
+
+                                 DesmontaData(R040FEM.IniFer,xDia,xMes,xAno);
+                                 MontaData(16,01,xAno,dIniCal);
+                                 MontaData(31,12,xAno,dFimCal);
+                                  
+                                 Se (R034FUN.DatAdm > dIniCal)
+                                 dIniCal = R034FUN.DatAdm;
+                                  
+                                 nAvo = 0;       
+@=================== apura direitos de avos do docente ========================@                
+                                 TempoTrabFun (nNumEmp,nTipCol,nNumCad,dIniCal,dFimCal,
+                                 3,nAvo);
+                      
+@====================== cursor para busca do % do Adto 13o salário ============@                    
+                                 cur_sin134.sql "select per13s \
+                                                   from r014sin \
+                                                  where codsin = :nCodSin \
+                                                    and per13s > 0";
+                                 cur_sin134.AbrirCursor();
+                                 Se (cur_sin134.Achou)
+                                 ValEvt = ((xValExt * (cur_sin134.per13s/100)) / 12 * nAvo) + pValExt;
+                                 Senao
+                                  {
+                                    RefEvt = 0;
+                                    ValEvt = 0;
+                                  }
+                                 cur_sin134.FecharCursor();                   
+                               }   
+                           }
+                         cur_evc134.FecharCursor();
+                       }
+                   }
+             }
+           Senao Se (TipCal = 63) @ aviso prévio indenizado =@ 
+             {
+               Se (((aExt = "E") e (CodEvt <> 1724)) ou ((aExt = "A") e (CodEvt = 1724)))
+                {
+                  RefEvt = 0;
+                  ValEvt = 0;
+                  VaPara Final134;
+                } 
+               Senao
+                ValEvt = ((xValExt / 30) * R042RCM.QtdInd) + pValExt;
+             }  
+           Senao Se (TipCal = 70) @ indenização por estabilidade =@
+             {
+               Se (((aExt = "E") e (CodEvt <> 1726)) ou ((aExt = "A") e (CodEvt = 1726)))
+                {
+                  RefEvt = 0;
+                  ValEvt = 0;
+                  VaPara Final134;
+                } 
+               Senao
+               ValEvt = ((xValExt / 30) * R042RCM.QtdEst) + pValExt;
+             }  
+@=========== Lógica de apropriação de tipos de cálculo férias em rescisão =====@           
+           Senao Se ((TipCal = 75) ou (TipCal = 76) ou (TipCal = 77) ou (TipCal = 78)
+           ou (TipCal = 79) ou (TipCal = 95) ou (TipCal = 96) ou (TipCal = 97) ou (TipCal = 98)
+           ou (TipCal = 99))
+             {
+               Se (((aExt = "E") e (CodEvt <> 1728)) ou ((aExt = "A") e (CodEvt = 1728)))
+                {
+                  RefEvt = 0;
+                  ValEvt = 0;
+                  VaPara Final134;
+                } 
+
+               Se (((aExt = "E") e (CodEvt <> 1732)) ou ((aExt = "A") e (CodEvt = 1732)))
+                {
+                  RefEvt = 0;
+                  ValEvt = 0;
+                  VaPara Final134;
+                } 
+
+                nAvo = 0;
+
+                Se (R040PER.FimPer >= R042RCM.DatDem)
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R040PER.IniPer,R042RCM.DatDem,1,nAvo);
+                  }
+                Senao
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R040PER.IniPer,R040PER.FimPer,1,nAvo);
+                  }
+
+@ controle p/ apropriar eventos de férias em suas verbas corretas em rescisão =@                
+                Se (((CodCrt = 1301) e (R040PER.AvoFer <> 12)) 
+                 ou ((CodCrt = 1302) e (R040PER.AvoFer = 12)))
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                    VaPara Final134;
+                  }
+               
+               Se (nAvo <= 0)
+                 {
+                   RefEvt = 0;
+                   ValEvt = 0;
+                   VaPara Final134;
+                 }
+                 Senao
+                 ValEvt = ((xValExt / 12) * nAvo) + pValExt;
+             }
+           Senao Se (TipCal = 65) @= metade dos dias de contrato =@
+             {
+               nDiaCon = 0;
+               
+               cur_cpl134.sql "select durcon,procon \
+                                from r034cpl \
+                               where numemp = :nNumEmp \
+                                 and tipcol = :nTipCol \
+                                 and numcad = :nNumCad";
+                cur_cpl134.AbrirCursor();
+                Se (cur_cpl134.Achou)
+                nDiaCon = cur_cpl134.durcon + cur_cpl134.procon;
+
+                cur_cpl134.FecharCursor();                                 
+             
+               Se (nDiaCon <= 0)
+                 {
+                   RefEvt = 0;
+                   ValEvt = 0;
+                   VaPara Final134;
+                 }
+                 Senao
+                   {
+                     dTerCon = R034FUN.DatAdm + nDiaCon;
+                     nDiaCon = 0;
+                     nDiaCon = dTerCon - R042RCM.DatDem;
+
+                     Se (nDiaCon <= 0)
+                       {
+                         RefEvt = 0;
+                         ValEvt = 0;
+                         VaPara Final134;
+                       }
+                       Senao
+                       ValEvt = (((xValExt / 30) * nDiaCon) / 2) + pValExt;
+                   }
+             }
+           Senao @===== demais cálculos de direito: folhas, inden.data base ===@
+             {
+               Se ((TipCal = 11) ou (TipCal = 62))
+                 {
+                   Se (((aExt = "E") e (CodEvt <> 308)) ou ((aExt = "A") e (CodEvt = 308)))
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final134;
+                     } 
+                 }
+               Senao Se (TipCal = 69)
+                 {
+                   Se (((aExt = "E") e (CodEvt <> 1734)) ou ((aExt = "A") e (CodEvt = 1734)))
+                     {
+                       RefEvt = 0;
+                       ValEvt = 0;
+                       VaPara Final134;
+                     } 
+                 }
+
+               ValEvt = xValExt + pValExt;
+             }  
+       }
+@========= não efetua cálculo se não existir valor apurado de titulação =======@
+       Senao
+         {
+           RefEvt = 0;
+           ValEvt = 0;
+         }
+   }
+   
+Final134:    

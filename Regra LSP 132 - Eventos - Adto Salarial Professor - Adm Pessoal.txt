@@ -1,0 +1,227 @@
+/* Regra Especial desenvolvida para atender o cálculo de Adto Salarial Professor;
+Vinculada no Evento "1961 - ADIANTAMENTO SALARIAL";
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 15/07/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definição das Variáveis Padrões =======================@
+Definir Cursor cur_afa132;
+Definir Cursor cur_adi132;
+Definir Cursor cur_apf132;
+Definir Cursor cur_dge132;
+
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+Definir Data dDatZer;
+Definir Data dDatAfa;
+Definir Data dDatTer;
+
+@=========== Somente Tipo de Cálculo 91 - Adiantamento Salarial ===============@
+Se (TipCal = 91)
+  {
+
+@============ Se exisitr, busca lançtos feitos pelo usuário ===================@
+    Se ((OriMov = "D") ou (OriMov = "X"))
+      {
+        RefEvt = RefMov;
+        ValEvt = ValMov;
+        VaPara Final132;
+      }
+
+@== Não calcula se colaborador(a) não estiver previsto p/ Recebe Adto Salário =@   
+    Se (R034FUN.RecAdi = "N")
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final132;
+      }
+
+@============ Tratativa exclusiva qdo for Tipo de Contrato Professor =@      
+    Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+      {
+@================= apropriação do período mensal vigente ======================@
+        dIniCmp = PerRef;
+        dFimCmp = PerRef;
+        UltimoDia(dFimCmp); 
+
+@======================= Empresa do(a) colaborador(a) =========================@        
+        nNumEmp = R034FUN.NumEmp;        
+
+@===================== zera variável de % adto salarial =======================@
+        pPerAdi = 0;
+        xValEvt = 0;
+
+@==== cursor p/ busca do % Adto Salarial na Empresa do(a) colaborador(a) ======@
+        cur_adi132.sql "select peradi \
+                          from r030emp \
+                         where numemp = :nNumEmp \
+                           and peradi > 0";
+        cur_adi132.AbrirCursor();
+        Se (cur_adi132.Achou)
+        pPerAdi = cur_adi132.peradi / 100;
+        
+        cur_adi132.FecharCursor();
+
+@= Se não encontrar % Adto Salarial na Empresa, busca no cadastro do Sindicato =@        
+        Se (pPerAdi = 0)
+          {
+            RetSinEmp (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dFimCmp);
+            nCodSin = CodSinEmp;     
+    
+            cur_adi132.sql "select peradi \
+                              from r014sin \
+                             where codsin = :nCodSin \
+                               and peradi > 0";
+            cur_adi132.AbrirCursor();
+            Se (cur_adi132.Achou)
+            pPerAdi = cur_adi132.peradi / 100;
+            
+            cur_adi132.FecharCursor();
+          }                   
+
+@= Se não encontrar % Adto Salarial na empresa e sindicato, busca padrão do evento =@        
+        Se (pPerAdi = 0)
+        pPerAdi = ValCal / 100;
+
+@=============== não efetua cálculo se não possuir % adto salarial ============@        
+        Se (pPerAdi = 0)
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final132;
+          }         
+
+@============= zera variáveis de dias trabalhados e dias do mês ===============@        
+        nDiaTra = 0;
+        nDiaMes = 0;
+
+@=================== encontra qtde dias do mês vigente ========================@
+        DesmontaData(dFimCmp,nDiaMes,xMes,xAno);
+        
+        Se (nDiaMes = 0)
+        nDiaMes = 1;         
+
+@========= apropriação de direitos de dias trabalhados no mês vigente =========@        
+        Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+        nDiaTra = (dFimCmp - R034FUN.DatAdm) + 1;
+        Senao
+        nDiaTra = nDiaMes;        
+
+@====================== variáveis do(a) colaborador(a) ========================@
+        nTipCol = R034FUN.TipCol;
+        nNumCad = R034FUN.NumCad;
+
+@============= zera variáveis de dias afastamento e data zerada ===============@        
+        nDiaAfa = 0;
+        nAfa = 0;
+        dDatZer = 0;
+
+/* Não usado a função "BuscaDiaSit" pq a mesma não carrega qdo é falta injust.
+Dedicado cursor p/ busca do histórico de afastamento vigente qdo a situação 
+estiver parametrizada p/ Perde Adt Salarial ==================================*/        
+        cur_afa132.sql "select datafa,datter \
+                          from r038afa \
+                         where numemp = :nNumEmp \
+                           and tipcol = :nTipCol \
+                           and numcad = :nNumCad \
+                           and exists (select 1 \
+                                         from r010sit sit \
+                                        where r038afa.sitafa = sit.codsit \
+                                          and sit.peradt = 'S') \
+                           and ((datter between :dIniCmp and :dFimCmp) \
+                             or (datafa between :dIniCmp and :dFimCmp) \
+                             or (datafa <= :dFimCmp and (datter = :dDatZer or datter > :dFimCmp))) \
+                      order by datafa";        
+        cur_afa132.AbrirCursor();
+        Enquanto (cur_afa132.Achou)
+          {
+@============= apropriação lógica de dias afastados no mês vigente ============@
+            dDatAfa = cur_afa132.datafa;
+            
+            Se (cur_afa132.datafa < dIniCmp)
+            dDatAfa = dIniCmp;
+            
+            dDatTer = cur_afa132.datter;
+            
+            Se ((cur_afa132.datter = dDatZer) ou (cur_afa132.datter >= dFimCmp))
+            dDatTer = dFimCmp;
+            
+            nAfa = (dDatTer - dDatAfa) + 1;
+            
+            Se (nAfa > 0)
+            nDiaAfa = nDiaAfa + nAfa;
+
+            cur_afa132.Proximo();
+          }
+        cur_afa132.FecharCursor();                                   
+
+@== Não efetua cálculo se colaborador(a) estiver afastado todo o mês vigente ==@        
+        Se (nDiaAfa >= nDiaTra)
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final132;
+          }
+
+@========= proporcionalidade de direitos se possuir afastamento ===============@          
+        nDiaTra = nDiaTra - nDiaAfa;  
+
+@============ zera variável da remuneração do(a) professor(a) =================@
+        xSalMes = 0;
+
+@======== cursor / busca da remuneração vigente do(a) professor(a) ============@        
+        cur_apf132.sql "select numemp from r030emp where numemp = 0 union \
+                          select sum(hormes*valapf)/60 \
+                            from r171apf \
+                           where numemp = :nNumEmp \
+                             and tipcol = :nTipCol \
+                             and numcad = :nNumCad \
+                             and datini <= :dFimCmp \
+                             and (datfim is null \
+                              or datfim = :dDatZer \
+                              or datfim >= :dIniCmp)";
+        cur_apf132.AbrirCursor();
+        Se (cur_apf132.Achou)
+        xSalMes = cur_apf132.numemp; @= remuneração do(a) professor(a) =@
+        
+        cur_apf132.FecharCursor();
+
+@================== não calcula se não encontrar remuneração ==================@        
+        Se (xSalMes = 0)
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final132;
+          }                              
+          Senao @= cálculo do evento adto salarial =@
+            {
+              RefEvt = pPerAdi * 100;
+              xValEvt = ((xSalMes / nDiaMes) * nDiaTra) * pPerAdi;
+              
+@================== cursor p/ busca do parâmetro DSR professor ================@
+              cur_dge132.sql "select mulmes,muldsr \
+                               from r171dge \
+                              where numemp = :nNumEmp \
+                                and mulmes > 0 \
+                                and muldsr > 0";
+              cur_dge132.AbrirCursor();
+              Se (cur_dge132.Achou)
+              nFatorHorSem = 1 + (cur_dge132.muldsr / cur_dge132.mulmes);
+              Senao
+              nFatorHorSem = 1.16666666666667;
+              
+              cur_dge132.FecharCursor(); 
+              
+              ValEvt = xValEvt * nFatorHorSem;                               
+            }
+      }  
+  }
+  Senao @================ não calcula se não for adto salarial ================@
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+    
+Final132:
+Regra(144);
