@@ -1,0 +1,13 @@
+create view usu_vProventos
+as
+select f.numemp,
+ f.numcad,
+ f.tipcol,
+ b.codcal,
+ b.perref,
+ sum(a.valeve) as total
+from r034fun f
+ inner join r046ver a on f.numemp = a.numemp and f.tipcol = a.tipcol and f.numcad = a.numcad
+ inner join r044cal b on b.numemp = a.numemp and b.codcal = a.codcal
+ inner join r008evc c on c.codtab = a.tabeve and c.codeve = a.codeve and c.tipeve in (1,2) 
+group by f.numemp, f.numcad, f.tipcol, b.perref, b.codcal
