@@ -1,0 +1,52 @@
+/* Regra Especial desenvolvida para atender o cálculo do evento lançado em Fixos
+   no recibo de férias do colaborador de acordo com os dias de férias; 
+Cliente: Marista Brasil;
+Autor: Bruno Martins;
+Data(s): 18/08/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@ Definindo e zerando variáveis @
+nDiaFer = R040FEM.DiaFer;
+nDiaAbo = R040FEM.DiaAbo;
+nBasEvt = 0;
+
+@ Zera o evento em cálculo de folha complementar @
+Se ((TipCal = 12) e (OriMov <> "D"))
+  {
+    RefEvt = 0;
+    ValEvt = 0;
+    VaPara Final139;
+  }
+
+@ Acata o valor do evento caso haja lançamento em Variáveis @
+Se ((OriMov = "D") ou (OriMov = "X"))
+  {
+    RefEvt = RefMov;
+    ValEvt = ValMov;
+    VaPara Final139;
+  }
+
+@ Efetua o Cálculo se for tipo de cálculo de férias @
+Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 54))
+  {
+  Se ((CodEvt = 3519) ou (codEvt = 3829))
+    {
+    ValEvt = (BasEvt / 30) * nDiaFer;
+    VaPara Final139;
+    }
+  Senao
+  Se ((CodEvt = 3522) ou (CodEvt = 3828))
+    {
+    ValEvt = (BasEvt / 30) * nDiaAbo;
+    VaPara Final139;
+    }
+  }
+
+Se ((TipCal <> 51) e (TipCal <> 52) e (TipCal <> 53) e (TipCal <> 54))
+  {
+  RefEvt = 0;
+  ValEvt = 0;
+  Cancel(1);
+  }
+
+Final139:

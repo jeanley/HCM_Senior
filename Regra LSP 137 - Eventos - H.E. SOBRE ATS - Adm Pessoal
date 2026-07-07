@@ -1,0 +1,478 @@
+/* Regra Especial desenvolvida para atender o cálculo de HORAS EXTRAORDINARIAS 
+SOBRE ADICIONAL POR TEMPO DE SERVIÇO; 
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 31/07/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+Definir Alfa aForPag;
+Definir Alfa aCrtEve;
+Definir Alfa aForAts;
+
+Definir Cursor cur_sib137;
+Definir Cursor cur_hsi137;
+Definir Cursor cur_sin137;
+Definir Cursor cur_fun137;
+Definir Cursor cur_evc137;
+Definir Cursor cur_adm137;
+Definir Cursor cur_hfi137;
+Definir Cursor cur_pli137;
+
+Definir Data dFimCmp;
+Definir Data dDatAlt;
+Definir Data dCmpTer;
+Definir Data dPerAdm;
+Definir Data dAdmMax;
+Definir Data dDatAdm;
+Definir Data dDatZer;
+Definir Data dCmpAlt;
+
+Se ((TipCal = 12) e (OriMov <> "D"))
+  {
+    RefEvt = 0;
+    ValEvt = 0;
+    VaPara Final137;
+  }
+
+Se ((OriMov = "D") ou (OriMov = "X"))
+  {
+    RefEvt = RefMov;
+    ValEvt = ValMov;
+    VaPara Final137;
+  }
+
+Se (BasEvt > 0)
+  {
+@======== Todos tipos de cálculo de direito da verba "Adic.Tempo Serviço" =====@
+    Se ((TipCal = 11) ou (TipCal = 12) ou (TipCal = 13) ou (TipCal = 62) ou (TipCal = 31) 
+      ou (TipCal = 32) ou (TipCal = 33) ou (TipCal = 34) ou (TipCal = 35) ou (TipCal = 51)
+      ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 55) ou (TipCal = 63) ou (TipCal = 65) 
+      ou (TipCal = 70) ou (TipCal = 71) ou (TipCal = 72) ou (TipCal = 75) ou (TipCal = 76) 
+      ou (TipCal = 77) ou (TipCal = 78) ou (TipCal = 79) ou (TipCal = 95) ou (TipCal = 96) 
+      ou (TipCal = 97) ou (TipCal = 98) ou (TipCal = 99) ou (TipCal = 69) ou (TipCal = 54))
+       {
+         Se ((TipCal = 11) ou (TipCal = 12) ou (TipCal = 62) ou (TipCal = 31) ou (TipCal = 32) ou (TipCal = 33))
+          {
+            Se ((TipCal = 12) e (OriMov <> "D"))
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final137;
+              }
+            
+            Se ((OriMov = "D") ou (OriMov = "X"))
+              {
+                RefEvt = RefMov;
+                ValEvt = ValMov;
+                VaPara Final137;
+              }
+          }
+    
+        Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53))
+          {
+            Se ((OriMov = "D") ou (OriMov = "X"))
+              {
+                RefEvt = RefMov;
+                ValEvt = ValMov;
+                VaPara Final137;
+              }
+          }
+    
+        nNumEmp = R034FUN.NumEmp;
+        nTipCol = R034FUN.TipCol;
+        nNumCad = R034FUN.NumCad;  
+        
+        nCodPer = 0;
+        
+@ conforme apropriação lançamento % livre apresentada em 10/2025  - CN @
+        cur_pli137.sql "select codper \
+                          from r034pli \
+                         where numemp = :nNumEmp \
+                           and tipcol = :nTipCol \
+                           and numcad = :nNumCad \
+                           and codper = 3 \
+                           and perliv > 0";
+        cur_pli137.AbrirCursor();
+        Se (cur_pli137.Achou)
+        nCodPer = cur_pli137.codper;
+    
+        cur_pli137.FecharCursor();  
+        
+        Se (nCodPer > 0)
+          {
+            Se ((nNumEmp = 3) ou (nNumEmp = 4))
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final137;
+              }
+          }                     
+        
+        dDatAlt = R034FUN.DatAdm;
+        nInsAnt = 0;
+        nInsAtu = 0;  
+        
+@===== Apropriação de data de referência conforme tipo de cálulo vigente ======@
+        Se ((TipCal = 62) ou (TipCal = 34) ou (TipCal = 63) ou (TipCal = 65) ou (TipCal = 70)
+        ou (TipCal = 71) ou (TipCal = 72) ou (TipCal = 75) ou (TipCal = 76) ou (TipCal = 77) 
+        ou (TipCal = 78) ou (TipCal = 79) ou (TipCal = 95) ou (TipCal = 96) ou (TipCal = 97) 
+        ou (TipCal = 98) ou (TipCal = 99) ou (TipCal = 69))
+        dFimCmp = R042RCM.DatDem;
+        Senao Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53))
+        dFimCmp = R040FEM.IniFer;
+        Senao
+        dFimCmp = FimCmp;  
+         
+        RetSinEmp(nNumEmp,nTipCol,nNumCad,dFimCmp);
+        nCodSin = CodSinEmp;
+
+        nTipAnu = 0;
+        xValAnu = 0;
+        dPerAdm = 0;
+        aForPag = "";
+        dDatAdm = 0;
+        dAdmMax = 0;
+        nQtdAnu = 0;
+        dDatZer = 0;
+        aForAts = "";
+        nPerTet = 0;
+        nQtdAts = 0;
+        nAnuAnt = 0;
+        
+        cur_adm137.sql "select usu_tr014dts.usu_peradm,usu_tr014dts.usu_cmpalt,\
+                           usu_tr014cts.usu_cmpter,usu_tr014cts.usu_tipats,\
+                           r014sin.numcgc \
+                      from usu_tr014dts,\
+                           usu_tr014cts,\
+                           r014sin \
+                     where usu_tr014cts.usu_codsin = r014sin.codsin \
+                       and usu_tr014cts.usu_codsin = usu_tr014dts.usu_codsin \
+                       and usu_tr014cts.usu_cmpalt = usu_tr014dts.usu_cmpalt \
+                       and usu_tr014dts.usu_codsin = :nCodSin \
+                       and usu_tr014dts.usu_peranu > 0 \
+                       and usu_tr014dts.usu_cmpalt <= :dFimCmp \
+                  group by usu_tr014dts.usu_peradm,usu_tr014dts.usu_cmpalt,\
+                           usu_tr014cts.usu_cmpter,usu_tr014cts.usu_tipats,\
+                           r014sin.numcgc \
+                  order by usu_tr014dts.usu_cmpalt,usu_tr014dts.usu_peradm";
+        cur_adm137.AbrirCursor();
+        Enquanto (cur_adm137.Achou)
+         {
+           Se ((dDatAlt > cur_adm137.usu_cmpter) e (cur_adm137.usu_cmpter > 0))
+           VaPara Prox137;
+           
+           dPerAdm = cur_adm137.usu_peradm;
+           
+           nInsAtu = cur_adm137.numcgc;
+           
+           Se (nQtdAnu = 0)
+             {
+               Se ((dPerAdm > 0) e (dDatAlt < dPerAdm))
+               dDatAlt = dPerAdm;
+             }
+             Senao
+             dDatAlt = dDatAlt + (nQtdAnu * 365.25);
+            
+           nQtdAno = 0;
+           nMesAtu = 0; 
+           
+           Se (cur_adm137.usu_tipats = "A")
+             {
+               Se (nQtdAnu = 0)
+                 {
+                   Se ((dPerAdm > 0) e (dDatAlt < dPerAdm))
+                   dDatAlt = dPerAdm;
+                 }
+                 Senao
+                 dDatAlt = dDatAlt + (nQtdAnu * 365.25);
+                 
+               Se (cur_adm137.usu_cmpter > 0) 
+                 {
+                   RetDifDat (2,dDatAlt,cur_adm137.usu_cmpter,nMesAtu);
+                   @RetDifDat (3,dDatAlt,cur_adm137.usu_cmpter,nQtdAno);@
+                 }  
+               Senao
+                 {
+                   RetDifDat (2,dDatAlt,dFimCmp,nMesAtu);
+                   @RetDifDat (3,dDatAlt,dFimCmp,nQtdAno);@
+                 }  
+             }
+           Senao Se (cur_adm137.usu_tipats = "D")
+             {
+               Se (nQtdAnu = 0)
+               {
+                RetDifDat (2,dDatAlt,dFimCmp,nMesAtu);
+                @RetDifDat (3,dDatAlt,dFimCmp,nQtdAno);@
+               }  
+               Senao 
+               VaPara ProxATS137;
+             }  
+            
+           Se (nQtdAno < 0)
+           nQtdAno = 0;
+           
+           Se (nMesAtu < 0)
+           nMesAtu = 0;
+
+/*= conforme delimitação interna do Cliente no final de 10/2025, estabelecido 
+aos códigos de sindicato abaixo regra de acúmulo de contratos anteriores no 
+mesmo colégio (filial) e sindicatos abaixo:
+2006 – SIND DOS PROFESSORES DO ESTADO DO RS
+2009 – SIND DOS TRABAL EM ESTAB DE ENSINO DE PASSO FUNDO E REGIAO
+2010 – SIND DOS TRABALHADORES DO ENSINO PRIVADO DOS VALES DO RS
+2011 – SIND DOS TRABALHADORES EM ADMINISTRACAO ESCOLAR NO RS
+2014 – SIND DOS TRAB EM EST. DE ENSINO PRIVADO DO NOROESTE DO RS
+1029 – SIND DOS PROFESSORES EM ESTA PARTICULARES DE ENSINO DO DF
+1030 – SIND INTERMUNICIPAL DOS PROFESSORES NO ESTADO DE SC
+1004 – SIND DOS AUXILIARES DA ADMINISTRACAO ESCOLAR DA GRANDE FLORIA
+1010 – SIND DOS AUXLIARES DA ADMINISTRACAO ESCOLAR DO OESTE DE SC
+1024 – SIND DOS PROFESSORES DO OESTE DE SC
+1038 – SIND TRAB INST ENS PART FUND EDUC NORTE - AUX
+1016 – SIND TRABALH INSTITUI ENSINO PART E FUND EDUC NORTE DE SC - PROF
+1036 – SIND DOS TRABAL EM ESTABEL DE ENs DA REGIAO SUL DE SC - AUXILIARES
+1014 – SIND DOS TRAB EM ESTA DE ENSINO DA REGIAO SUL DE SC - PROFES
+1009 – SIND DOS AUX DE ADM ESCOLAR EM ESTAB PARTIC DE ENSINO NO DF
+1001 – SIND DOS AUXILIARES EM ADMINISTRACAO ESCOLAR DA REGIAO SERRANA
+3036 - SIND DOS PROFESSORES DO ESTADO DE MG */
+ 
+           Se ((nCodSin = 2006) ou (nCodSin = 2009) ou (nCodSin = 2010) ou (nCodSin = 2011)
+            ou (nCodSin = 2014) ou (nCodSin = 1029) ou (nCodSin = 1030) ou (nCodSin = 1004)
+            ou (nCodSin = 1010) ou (nCodSin = 1024) ou (nCodSin = 1038) ou (nCodSin = 1016)
+            ou (nCodSin = 1036) ou (nCodSin = 1014) ou (nCodSin = 1009) ou (nCodSin = 1001)
+            ou (nCodSin = 3036))
+             {
+               dDatAdm = R034FUN.DatAdm;
+               nNumCpf = R034FUN.NumCpf;
+               nQtdSin = 0;
+               nInsFil = 0;
+               
+               cur_hfi137.sql "select r030fil.numcgc \
+                                 from r030fil,\
+                                      r038hfi \
+                                where r038hfi.numemp = r030fil.numemp \
+                                  and r038hfi.codfil = r030fil.codfil \
+                                  and r038hfi.numemp = :nNumEmp \
+                                  and r038hfi.tipcol = :nTipCol \
+                                  and r038hfi.numcad = :nNumCad \
+                                  and r038hfi.datalt = (select max(hfi.datalt) \
+                                                          from r038hfi hfi \
+                                                         where r038hfi.numemp = hfi.numemp \
+                                                           and r038hfi.tipcol = hfi.tipcol \
+                                                           and r038hfi.numcad = hfi.numcad \
+                                                           and hfi.datalt <= :dFimCmp)";
+               cur_hfi137.AbrirCursor(); 
+               Se (cur_hfi137.Achou)
+               nInsFil = cur_hfi137.numcgc;
+               
+               cur_hfi137.FecharCursor();                                                  
+                
+               Se ((nInsFil > 0) e (nInsAtu > 0))
+                 {
+                   nSin = 0;
+                   nQtdSin = 0;
+                   
+                   cur_fun137.sql "select r034fun.numcad,r034fun.datadm,r038hsi.datalt,\
+                                          r034fun.datafa \
+                                     from r034fun,\
+                                          r038hsi,\
+                                          r014sin,\
+                                          r010sit,\
+                                          r038hfi,\
+                                          r030fil \
+                                    where r034fun.sitafa = r010sit.codsit \
+                                      and r034fun.numemp = r038hsi.numemp \
+                                      and r034fun.tipcol = r038hsi.tipcol \
+                                      and r034fun.numcad = r038hsi.numcad \
+                                      and r038hsi.datalt = (select max(hsi.datalt) \
+                                                              from r038hsi hsi \
+                                                             where r038hsi.numemp = hsi.numemp \
+                                                               and r038hsi.tipcol = hsi.tipcol \
+                                                               and r038hsi.numcad = hsi.numcad \
+                                                               and hsi.datalt <= r034fun.datafa) \
+                                      and r038hsi.codsin = r014sin.codsin \
+                                      and r034fun.numemp = r038hfi.numemp \
+                                      and r034fun.tipcol = r038hfi.tipcol \
+                                      and r034fun.numcad = r038hfi.numcad \
+                                      and r038hfi.datalt = (select max(hfi.datalt) \
+                                                              from r038hfi hfi \
+                                                             where r038hfi.numemp = hfi.numemp \
+                                                               and r038hfi.tipcol = hfi.tipcol \
+                                                               and r038hfi.numcad = hfi.numcad \
+                                                               and hfi.datalt <= r034fun.datafa) \
+                                      and r038hfi.numemp = r030fil.numemp \  
+                                      and r038hfi.codfil = r030fil.codfil \
+                                      and r034fun.tipcon <> 5 \
+                                      and r014sin.numcgc = :nInsAtu \
+                                      and r030fil.numcgc = :nInsFil \
+                                      and r010sit.tipsit = 7 \
+                                      and r034fun.numemp = :nNumEmp \
+                                      and r034fun.tipcol = :nTipCol \
+                                      and r034fun.numcad <> :nNumCad \
+                                      and r034fun.datadm < :dDatAdm \
+                                      and r034fun.numcpf = :nNumCpf \
+                                 order by r038hsi.datalt desc";
+                   cur_fun137.AbrirCursor();
+                   Enquanto (cur_fun137.Achou)
+                     {
+                       dDatAlt = cur_fun137.datalt;
+                   
+                        Se ((dPerAdm > 0) e (dDatAlt < dPerAdm))
+                        dDatAlt = dPerAdm;
+                        
+                        dDatAfa = cur_fun137.datafa;
+                        
+                        @RetDifDat (3,dDatAlt,dDatAfa,nQtdSin);@
+                        RetDifDat (2,dDatAlt,dDatAfa,nSin);
+                        
+                        Se (nSin > 0)
+                        nQtdSin = nQtdSin + nSin;
+                        
+                        nSin = 0;
+                        
+                        cur_fun137.Proximo();
+                      }
+                    cur_fun137.FecharCursor(); 
+                    
+                   Se (nQtdSin > 0)
+                   nMesAtu = nMesAtu + nQtdSin;
+
+                  /*  Se (nQtdSin > 0)
+                      {
+                        nQtdSin = nQtdSin / 12;
+                        TruncarValor(nQtdSin);
+                        
+                        Se (nQtdSin >= 1)
+                        nQtdAno = nQtdAno + nQtdSin;
+                      } */ 
+                 }
+             }
+            
+            xAnu = 0;
+            
+            dCmpAlt = cur_adm137.usu_cmpalt;
+            
+            nQtdAno = nMesAtu / 12;
+            TruncarValor(nQtdAno);
+            
+            Se (nAnuAnt = 0)
+              {
+                nAnuAnt = 1;
+    
+                cur_fun137.sql "select usu_qtdats \
+                                  from r034fun \
+                                 where numemp = :nNumEmp \
+                                   and tipcol = :nTipCol \
+                                   and numcad = :nNumCad \
+                                   and usu_perats > 0 \
+                                   and usu_qtdats > 0";
+                cur_fun137.AbrirCursor();
+                Se (cur_fun137.Achou)
+                nQtdAno = nQtdAno + cur_fun137.usu_qtdats;
+                
+                cur_fun137.FecharCursor();          
+              }
+            
+            cur_sib137.sql "select usu_tr014dts.usu_peranu,usu_tr014dts.usu_numanu,\
+                                   usu_tr014cts.usu_forats,usu_tr014dts.usu_pertet \
+                              from usu_tr014dts,\
+                                   usu_tr014cts \
+                             where usu_tr014cts.usu_codsin = usu_tr014dts.usu_codsin \
+                               and usu_tr014cts.usu_cmpalt = usu_tr014dts.usu_cmpalt \
+                               and usu_tr014dts.usu_codsin = :nCodSin \
+                               and usu_tr014dts.usu_peradm = :dPerAdm \
+                               and usu_tr014dts.usu_peranu > 0 \
+                               and usu_tr014dts.usu_cmpalt = :dCmpAlt \
+                               and usu_tr014dts.usu_numanu = (select max(dts.usu_numanu) \
+                                                                from usu_tr014dts dts \
+                                                               where usu_tr014dts.usu_codsin = dts.usu_codsin \
+                                                                 and usu_tr014dts.usu_peradm = dts.usu_peradm \
+                                                                 and usu_tr014dts.usu_cmpalt = dts.usu_cmpalt \
+                                                                 and dts.usu_numanu <= :nQtdAno)";
+            cur_sib137.AbrirCursor();
+            Se (cur_sib137.Achou)
+              {
+                nQtdAnu = cur_sib137.usu_numanu;
+                aForAts = cur_sib137.usu_forats;
+                nPerTet = cur_sib137.usu_pertet;
+                
+                Se (nQtdAnu > 0)
+                nQtdAts = nQtdAno / nQtdAnu;
+                
+                TruncarValor(nQtdAts);
+        
+                xAnu = cur_sib137.usu_peranu * nQtdAts;
+                
+                Se (xAnu > nPerTet)
+                xAnu = nPerTet;
+              }
+            cur_sib137.FecharCursor(); 
+            
+            Se (xAnu > 0)
+            xValAnu = xValAnu + xAnu;
+            
+            Prox137:
+           
+           cur_adm137.Proximo();
+         }
+         
+         ProxATS137:
+         
+        cur_adm137.FecharCursor();  
+
+        Se (xValAnu > 0)
+          {
+            Se (xValAnu > nPerTet)
+              {
+                cur_sib137.sql "select usu_tr014dts.usu_pertet \
+                                  from usu_tr014dts,\
+                                       usu_tr014cts \
+                                 where usu_tr014cts.usu_codsin = usu_tr014dts.usu_codsin \
+                                   and usu_tr014cts.usu_cmpalt = usu_tr014dts.usu_cmpalt \
+                                   and usu_tr014dts.usu_codsin = :nCodSin \
+                                   and usu_tr014dts.usu_peradm = (select max(dts.usu_peradm) \
+                                                                    from usu_tr014dts dts \
+                                                                   where usu_tr014dts.usu_codsin = dts.usu_codsin \
+                                                                     and usu_tr014dts.usu_cmpalt = dts.usu_cmpalt \
+                                                                     and dts.usu_peradm <= :dPerAdm) \
+                                   and usu_tr014dts.usu_peranu > 0 \
+                                   and usu_tr014dts.usu_cmpalt = (select max(dts.usu_cmpalt) \
+                                                                    from usu_tr014dts dts \
+                                                                   where usu_tr014dts.usu_codsin = dts.usu_codsin \
+                                                                     and usu_tr014dts.usu_peradm = dts.usu_peradm) \
+                                   and usu_tr014dts.usu_numanu = (select max(dts.usu_numanu) \
+                                                                    from usu_tr014dts dts \
+                                                                   where usu_tr014dts.usu_codsin = dts.usu_codsin \
+                                                                     and usu_tr014dts.usu_peradm = dts.usu_peradm \
+                                                                     and usu_tr014dts.usu_cmpalt = dts.usu_cmpalt \
+                                                                     and dts.usu_numanu <= :nQtdAno)";
+                cur_sib137.AbrirCursor();
+                Se (cur_sib137.Achou)
+                  {
+                     Se (xValAnu > cur_sib137.usu_pertet)
+                     xValAnu = cur_sib137.usu_pertet;
+                  }
+                  Senao
+                    {
+                      Se (xValAnu > nPerTet)
+                      xValAnu = nPerTet;
+                    }
+                cur_sib137.FecharCursor();                                                             
+              }
+
+            RefEvt = xValAnu;
+            ValEvt = BasEvt * (xValAnu / 100);
+          }  
+        Senao
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+          }
+       }
+  }
+  Senao
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+   
+Final137:  

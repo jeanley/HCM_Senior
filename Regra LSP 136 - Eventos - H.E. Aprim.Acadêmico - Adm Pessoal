@@ -1,0 +1,102 @@
+/* Regra Especial desenvolvida para atender o cálculo de HORAS EXTRAORDINARIAS 
+SOBRE APRIMORAENTO ACADÊMICO (TITULAÇÃO); 
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 30/07/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definição das Variáveis Padrões =======================@
+Definir Cursor cur_tit136;
+
+Definir Data dFimCmp;
+Definir Data dDatZer;
+
+@==== considera lançamentos fixo ou variável, pelo usuário, se existir ========@
+Se ((OriMov = "D") ou (OriMov = "X"))
+  {
+    RefEvt = RefMov;
+    ValEvt = ValMov;
+    VaPara Final136;
+  }
+
+@= conforme base dos eventos que devem ser considerados p/ aplicação do perc. =@
+Se (BasEvt > 0)
+  {
+@===== Apropriação de data de referência conforme tipo de cálulo vigente ======@
+     Se ((TipCal = 62) ou (TipCal = 34) ou (TipCal = 63) ou (TipCal = 65) ou (TipCal = 70)
+     ou (TipCal = 71) ou (TipCal = 72) ou (TipCal = 75) ou (TipCal = 76) ou (TipCal = 77) 
+     ou (TipCal = 78) ou (TipCal = 79) ou (TipCal = 95) ou (TipCal = 96) ou (TipCal = 97) 
+     ou (TipCal = 98) ou (TipCal = 99))
+     dFimCmp = R042RCM.DatDem;
+     Senao Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53))
+     dFimCmp = R040FEM.IniFer;
+     Senao
+     dFimCmp = FimCmp;  
+
+@===================== variáveis do colaborador no cálculo ====================@     
+     nNumEmp = R034FUN.NumEmp;
+     nTipCol = R034FUN.TipCol;
+     nNumCad = R034FUN.NumCad;
+
+@======================= zera variáveis de lógica e data ======================@     
+     pPerTit = 0;
+     dDatZer = 0;
+
+@= cursor p/ busca do % titulação de direito acumulado vigente conforme sindicato =@     
+     cur_tit136.sql "select usu_tr014tit.usu_persin \
+                       from usu_tr014tit,\
+                            r038hsi,\
+                            usu_tr038hti \
+                      where usu_tr014tit.usu_datalt = (select max(tit.usu_datalt) \
+                                                         from usu_tr014tit tit \
+                                                        where usu_tr014tit.usu_codsin = tit.usu_codsin \
+                                                          and usu_tr014tit.usu_codtit = tit.usu_codtit \
+                                                          and tit.usu_datalt <= :dFimCmp) \
+                        and usu_tr014tit.usu_codsin = r038hsi.codsin \
+                        and r038hsi.datalt = (select max(hsi.datalt) \
+                                                from r038hsi hsi \
+                                               where r038hsi.numemp = hsi.numemp \
+                                                 and r038hsi.tipcol = hsi.tipcol \
+                                                 and r038hsi.numcad = hsi.numcad \
+                                                 and hsi.datalt <= :dFimCmp) \
+                        and r038hsi.numemp = usu_tr038hti.usu_numemp \
+                        and r038hsi.tipcol = usu_tr038hti.usu_tipcol \
+                        and r038hsi.numcad = usu_tr038hti.usu_numcad \
+                        and usu_tr038hti.usu_codtit = usu_tr014tit.usu_codtit \
+                        and usu_tr014tit.usu_persin > 0 \
+                        and usu_tr038hti.usu_initit <= :dFimCmp \
+                        and (usu_tr038hti.usu_tertit is null \
+                         or usu_tr038hti.usu_tertit = :dDatZer \
+                         or usu_tr038hti.usu_tertit >= :dFimCmp) \
+                        and usu_tr038hti.usu_numemp = :nNumEmp \
+                        and usu_tr038hti.usu_tipcol = :nTipCol \
+                        and usu_tr038hti.usu_numcad = :nNumCad";
+     cur_tit136.AbrirCursor();
+     Enquanto (cur_tit136.Achou)
+       {
+@=========== apropriação acumulada de direito do percentual de titulação ======@
+         pPerTit = pPerTit + cur_tit136.usu_persin; 
+
+         cur_tit136.Proximo();
+       }
+     cur_tit136.FecharCursor(); 
+
+@============ cálculo do evento conforme percentual de titulação ==============@     
+     Se (pPerTit > 0)
+       {
+         RefEvt = pPerTit;
+         ValEvt = BasEvt * (pPerTit / 100);
+       }  
+       Senao @= não calcula evento se não possuir perc. de titulação =@
+         {
+            RefEvt = 0;
+            ValEvt = 0;
+         }
+  }
+  Senao @= não calcula evento se não possuir base de eventos =@
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+  
+Final136:  

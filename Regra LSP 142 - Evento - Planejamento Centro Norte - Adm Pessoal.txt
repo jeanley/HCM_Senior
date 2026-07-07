@@ -1,0 +1,23 @@
+/* Regra especial para calcular o DSR no evento de Planejamento referente
+  às empresas da Centro Norte (UBEE e UNBEC) 
+Cliente: Marista Brasil;
+Autor: Isabella Nasssaro;
+Data(s): 25/08/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+
+
+@======================== não calculo se não for professor ======================@
+
+     Se ((R034FUN.TipCon <> 10) e (R034FUN.TipCon <> 13))
+       {
+         RefEvt = 0;
+         ValEvt = 0;
+         VaPara Final142;
+       }
+
+@======================== início de cálculo do evento =========================@
+valEvt = (BasEvt + (BasEvt / 6)) * 15 / 100;
+
+
+Final142: 
