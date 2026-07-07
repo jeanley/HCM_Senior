@@ -1,0 +1,110 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 16/05/2024
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aNumEmp;
+Definir Alfa aTipCol;
+Definir Alfa aNumCad;
+Definir Alfa aNomFun;
+Definir Alfa aCodFil;
+Definir Alfa aEmaCom;
+Definir Alfa aEmaPar;
+Definir Alfa aNumTel;
+Definir Alfa aDatAdm;
+Definir Alfa aNumCpf;
+
+Definir Numero nNumEmp;
+Definir Numero nTipCol;
+Definir Numero nNumCad;
+
+Definir Data dDatAdm;
+
+aNumEmp = getColaboradoresVS.enumemp;
+aTipCol = getColaboradoresVS.etipcol;
+@aNumCad = getColaboradoresVS.enumcad;  @
+aCodFil = getColaboradoresVS.ecodfil;
+aNomFun = getColaboradoresVS.enomfun;
+
+aNumCad ="";
+
+
+aTipCol = "1" ;
+
+aSQL = "SELECT FUN.NUMEMP,                                                     \
+               FUN.TIPCOL,                                                     \
+               FUN.NUMCAD,                                                     \
+               FUN.NOMFUN,                                                     \
+               FUN.NUMCPF,                                                     \
+               FUN.DATADM,                                                     \
+               CPL.NUMTEL,                                                     \
+               CPL.EMACOM,                                                     \
+               CPL.EMAPAR                                                      \
+                 FROM R034FUN FUN, R034CPL CPL                                 \
+                   WHERE FUN.NUMEMP = CPL.NUMEMP                               \
+                     AND FUN.TIPCOL = CPL.TIPCOL                               \
+                     AND FUN.NUMCAD = CPL.NUMCAD                               \
+                     AND FUN.TIPCOL = 1                                        \
+                     AND FUN.SITAFA <> 7";
+
+Se((aNumEmp <> "") e (aNumEmp <> " "))
+aSQL = aSQL + " AND FUN.NUMEMP = " + aNumEmp;
+
+Se((aCodFil <> "") e (aCodFil <> " "))
+aSQL = aSQL + " AND FUN.CODFIL = " + aCodFil;
+
+Se((aNumCad <> "") e (aNumCad <> " "))
+aSQL = aSQL + " AND FUN.NUMCAD = " + aNumCad;
+
+Se((aTipCol <> "") e (aTipCol <> " "))
+aSQL = aSQL + " AND FUN.TIPCOL = " + aTipCol;
+
+Se((aNomFun <> "") e (aNomFun <> " "))
+aSQL = aSQL + " AND FUN.NOMFUN LIKE '%" + aNomFun + "%'";
+
+aSQL = aSQL + " ORDER BY NOMFUN";
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca, aSQL);          
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarInteiro(cBusca, "NUMEMP", nNumEmp);
+  SQL_RetornarInteiro(cBusca, "TIPCOL", nTipCol);
+  SQL_RetornarInteiro(cBusca, "NUMCAD", nNumCad);
+  SQL_RetornarAlfa   (cBusca, "NOMFUN", aNomFun);
+  SQL_RetornarInteiro(cBusca, "NUMCPF", nNumCpf);
+  SQL_RetornarData   (cBusca, "DATADM", dDatAdm);
+  SQL_RetornarAlfa   (cBusca, "NUMTEL", aNumTel);
+  SQL_RetornarAlfa   (cBusca, "EMACOM", aEmaCom);
+  SQL_RetornarAlfa   (cBusca, "EMAPAR", aEmaPar);           
+  
+  ConverteMascara(1, nNumEmp, aNumEmp, "9[4]");
+  ConverteMascara(1, nTipCol, aTipCol, "9[1]");
+  ConverteMascara(1, nNumCad, aNumCad, "#N(9,0)[EDICAD]#");       
+  ConverteMascara(1, nNumCpf, aNumCpf, "999.999.999-99");
+  ConverteMascara(3, dDatAdm, aDatAdm, "DD/MM/YYYY");
+  
+  DescItemLista("LTipCol", aTipCol, aTipCol);
+    
+  getColaboradoresVS.sretorno.CriarLinha();  
+  getColaboradoresVS.sretorno.snumemp = aNumEmp;
+  getColaboradoresVS.sretorno.stipcol = aTipCol;
+  getColaboradoresVS.sretorno.snumcad = aNumCad;
+  getColaboradoresVS.sretorno.snomfun = aNomFun;
+  getColaboradoresVS.sretorno.snumcpf = aNumCpf;
+  getColaboradoresVS.sretorno.sdatadm = aDatAdm;
+  getColaboradoresVS.sretorno.snumtel = aNumTel;
+  getColaboradoresVS.sretorno.semacom = aEmaCom;
+  getColaboradoresVS.sretorno.semapar = aEmaPar;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

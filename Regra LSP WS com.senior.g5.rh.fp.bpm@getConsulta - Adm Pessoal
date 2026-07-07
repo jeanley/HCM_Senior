@@ -1,0 +1,54 @@
+definir alfa anumemp;
+definir alfa atipcol;
+definir alfa anumcad;
+definir alfa anomfun;
+definir alfa aestcar;
+definir alfa acodcar;
+definir alfa atitred;
+
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad;
+
+definir cursor cur_car;
+
+acodcar = getConsulta.ecodcar;
+aestcar = getConsulta.eestcar;
+                                                             
+
+cur_car.sql"select r034fun.numemp, r034fun.tipcol,       \
+                    r034fun.numcad, r034fun.nomfun,      \
+                    r024car.titred                       \
+             from r034fun, r024car                       \
+             where                                       \
+             r034fun.codcar = r024car.codcar and         \
+             r034fun.estcar = r024car.estcar and         \
+             r024car.estcar = :aestcar and               \
+             r024car.codcar = :acodcar";
+             
+cur_car.abrircursor();
+enquanto(cur_car.achou)
+{
+  nnumemp = cur_car.numemp;
+  ntipcol = cur_car.tipcol;
+  nnumcad = cur_car.numcad;
+  anomfun = cur_car.nomfun;
+  atitred = cur_car.titred;
+  
+  intparaalfa(nnumemp, anumemp);
+  intparaalfa(ntipcol, atipcol);
+  intparaalfa(nnumcad, anumcad);
+    
+  getConsulta.stabela.CriarLinha();
+  
+  getConsulta.stabela.snumemp = anumemp;
+  getConsulta.stabela.stipcol = atipcol;
+  getConsulta.stabela.snumcad = anumcad;
+  getConsulta.stabela.snomfun = anomfun;   
+  
+  cur_car.proximo(); 
+}
+cur_car.fecharcursor();
+getConsulta.stitred = atitred;
+
+      

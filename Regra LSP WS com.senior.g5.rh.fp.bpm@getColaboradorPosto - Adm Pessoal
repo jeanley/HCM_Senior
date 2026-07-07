@@ -1,0 +1,535 @@
+DEFINIR ALFA AESTPOS;
+DEFINIR ALFA APOSTRA;
+DEFINIR ALFA ASQL;
+DEFINIR ALFA CCURSOR;
+Definir Alfa aDatAfa;
+
+DEFINIR ALFA ANUMEMP;
+DEFINIR ALFA ATIPCOL;
+DEFINIR ALFA ANUMCAD;
+DEFINIR ALFA ANOMFUN;
+DEFINIR NUMERO NNUMEMP;
+DEFINIR NUMERO NTIPCOL;
+DEFINIR NUMERO NNUMCAD;
+Definir Alfa aDesSit;
+
+Definir DAta dDatAfa;
+Definir Alfa aDAtAfa;
+Definir Alfa atippes ;
+Definir Alfa aConAux;
+Definir Alfa aNumEmp ;
+Definir Alfa aCodFil;
+Definir Alfa aDesPos;
+Definir Alfa aCodCar;
+Definir Alfa aTiTCar;
+Definir Alfa aTipCon;
+Definir Alfa aDesCon;
+Definir Alfa aCodCcu;
+Definir Alfa aDesCcu;
+Definir Alfa aNomCcu;
+Definir Alfa aDesCom;
+Definir Alfa aHorSem;
+Definir Alfa aHorMes;
+Definir Alfa aNomEsc ;
+Definir Alfa aEmpSub;
+Definir alfa aFilSub ;
+Definir Alfa aCarHor ;
+Definir Alfa aCmpRef ;
+Definir Alfa aTipMov;
+
+
+
+Definir Alfa cur_docente;
+
+Definir Data ddathoj;
+Definir Data ddatzer;
+Definir Alfa aCarHor ;
+Definir Alfa aQualPos;
+
+ddathoj = DatSis ;
+
+
+
+aEmpSub = getColaboradorPosto.empsub;
+aFilSub = getColaboradorPosto.filsub;
+aCmpRef = getColaboradorPosto.cmpref;
+aTipMov = getColaboradorPosto.TipMov;
+
+
+EstaNulo (aEmpSub,nEmpNull);
+EstaNulo (aFilSub,nFilNull);
+
+@ Parametros de Entrada @
+AESTPOS = getColaboradorPosto.eestpos;
+APOSTRA = getColaboradorPosto.epostra;
+
+aNumEmp  = getColaboradorPosto.NumEmp ;
+aCodFil =   getColaboradorPosto.codfil;
+
+
+aTipMov = "Mov" ;
+
+
+@Movimentação de Substituição, assume empresa e filial Substituido@
+Se ((nEmpNull = 0) e (nFilNull = 0)) {
+ 
+  ListaItem(aEmpSub, "-", 1, aNumEmp);
+  ListaItem(aFilSub, "-", 1, aCodFil);
+  
+}
+  
+
+AlfaParaint(aNumEmp,nNumEmp);
+AlfaParaint(aCodFil,nCodFil);
+
+EstaNulo (APOSTRA, nRetNull);
+
+Se ((nRetNull =  0)  e (nEmpNull = 1)){    @Pesquisa  / posto@
+   aConAux = " AND R034FUN.ESTPOS = "+AESTPOS+" \
+              AND R034FUN.POSTRA = '"+APOSTRA+"'"  ;
+}
+Senao Se ((nNumEmp > 0) e (nCodFil > 0)) {     @pesquisa por empresa e filial@
+
+  aConAux = "AND R034FUN.NUMEMP =  "+aNumEmp+"  \
+             AND R034FUN.CODFIL =  "+aCodFil+"" ;
+}
+Senao 
+  aConAux =  "" ;
+  
+  
+EstaNulo (aCmpRef,nCmpNul);
+
+Se (nCmpNul = 0) {
+
+  aCmpRef = "01/"+aCmpRef ;
+  AlfaParaData(aCmpRef, "DD/MM/YYYY", ddathoj);
+
+}
+
+@ Histórico de salário @
+ASQL = "SELECT R034FUN.NUMEMP,    \
+       R034FUN.TIPCOL,           \
+       R034FUN.NUMCAD,           \
+       R034FUN.NOMFUN,           \
+       R034FUN.SITAFA,           \
+       R034FUN.DATAFA,           \
+       R010SIT.DESSIT,           \
+       R017POS.POSTRA,           \
+       R017POS.DESPOS,           \
+       R024CAR.CODCAR,          \
+       R024CAR.titcar,          \
+       R018CCU.codccu,          \
+       R018CCU.nomccu,          \
+       R034FUN.tipcon,          \
+       R006ESC.HORSEM,  \
+       R006ESC.HORMES,  \
+       R006ESC.USU_NomCom ,  \
+       R014SIN.usu_carhor      \
+       FROM R034FUN                      \
+         INNER JOIN R010SIT  ON (R034FUN.SITAFA = R010SIT.CODSIT)  \        
+         INNER JOIN R017POS  ON (R034FUN.ESTPOS = R017POS.ESTPOS AND R034FUN.POSTRA = R017POS.POSTRA) \  
+         INNER JOIN R024CAR  ON (R034FUN.ESTCAR = R024CAR.ESTCAR AND R034FUN.CODCAR = R024CAR.CODCAR) \
+         INNER JOIN R018CCU ON (R034FUN.NUMEMP = R018CCU.NUMEMP AND R034FUN.CODCCU = R018CCU.CODCCU)  \
+         INNER JOIN R006ESC ON (R034FUN.CODESC = R006ESC.CODESC )         \
+         LEFT JOIN R038HSI HI                                            \
+          ON HI.NUMEMP = R034FUN.NUMEMP                                      \
+           AND HI.TIPCOL = R034FUN.TIPCOL                                      \
+           AND HI.NUMCAD = R034FUN.NUMCAD                                      \
+           AND HI.DATALT = (                                              \
+              SELECT MAX(DAT.DATALT)                                     \
+              FROM R038HSI DAT                                           \
+              WHERE DAT.NUMEMP = HI.NUMEMP                               \
+                AND DAT.TIPCOL = HI.TIPCOL                               \
+                AND DAT.NUMCAD = HI.NUMCAD)                              \
+         INNER JOIN R014SIN  ON (R014SIN.CODSIN = HI.CODSIN)  \    
+          WHERE  R034FUN.TIPCOL = 1 AND ((R034FUN.SITAFA <> 7  )  OR (R034FUN.SITAFA = 7 AND  R034FUN.DATAFA >= CONVERT(date, '01/01/2023', 103))) \                                                                
+          ##CONDAUX##";
+        
+                                  
+ASQL = "SELECT                                                             \
+       R034FUN.NUMEMP,                                                     \
+       R034FUN.TIPCOL,                                                     \
+       R034FUN.NUMCAD,                                                     \
+       R034FUN.NOMFUN,                                                     \
+       R034FUN.SITAFA,                                                     \
+       R034FUN.DATAFA,                                                     \
+       R010SIT.DESSIT,                                                     \
+       R017POS.POSTRA,                                                     \
+       R038HPO.postra AS POSHPO,                                           \
+       R017POS.DESPOS,                                                     \
+       R024CAR.CODCAR,                                                     \
+       R024CAR.TITCAR,                                                     \
+       R018CCU.CODCCU,                                                     \
+       R018CCU.NOMCCU,                                                     \
+       R034FUN.TIPCON,                                                     \
+       R006ESC.HORSEM,                                                     \
+       R006ESC.HORMES,                                                     \
+       R006ESC.USU_NomCom,                                                 \
+       R014SIN.USU_CARHOR                                                  \
+FROM   R034FUN                                                             \ 
+       INNER JOIN R038HPO                                                  \
+               ON R038HPO.NUMEMP = R034FUN.NUMEMP                          \
+              AND R038HPO.TIPCOL = R034FUN.TIPCOL                          \
+              AND R038HPO.NUMCAD = R034FUN.NUMCAD                          \
+              AND R038HPO.INIATU = (                                       \
+                  SELECT MAX(TAB1.INIATU)                                  \
+                  FROM   R038HPO TAB1                                      \
+                  WHERE  TAB1.NUMEMP = R034FUN.NUMEMP                      \
+                    AND  TAB1.TIPCOL = R034FUN.TIPCOL                      \
+                    AND  TAB1.NUMCAD = R034FUN.NUMCAD                      \
+                    AND  TAB1.iniatu < :CMPREF) \
+       INNER JOIN R010SIT                                                  \
+               ON R034FUN.SITAFA = R010SIT.CODSIT                          \
+       INNER JOIN R017POS                                                  \
+               ON R038HPO.ESTPOS = R017POS.ESTPOS                          \
+              AND R038HPO.POSTRA = R017POS.POSTRA                          \
+       INNER JOIN R024CAR                                                  \
+               ON R034FUN.ESTCAR = R024CAR.ESTCAR                          \
+              AND R034FUN.CODCAR = R024CAR.CODCAR                          \
+       INNER JOIN R018CCU                                                  \
+               ON R034FUN.NUMEMP = R018CCU.NUMEMP                          \
+              AND R034FUN.CODCCU = R018CCU.CODCCU                          \
+       INNER JOIN R006ESC                                                  \
+               ON R034FUN.CODESC = R006ESC.CODESC                          \
+                                                                           \
+       LEFT JOIN R038HSI HI                                                \
+              ON HI.NUMEMP = R034FUN.NUMEMP                                \
+             AND HI.TIPCOL = R034FUN.TIPCOL                                \
+             AND HI.NUMCAD = R034FUN.NUMCAD                                \
+             AND HI.DATALT = (                                             \
+                 SELECT MAX(DAT.DATALT)                                    \
+                 FROM   R038HSI DAT                                        \
+                 WHERE  DAT.NUMEMP = HI.NUMEMP                             \
+                   AND  DAT.TIPCOL = HI.TIPCOL                             \
+                   AND  DAT.NUMCAD = HI.NUMCAD                             \
+             )                                                             \
+       INNER JOIN R014SIN                                                  \
+               ON R014SIN.CODSIN = HI.CODSIN                               \
+WHERE  R034FUN.TIPCOL = 1                                                  \
+  AND  (R034FUN.SITAFA <> 7                                                \
+        OR (R034FUN.SITAFA = 7                                             \
+  AND R034FUN.DATAFA >= CONVERT(DATE, '01/01/2023', 103)))     \
+   ##CONDAUX##" ;
+   
+   
+Se ((aTipMov  <> "") e (aTipMov <> " ")) {
+  ASQL = "SELECT                                                                                         \                                                                                
+      R034FUN.NUMEMP,                                                                                     \ 
+      R034FUN.TIPCOL,                                                                                     \
+      R034FUN.NUMCAD,                                                                                     \
+      R034FUN.NOMFUN,                                                                                     \
+      R034FUN.SITAFA,                                                                                      \
+      R034FUN.DATAFA,                                                                                       \
+      S.DESSIT,                                                                                             \
+      P.POSTRA,                                                                                              \
+      P.DESPOS,                                                                                               \
+      CASE WHEN HR.QUAL_POSTO = 'ANTERIOR' THEN HR.CODCAR_ANT ELSE C.CODCAR END AS CODCAR,                     \
+      CASE WHEN HR.QUAL_POSTO = 'ANTERIOR' THEN C_ANT.TITCAR   ELSE C.TITCAR   END AS TITCAR,                  \
+      CASE WHEN HR.QUAL_POSTO = 'ANTERIOR' THEN HR.CODCCU_ANT  ELSE CC.CODCCU  END AS CODCCU,                  \
+      CASE WHEN HR.QUAL_POSTO = 'ANTERIOR' THEN CC_ANT.NOMCCU  ELSE CC.NOMCCU  END AS NOMCCU,                  \
+      CASE WHEN HR.QUAL_POSTO = 'ANTERIOR' THEN HR.NOMSIN_ANT    ELSE SIN.NOMSIN    END AS NOMSIN,             \
+      CASE WHEN HR.QUAL_POSTO = 'ANTERIOR' THEN HR.USU_CARHOR_ANT ELSE SIN.USU_CARHOR END AS USU_CARHOR,       \
+      CASE WHEN HR.QUAL_POSTO = 'ANTERIOR' THEN HR.TIPCON_ANT    ELSE R034FUN.TIPCON      END AS TIPCON,       \
+      E.HORSEM,                                                                                                \
+      E.HORMES,                                                                                                 \
+      E.USU_NomCom,                                                                                             \
+      HR.QUAL_POSTO                                                                                             \
+  FROM R034FUN                                                                                                  \
+  INNER JOIN (                                                                                                   \
+                                                                                                   \
+      SELECT                                                                                                     \
+          H1.NUMEMP,                                                                                             \
+          H1.TIPCOL,                                                                                             \
+          H1.NUMCAD,                                                                                             \
+          H1.ESTPOS,                                                                                             \
+          H1.POSTRA,                                                                                             \
+          NULL        AS CODCCU_ANT,                                                                             \
+          NULL        AS CODCAR_ANT,                                                                             \
+          NULL        AS ESTCAR_ANT,                                                                             \
+          NULL        AS TIPCON_ANT,                                                                             \
+          NULL        AS CODSIN_ANT,                                                                             \
+          NULL        AS NOMSIN_ANT,                                                                             \
+          NULL        AS USU_CARHOR_ANT,                                                                         \
+          'ATUAL'     AS QUAL_POSTO                                                                              \
+      FROM R038HPO H1                                                                                            \
+      WHERE H1.INIATU = (                                                                                        \
+          SELECT MAX(H.INIATU)                                                                                   \
+          FROM R038HPO H                                                                                         \
+          WHERE H.NUMEMP = H1.NUMEMP                                                                             \
+            AND H.TIPCOL = H1.TIPCOL                                                                             \
+            AND H.NUMCAD = H1.NUMCAD                                                                             \
+      )                                                                                                          \
+                                                                                                                 \
+      UNION ALL                                                                                                  \
+      SELECT                                                                                                     \
+          H2.NUMEMP,                                                                                             \
+          H2.TIPCOL,                                                                                             \
+          H2.NUMCAD,                                                                                             \
+          H2.ESTPOS,                                                                                             \
+          H2.POSTRA,                                                                                             \
+          CAR.CODCCU             AS CODCCU_ANT,                                                                  \
+          CAR.CODCAR             AS CODCAR_ANT,                                                                  \
+          CAR.ESTCAR             AS ESTCAR_ANT,                                                                  \
+          CAR.TIPCON             AS TIPCON_ANT,                                                                  \
+          CAR.CODSIN             AS CODSIN_ANT,                                                                  \
+          SIN_A.NOMSIN           AS NOMSIN_ANT,                                                                  \
+          SIN_A.USU_CARHOR       AS USU_CARHOR_ANT,                                                              \
+          'ANTERIOR'             AS QUAL_POSTO                                                                   \
+      FROM R038HPO H2                                                                                            \
+      OUTER APPLY (                                                                                              \
+          SELECT TOP (1) C.*                                                                                     \
+          FROM R017CAR C                                                                                         \
+          WHERE C.ESTPOS = H2.ESTPOS                                                                             \
+            AND C.POSTRA = H2.POSTRA                                                                             \
+            AND C.DATINI <= H2.INIATU                                                                            \
+            AND (                                                                                                \
+                  C.DATFIM = CONVERT(date,'31/12/1900',103)                                                      \
+               OR C.DATFIM > H2.INIATU                                                                           \
+            )                                                                                                    \
+          ORDER BY C.DATINI DESC                                                                                 \
+      ) CAR                                                                                                      \
+      LEFT JOIN R014SIN SIN_A                                                                                    \
+        ON SIN_A.CODSIN = CAR.CODSIN                                                                             \
+      WHERE H2.INIATU = (                                                                                        \
+          SELECT MAX(H.INIATU)                                                                                   \
+          FROM R038HPO H                                                                                         \
+          WHERE H.NUMEMP = H2.NUMEMP                                                                             \
+            AND H.TIPCOL = H2.TIPCOL                                                                             \
+            AND H.NUMCAD = H2.NUMCAD                                                                             \
+            AND H.INIATU < (                                                                                     \
+                SELECT MAX(H3.INIATU)                                                                            \
+                FROM R038HPO H3                                                                                  \
+                WHERE H3.NUMEMP = H2.NUMEMP                                                                      \
+                  AND H3.TIPCOL = H2.TIPCOL                                                                      \
+                  AND H3.NUMCAD = H2.NUMCAD                                                                      \
+            )                                                                                                    \
+      )                                                                                                          \
+  ) HR                                                                                                           \
+        ON HR.NUMEMP = R034FUN.NUMEMP                                                                            \
+       AND HR.TIPCOL = R034FUN.TIPCOL                                                                            \
+       AND HR.NUMCAD = R034FUN.NUMCAD                                                                            \
+                                                                                                                 \
+  INNER JOIN R010SIT S                                                                                           \
+          ON R034FUN.SITAFA = S.CODSIT                                                                           \
+  INNER JOIN R017POS P                                                                                           \
+          ON HR.ESTPOS = P.ESTPOS                                                                                \
+         AND HR.POSTRA = P.POSTRA                                                                                 \
+  INNER JOIN R024CAR C                                                                                           \
+          ON R034FUN.ESTCAR = C.ESTCAR                                                                           \
+         AND R034FUN.CODCAR = C.CODCAR                                                                           \
+                                                                                                                 \
+                                                                                                                 \
+  INNER JOIN R018CCU CC                                                                                          \
+          ON R034FUN.NUMEMP = CC.NUMEMP                                                                          \
+         AND R034FUN.CODCCU = CC.CODCCU                                                                           \
+                                                                                                                  \
+  LEFT  JOIN R018CCU CC_ANT                                                                                       \
+          ON CC_ANT.NUMEMP = R034FUN.NUMEMP                                                                       \
+         AND CC_ANT.CODCCU = HR.CODCCU_ANT                                                                        \
+  LEFT  JOIN R024CAR C_ANT                                                                                        \
+          ON C_ANT.ESTCAR = HR.ESTCAR_ANT                                                                         \
+         AND C_ANT.CODCAR = HR.CODCAR_ANT                                                                         \
+                                                                                                                  \
+  INNER JOIN R006ESC E                                                                                            \
+          ON R034FUN.CODESC = E.CODESC                                                                            \
+                                                                                                                  \
+                                                                                                                  \
+  LEFT  JOIN R038HSI HI                                                                                           \
+          ON HI.NUMEMP = R034FUN.NUMEMP                                                                           \
+         AND HI.TIPCOL = R034FUN.TIPCOL                                                                           \
+         AND HI.NUMCAD = R034FUN.NUMCAD                                                                           \
+         AND HI.DATALT = (                                                                                        \
+              SELECT MAX(DAT.DATALT)                                                                              \
+              FROM R038HSI DAT                                                                                    \
+              WHERE DAT.NUMEMP = HI.NUMEMP                                                                        \
+                AND DAT.TIPCOL = HI.TIPCOL                                                                        \
+                AND DAT.NUMCAD = HI.NUMCAD                                                                        \
+         )                                                                                                        \
+  INNER JOIN R014SIN SIN                                                                                          \
+          ON SIN.CODSIN = HI.CODSIN                                                                               \
+                                                                                                                  \
+  WHERE                                                                                                           \
+      R034FUN.TIPCOL = 1                                                                                          \
+    AND (                                                                                                         \
+          R034FUN.SITAFA <> 7                                                                                     \
+       OR (R034FUN.SITAFA = 7 AND R034FUN.DATAFA >= CONVERT(date,'01/01/2023',103))                               \    
+    )                                                                                                             \
+     ##CONDAUX##                                                                                                  \
+  ORDER BY                                                                                                        \
+      CASE WHEN HR.QUAL_POSTO = 'ATUAL' THEN 1 ELSE 2 END, R034FUN.nomfun" ;                                      
+  
+}
+
+
+TrocaString(ASQL,"##CONDAUX##" , aConAux,ASQL);                                        
+SQL_CRIAR(CCURSOR);
+SQL_USARABRANGENCIA(CCURSOR,0);
+SQL_USARSQLSENIOR2(CCURSOR,0);
+SQL_DEFINIRCOMANDO(CCURSOR,ASQL);
+
+@Sql_DefinirData(CCURSOR,"CMPREF",ddathoj);@
+ /*
+Se ((nRetNull =  0) e ( nEmpNull = 1)) {
+   SQL_DefinirAlfa(CCURSOR,"AESTPOS",AESTPOS);
+   SQL_DefinirAlfa(CCURSOR,"APOSTRA",APOSTRA);
+}
+Senao Se ((nNumEmp > 0) e (nCodFil > 0)) {
+   SQL_DefinirInteiro(CCURSOR,"NUMEMP",nNumEmp);
+   SQL_DefinirInteiro(CCURSOR,"CODFIL",nCodFil); 
+
+}   */
+  
+SQL_ABRIRCURSOR(CCURSOR);
+ENQUANTO(SQL_EOF(CCURSOR) = 0)
+{
+  SQL_RETORNARALFA(CCURSOR,"NUMEMP",ANUMEMP);
+  SQL_RETORNARALFA(CCURSOR,"TIPCOL",ATIPCOL);
+  SQL_RETORNARALFA(CCURSOR,"NUMCAD",ANUMCAD);
+  SQL_RETORNARALFA(CCURSOR,"NOMFUN",ANOMFUN);
+  
+  SQL_RetornarInteiro(CCURSOR,"NUMEMP",nNumEmp);
+  SQL_RetornarInteiro(CCURSOR,"TIPCOL",nTipCol);
+  SQL_RetornarInteiro(CCURSOR,"NUMCAD",nNumCad);
+
+  
+  Sql_RetornarData(CCURSOR,"DATAFA",dDatAfa);
+  SQL_RETORNARALFA(CCURSOR,"DESSIT",aDesSit);
+  SQL_RETORNARALFA(CCURSOR,"POSTRA",aPosTra);
+  SQL_RETORNARALFA(CCURSOR,"DESPOS",aDesPos);
+  SQL_RETORNARALFA(CCURSOR,"CODCAR",aCodCar);
+  SQL_RETORNARALFA(CCURSOR,"titcar",aTiTCar);
+  SQL_RETORNARALFA(CCURSOR,"codccu",aCodCcu);
+  SQL_RETORNARALFA(CCURSOR,"nomccu",aNomCcu);
+  SQL_RETORNARALFA(CCURSOR,"nomccu",aNomCcu);
+  SQL_RETORNARALFA(CCURSOR,"USU_NomCom",aNomEsc);
+  SQL_RetornarInteiro(CCURSOR,"tipcon",nTipCon);
+  SQL_RetornarInteiro(CCURSOR,"usu_carhor",nCarHor);
+  
+  SQL_RETORNARALFA(CCURSOR,"QUAL_POSTO", aQualPos);  
+  
+  IntParaAlfa(nTipCon,aTipCon);
+
+  DescItemLista("LTipCon",aTipCon,aDesCon);
+  SQL_RetornarInteiro(CCURSOR, "HORSEM", nHorSem);
+  SQL_RetornarInteiro(CCURSOR, "HORMES", nHorMes);
+  
+
+  ConverteMascara (4,nHorSem,aHorSem,"#Q#hh:mm");
+  ConverteMascara (4,nHorMes,aHorMes,"hhh:mm");
+  
+  ConverteMascara (4,nCarHor,aCarHor,"hh:mm");
+  
+  
+  Se ((aTipMov  <> "") e (aTipMov <> " ")) {
+  
+     ANOMFUN = ANOMFUN + " | " + aQualPos ;
+  
+  }
+
+  @ Parametros de Saída @
+  getColaboradorPosto.colaboradores.CRIARLINHA();  
+  getColaboradorPosto.colaboradores.snumemp = ANUMEMP;
+  getColaboradorPosto.colaboradores.stipcol = ATIPCOL;
+  getColaboradorPosto.colaboradores.snumcad = ANUMCAD;
+  getColaboradorPosto.colaboradores.snomfun = ANOMFUN; 
+  getColaboradorPosto.colaboradores.posto =  aPosTra  +  " - " +   aDesPos ;
+  getColaboradorPosto.colaboradores.cargo =  aCodCar  +  " - " +   aTiTCar ; 
+  getColaboradorPosto.colaboradores.colaborador =  ANUMCAD + " - " + ANOMFUN ;
+  getColaboradorPosto.colaboradores.tipcon = aTipCon;
+  getColaboradorPosto.colaboradores.descon =  aDesCon ;
+  getColaboradorPosto.colaboradores.centrocusto = aCodCcu +  " - " + aNomCcu ;
+  ConverteMascara (3,dDatAfa, aDAtAfa, "DD/MM/YYYY");
+  @campo do bom é tipo data enviar sem data quando for zero@
+  Se (dDatAfa > 0)
+      getColaboradorPosto.colaboradores.datAfa = aDAtAfa ;
+      
+   getColaboradorPosto.colaboradores.sitafa =  aDesSit;
+   getColaboradorPosto.colaboradores.horsem =  aHorSem ;
+   getColaboradorPosto.colaboradores.hormes =  aHorMes ; 
+   getColaboradorPosto.colaboradores.nomesc =  aNomEsc ;
+   
+   getColaboradorPosto.colaboradores.carhor = aCarHor ;
+   
+   Definir Alfa adesapf;
+   Definir Alfa aseqapf;
+   Definir Alfa avalapf;
+   Definir Alfa adatini;
+   Definir Alfa infocom ;
+   Definir Alfa aenter;
+   
+   RetornaAscii(13,aenter);
+   infocom = "" ; 
+  Se (nTipCon = 10) {
+  
+       Definir Alfa asql_docente ;
+       asql_docente = "select r171apf.seqapf, r171apf.codapf,        \
+                           r171apf.hormes, r171apf.valapf,        \              
+                           r171ati.desapf, r171apf.datini         \
+                             from r171apf, r171ati                \
+                             where                                \
+                             r171apf.codapf = r171ati.codapf and  \
+                             numemp = :NFNUMEMP and                \                                                                               
+                             tipcol = :NFTIPCOL and                \
+                             numcad = :NFNUMCAD and                \
+                             ((datfim = :ddatzer) or              \
+                             (datfim > :ddathoj))";
+      
+      SQL_Criar(cur_docente); 
+      SQL_UsarSQLSenior2(cur_docente, 0); 
+      SQL_UsarAbrangencia(cur_docente, 0);
+      SQL_DEFINIRCOMANDO(cur_docente, asql_docente);
+      
+      SQL_DEFINIRDATA(cur_docente, "ddatzer", ddatzer);
+      SQL_DEFINIRDATA(cur_docente, "ddathoj", ddathoj);
+      SQL_DEFINIRINTEIRO(cur_docente, "NFNUMEMP", nNumEmp);
+      SQL_DEFINIRINTEIRO(cur_docente, "NFTIPCOL", nTipCol); 
+      SQL_DEFINIRINTEIRO(cur_docente, "NFNUMCAD", nNumCad);
+      SQL_AbrirCursor(cur_docente); 
+      ENQUANTO (SQL_EOF(cur_docente) = 0)  {
+         SQL_RetornarInteiro(cur_docente, "seqapf", nseqapf);
+         SQL_RetornarInteiro(cur_docente, "codapf", ncodapf);
+         SQL_RetornarInteiro(cur_docente, "hormes", nhormes);
+         SQL_RetornarFlutuante(cur_docente, "valapf", nvalapf);
+         SQL_RetornarAlfa(cur_docente, "desapf", adesapf);
+         SQL_RetornarData(cur_docente, "datini", ddatini);
+   
+         intparaalfa(nseqapf, aseqapf);
+         convertemascara(4,nhormes, ahormes,"hh:mm");
+         
+         nhorsem = nhormes / 4.5 ;
+         convertemascara(4,nhorsem, ahorsem,"hh:mm");
+       
+
+         convertemascara(1, nvalapf, avalapf,"zzz.zzz.zzz.zz9,99");
+         convertemascara(3, ddatini, adatini, "DD/MM/YYYY");
+         TiraEspacos (avalapf, avalapf);   
+         infocom = infocom + "> Atividade: "+adesapf+" | Início: "+adatini+" Hora(s) Semanal: "+ahorsem+" | Hora(s) Mensal:"+ahormes+" | Salário hora: R$"+avalapf+aenter+ 
+                             "---------------------------------------------------------------------------------------------------------------------------------------------------------"+aenter;
+         
+         
+         
+         nhorsem = 0;
+         nhormes = 0;
+         SQL_PROXIMO(cur_docente);  
+      
+        
+      
+     }
+     SQL_FECHARCURSOR(cur_docente);
+     SQL_DESTRUIR(cur_docente);
+     getColaboradorPosto.colaboradores.infocom   = infocom ;
+  
+  
+  
+  } 
+   
+  
+  
+
+  SQL_PROXIMO(CCURSOR); 
+}
+SQL_FECHARCURSOR(CCURSOR);
+SQL_DESTRUIR(CCURSOR);
+
+
+ 

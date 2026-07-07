@@ -1,0 +1,836 @@
+@Limpando tabela auxiliar @ 
+
+execsql"delete usu_tempch2";
+
+definir alfa anumemp;
+definir alfa anumcad;
+definir alfa atipcol;
+definir alfa acodapf;
+definir alfa ahorsem;
+definir alfa ahormes;
+definir alfa ahorsin; @-- teste @--
+definir alfa asindicato;
+definir alfa areducao;
+definir alfa atipope1;
+definir alfa atipope2;
+definir alfa atipope3;
+definir alfa atipope4;
+definir alfa atipope5;
+definir alfa atipope6;
+definir alfa atipope7;
+definir alfa atipope8;
+definir alfa atipope9;
+definir alfa atipope10;
+definir alfa ahorsem1;
+definir alfa ahorsem2;
+definir alfa ahorsem3;
+definir alfa ahorsem4;
+definir alfa ahorsem5;
+definir alfa ahorsem6;
+definir alfa ahorsem7;
+definir alfa ahorsem8;
+definir alfa ahorsem9;
+definir alfa ahorsem10;
+definir alfa acodapf1;
+definir alfa acodapf2;
+definir alfa acodapf3;
+definir alfa acodapf4;
+definir alfa acodapf5;
+definir alfa acodapf6;
+definir alfa acodapf7;
+definir alfa acodapf8;
+definir alfa acodapf9;
+definir alfa acodapf10;
+definir alfa aerro;
+definir alfa aminutos1;                                                           
+definir alfa aminutos2;
+definir alfa aminutos3;
+definir alfa aminutos4;
+definir alfa aminutos5;
+definir alfa aminutos6;
+definir alfa aminutos7;
+definir alfa aminutos8;
+definir alfa aminutos9;
+definir alfa aminutos10;
+definir alfa ahora1;
+definir alfa ahora2;
+definir alfa ahora3;
+definir alfa ahora4;
+definir alfa ahora5;
+definir alfa ahora6;
+definir alfa ahora7;
+definir alfa ahora8;
+definir alfa ahora9;
+definir alfa ahora10;
+definir alfa atotalsemana;
+definir alfa atotalmes;
+definir alfa atotalizador;
+definir alfa ahoraatu;
+definir alfa aminutosatu; 
+definir alfa ahosematu;
+definir alfa ahormesatu;
+definir alfa ahorasin;
+definir alfa aminutossin; 
+definir alfa ahosemsin;
+definir alfa ahormessin;
+
+
+definir numero ncodapf1;
+definir numero ncodapf2;
+definir numero ncodapf3;
+definir numero ncodapf4;
+definir numero ncodapf5;
+definir numero ncodapf6;
+definir numero ncodapf7;
+definir numero ncodapf8;
+definir numero ncodapf9;
+definir numero ncodapf10;
+definir numero nhorsem1;
+definir numero nhorsem2;
+definir numero nhorsem3;
+definir numero nhorsem4;
+definir numero nhorsem5;
+definir numero nhorsem6;
+definir numero nhorsem7;
+definir numero nhorsem8;
+definir numero nhorsem9;
+definir numero nhorsem10;   
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad; 
+definir numero nhorsem;
+definir numero nhormes;
+definir numero ncodapf;
+definir numero nerro;
+definir numero nhora1;
+definir numero nhora2;
+definir numero nhora3;
+definir numero nhora4;
+definir numero nhora5;
+definir numero nhora6;
+definir numero nhora7;
+definir numero nhora8;
+definir numero nhora9;
+definir numero nhora10;
+definir numero nminutos1;
+definir numero nminutos2;
+definir numero nminutos3;
+definir numero nminutos4;
+definir numero nminutos5;
+definir numero nminutos6;
+definir numero nminutos7;
+definir numero nminutos8;
+definir numero nminutos9;
+definir numero nminutos10; 
+definir numero ntotalsemana; 
+definir numero ntotalmes; 
+definir numero nhorsin;
+definir numero ntotalizador;
+definir numero nhoraatu;
+definir numero nminutosatu; 
+definir numero nhosematu;
+definir numero nhormesatu;
+definir numero nhorasin;
+definir numero nminutossin; 
+definir numero nhosemsin;
+definir numero nhormessin;
+
+definir cursor cur_insert;
+definir cursor cur_total;
+definir cursor cur_totalizador;
+
+anumemp = getDiferencaCH.enumemp;
+atipcol = getDiferencaCH.etipcol;
+anumcad = getDiferencaCH.enumcad;
+ahorsem = getDiferencaCH.ehorsem;
+ahormes = getDiferencaCH.ehormes; 
+ahorsin = getDiferencaCH.ehorsin; 
+
+acodapf1 = getDiferencaCH.ecodapf1;
+ahorsem1 = getDiferencaCH.ehorsem1;                                  
+atipope1 = getDiferencaCH.etipope1;
+
+acodapf2 = getDiferencaCH.ecodapf2;
+ahorsem2 = getDiferencaCH.ehorsem2;                                  
+atipope2 = getDiferencaCH.etipope2;
+
+acodapf3 = getDiferencaCH.ecodapf3;
+ahorsem3 = getDiferencaCH.ehorsem3;                                  
+atipope3 = getDiferencaCH.etipope3;
+
+acodapf4 = getDiferencaCH.ecodapf4;
+ahorsem4 = getDiferencaCH.ehorsem4;                                  
+atipope4 = getDiferencaCH.etipope4;
+
+acodapf5 = getDiferencaCH.ecodapf5;
+ahorsem5 = getDiferencaCH.ehorsem5;                                  
+atipope5 = getDiferencaCH.etipope5;
+
+acodapf6 = getDiferencaCH.ecodapf6;
+ahorsem6 = getDiferencaCH.ehorsem6;                                  
+atipope6 = getDiferencaCH.etipope6;
+
+acodapf7 = getDiferencaCH.ecodapf7;
+ahorsem7 = getDiferencaCH.ehorsem7;                                  
+atipope7 = getDiferencaCH.etipope7;
+
+acodapf8 = getDiferencaCH.ecodapf8;
+ahorsem8 = getDiferencaCH.ehorsem8;                                  
+atipope8 = getDiferencaCH.etipope8;
+
+acodapf9 = getDiferencaCH.ecodapf9;
+ahorsem9 = getDiferencaCH.ehorsem9;                                  
+atipope9 = getDiferencaCH.etipope9;
+
+acodapf10 = getDiferencaCH.ecodapf10;
+ahorsem10 = getDiferencaCH.ehorsem10;                                  
+atipope10 = getDiferencaCH.etipope10;  
+
+alfaparaint(anumemp, nnumemp);
+alfaparaint(atipcol, ntipcol);
+alfaparaint(anumcad, nnumcad);
+
+@Converte Hora Sindicato  hh:mm em inteiro @
+nhorasin = 0;
+ahorasin = ahorsin; 
+aminutosatu = ahorsin; 
+COPIARALFA(ahorasin,0,2); 
+COPIARALFA(aminutossin,4,2);        
+ALFAPARAINT(ahorasin,nhorasin); 
+ALFAPARAINT(aminutossin,nminutossin); 
+NHORSEMSIN = (nhorasin * 60) + nminutossin;
+
+@Converte Hora atual  hh:mm em inteiro @
+nhoraatu = 0;
+ahoraatu = ahorsem; 
+aminutosatu = ahorsem; 
+COPIARALFA(ahoraatu,0,2); 
+COPIARALFA(aminutosatu,4,2);        
+ALFAPARAINT(ahoraatu,nhoraatu); 
+ALFAPARAINT(aminutosatu,nminutosatu); 
+NHORSEMATU = (nhoraatu * 60) + nminutosatu;
+    
+NHORMESATU = NHORSEMATU * 4.5;
+
+ntotalsemana = 0;
+ntotalmes = 0;
+
+cur_insert.sql"select * from usu_tempch1                       \
+               where                                           \
+               usu_numemp = :anumemp and                       \
+               usu_tipcol = :atipcol and                       \
+               usu_numcad = :anumcad";
+               
+cur_insert.abrircursor();
+enquanto(cur_insert.achou)
+{
+  ncodapf = cur_insert.usu_codapf;
+  nhorsem = cur_insert.usu_horsem;
+  nhormes = cur_insert.usu_hormes;
+  
+  @Armazenando em tabela auxiliar @ 
+  
+  EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+          (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+          VALUES                                                                  \
+          (:NNUMEMP, :NTIPCOL,:NNUMCAD,:NCODAPF,:NHORSEM,:NHORMES)";
+
+
+  cur_insert.proximo();
+}
+cur_insert.fecharcursor();
+                                                               
+ncodapf = 0;
+nhorsem = 0;
+nhormes = 0;
+
+
+@ verificando primeira linha - Obrigatória @
+
+@ALFAPARAINT(ahorsem1, NHORSEM1);@
+ALFAPARAINT(acodapf1, NCODAPF1);
+                                  
+nhora1 = 0;
+ahora1 = ahorsem1; 
+aminutos1 = ahorsem1; 
+COPIARALFA(ahora1,0,2); 
+COPIARALFA(aminutos1,4,2);        
+ALFAPARAINT(ahora1,nhora1); 
+ALFAPARAINT(aminutos1,nminutos1); 
+NHORSEM1 = (nhora1 * 60) + nminutos1;
+  
+  NHORMES1 = NHORSEM1 * 4.5;
+  
+  /*ntotalsemana = ntotalsemana + NHORSEM1;
+  ntotalmes = ntotalmes + NHORMES1;*/
+
+se(atipope1 = "Adicionar")
+{    
+  EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+          (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+          VALUES                                                                  \
+          (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF1, :NHORSEM1, :NHORMES1)";
+}
+se(atipope1 = "Excluir")
+{
+  EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+           USU_NUMEMP = :NNUMEMP AND             \
+           USU_TIPCOL = :NTIPCOL AND             \
+           USU_NUMCAD = :NNUMCAD AND             \
+           USU_CODAPF = :NCODAPF1",NERRO, AERRO);
+}
+se(atipope1 = "Alterar")
+{
+    EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM1,    \
+                                       USU_HORMES = :NHORMES1     \                      
+                    WHERE                                         \
+                    USU_NUMEMP = :NNUMEMP AND                     \
+                    USU_TIPCOL = :NTIPCOL AND                     \
+                    USU_NUMCAD = :NNUMCAD AND                     \
+                    USU_CODAPF = :NCODAPF1",NERRO, AERRO);
+     
+}
+@Final Primeira Linha @ 
+
+
+
+@=============================================@
+@ Verificando Segunda linha - Não Obrigatória @
+@=============================================@
+se((atipope2 <> "") e (atipope2 <> " "))
+{
+  @ALFAPARAINT(ahorsem1, NHORSEM1);@
+  ALFAPARAINT(acodapf2, NCODAPF2);
+                                    
+  nhora2 = 0;
+  ahora2 = ahorsem2; 
+  aminutos2 = ahorsem2; 
+  COPIARALFA(ahora2,0,2); 
+  COPIARALFA(aminutos2,4,2);        
+  ALFAPARAINT(ahora2,nhora2); 
+  ALFAPARAINT(aminutos2,nminutos2); 
+  NHORSEM2 = (nhora2 * 60) + nminutos2;
+    
+  NHORMES2 = NHORSEM2 * 4.5;
+    
+  /*ntotalsemana = ntotalsemana + NHORSEM2;
+  ntotalmes = ntotalmes + NHORMES2; */
+  
+  se(atipope2 = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF2, :NHORSEM2, :NHORMES2)";
+  }
+  se(atipope2 = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+             USU_NUMEMP = :NNUMEMP AND             \                                                 
+             USU_TIPCOL = :NTIPCOL AND             \
+             USU_NUMCAD = :NNUMCAD AND             \
+             USU_CODAPF = :NCODAPF2",NERRO, AERRO);
+  }
+  se(atipope2 = "Alterar")
+  {
+      EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM2,    \
+                                         USU_HORMES = :NHORMES2     \
+                      WHERE                                         \
+                      USU_NUMEMP = :NNUMEMP AND                     \
+                      USU_TIPCOL = :NTIPCOL AND                     \
+                      USU_NUMCAD = :NNUMCAD AND                     \
+                      USU_CODAPF = :NCODAPF2",NERRO, AERRO);
+       
+  }
+}
+@============================================@
+@============ Final Segunda Linha ===========@ 
+@============================================@
+
+
+@==============================================@
+@ Verificando Terceira linha - Não Obrigatória @
+@==============================================@
+se((atipope3 <> "") e (atipope3 <> " "))
+{
+  @ALFAPARAINT(ahorsem1, NHORSEM1);@
+  ALFAPARAINT(acodapf3, NCODAPF3);
+                                    
+  nhora3 = 0;
+  ahora3 = ahorsem3; 
+  aminutos3 = ahorsem3; 
+  COPIARALFA(ahora3,0,2); 
+  COPIARALFA(aminutos3,4,2);        
+  ALFAPARAINT(ahora3,nhora3); 
+  ALFAPARAINT(aminutos3,nminutos3); 
+  NHORSEM3 = (nhora3 * 60) + nminutos3;
+    
+  NHORMES3 = NHORSEM3 * 4.5;
+    
+  /*ntotalsemana = ntotalsemana + NHORSEM3;
+  ntotalmes = ntotalmes + NHORMES3; */
+  
+  se(atipope3 = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF3, :NHORSEM3, :NHORMES3)";
+  }
+  se(atipope3 = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+             USU_NUMEMP = :NNUMEMP AND             \                                                 
+             USU_TIPCOL = :NTIPCOL AND             \
+             USU_NUMCAD = :NNUMCAD AND             \
+             USU_CODAPF = :NCODAPF3",NERRO, AERRO);
+  }
+  se(atipope3 = "Alterar")
+  {
+      EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM3,    \
+                                         USU_HORMES = :NHORMES3     \
+                      WHERE                                         \
+                      USU_NUMEMP = :NNUMEMP AND                     \
+                      USU_TIPCOL = :NTIPCOL AND                     \
+                      USU_NUMCAD = :NNUMCAD AND                     \
+                      USU_CODAPF = :NCODAPF3",NERRO, AERRO);
+       
+  }
+}
+@=============================================@
+@============ Final Terceira Linha ===========@ 
+@=============================================@
+
+
+@==============================================@
+@  Verificando Quarta linha - Não Obrigatória  @
+@==============================================@
+se((atipope4 <> "") e (atipope4 <> " "))
+{
+  @ALFAPARAINT(ahorsem1, NHORSEM1);@
+  ALFAPARAINT(acodapf4, NCODAPF4);
+                                    
+  nhora4 = 0;
+  ahora4 = ahorsem4; 
+  aminutos4 = ahorsem4; 
+  COPIARALFA(ahora4,0,2); 
+  COPIARALFA(aminutos4,4,2);        
+  ALFAPARAINT(ahora4,nhora4); 
+  ALFAPARAINT(aminutos4,nminutos4); 
+  NHORSEM4 = (nhora4 * 60) + nminutos4;
+    
+  NHORMES4 = NHORSEM4 * 4.5;
+  
+  /*ntotalsemana = ntotalsemana + NHORSEM4;
+  ntotalmes = ntotalmes + NHORMES4; */
+  
+  se(atipope4 = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF4, :NHORSEM4, :NHORMES4)";
+  }
+  se(atipope4 = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+             USU_NUMEMP = :NNUMEMP AND             \                                                 
+             USU_TIPCOL = :NTIPCOL AND             \
+             USU_NUMCAD = :NNUMCAD AND             \
+             USU_CODAPF = :NCODAPF4",NERRO, AERRO);
+  }
+  se(atipope4 = "Alterar")
+  {
+      EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM4,    \
+                                         USU_HORMES = :NHORMES4     \
+                      WHERE                                         \
+                      USU_NUMEMP = :NNUMEMP AND                     \
+                      USU_TIPCOL = :NTIPCOL AND                     \
+                      USU_NUMCAD = :NNUMCAD AND                     \
+                      USU_CODAPF = :NCODAPF4",NERRO, AERRO);
+       
+  }
+}
+@=============================================@
+@============= Final Quarta Linha ============@ 
+@=============================================@
+
+
+@==============================================@
+@  Verificando Quinta linha - Não Obrigatória  @
+@==============================================@
+se((atipope5 <> "") e (atipope5 <> " "))
+{
+  @ALFAPARAINT(ahorsem1, NHORSEM1);@
+  ALFAPARAINT(acodapf5, NCODAPF5);
+                                    
+  nhora5 = 0;
+  ahora5 = ahorsem5; 
+  aminutos5 = ahorsem5; 
+  COPIARALFA(ahora5,0,2); 
+  COPIARALFA(aminutos5,4,2);        
+  ALFAPARAINT(ahora5,nhora5); 
+  ALFAPARAINT(aminutos5,nminutos5); 
+  NHORSEM5 = (nhora5 * 60) + nminutos5;
+    
+  NHORMES5 = NHORSEM5 * 4.5;
+  
+  ntotalsemana = ntotalsemana + NHORSEM5;
+  ntotalmes = ntotalmes + NHORMES5;  
+  
+  
+  se(atipope5 = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF5, :NHORSEM5, :NHORMES5)";
+  }
+  se(atipope5 = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+             USU_NUMEMP = :NNUMEMP AND             \                                                 
+             USU_TIPCOL = :NTIPCOL AND             \
+             USU_NUMCAD = :NNUMCAD AND             \
+             USU_CODAPF = :NCODAPF5",NERRO, AERRO);
+  }
+  se(atipope5 = "Alterar")
+  {
+      EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM5,    \
+                                         USU_HORMES = :NHORMES5     \
+                      WHERE                                         \
+                      USU_NUMEMP = :NNUMEMP AND                     \
+                      USU_TIPCOL = :NTIPCOL AND                     \
+                      USU_NUMCAD = :NNUMCAD AND                     \
+                      USU_CODAPF = :NCODAPF5",NERRO, AERRO);
+       
+  }
+}
+@=============================================@
+@============= Final Quinta Linha ============@ 
+@=============================================@
+
+
+@==============================================@
+@   Verificando Sexta linha - Não Obrigatória  @
+@==============================================@
+se((atipope6 <> "") e (atipope6 <> " "))
+{
+  @ALFAPARAINT(ahorsem1, NHORSEM1);@
+  ALFAPARAINT(acodapf6, NCODAPF6);
+                                    
+  nhora6 = 0;
+  ahora6 = ahorsem6; 
+  aminutos6 = ahorsem6; 
+  COPIARALFA(ahora6,0,2); 
+  COPIARALFA(aminutos6,4,2);        
+  ALFAPARAINT(ahora6,nhora6); 
+  ALFAPARAINT(aminutos6,nminutos6); 
+  NHORSEM6 = (nhora6 * 60) + nminutos6;
+    
+  NHORMES6 = NHORSEM6 * 4.5;
+  
+  /*ntotalsemana = ntotalsemana + NHORSEM6;
+  ntotalmes = ntotalmes + NHORMES6;*/
+  
+  se(atipope6 = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF6, :NHORSEM6, :NHORMES6)";
+  }
+  se(atipope6 = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+             USU_NUMEMP = :NNUMEMP AND             \                                                 
+             USU_TIPCOL = :NTIPCOL AND             \
+             USU_NUMCAD = :NNUMCAD AND             \
+             USU_CODAPF = :NCODAPF6",NERRO, AERRO);
+  }
+  se(atipope6 = "Alterar")
+  {
+      EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM6,    \
+                                         USU_HORMES = :NHORMES6     \
+                      WHERE                                         \
+                      USU_NUMEMP = :NNUMEMP AND                     \
+                      USU_TIPCOL = :NTIPCOL AND                     \
+                      USU_NUMCAD = :NNUMCAD AND                     \
+                      USU_CODAPF = :NCODAPF6",NERRO, AERRO);
+       
+  }
+}
+@=============================================@
+@============== Final Sexta Linha ============@ 
+@=============================================@
+
+
+@==============================================@
+@  Verificando Sétima linha - Não Obrigatória  @
+@==============================================@
+se((atipope7 <> "") e (atipope7 <> " "))
+{
+  @ALFAPARAINT(ahorsem1, NHORSEM1);@
+  ALFAPARAINT(acodapf7, NCODAPF7);
+                                    
+  nhora7 = 0;
+  ahora7 = ahorsem7; 
+  aminutos7 = ahorsem7; 
+  COPIARALFA(ahora7,0,2); 
+  COPIARALFA(aminutos7,4,2);        
+  ALFAPARAINT(ahora7,nhora7); 
+  ALFAPARAINT(aminutos7,nminutos7); 
+  NHORSEM7 = (nhora7 * 60) + nminutos7;
+    
+  NHORMES7 = NHORSEM7 * 4.5;
+  
+  /*ntotalsemana = ntotalsemana + NHORSEM7;
+  ntotalmes = ntotalmes + NHORMES7;*/
+  
+  se(atipope7 = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF7, :NHORSEM7, :NHORMES7)";
+  }
+  se(atipope7 = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+             USU_NUMEMP = :NNUMEMP AND             \                                                 
+             USU_TIPCOL = :NTIPCOL AND             \
+             USU_NUMCAD = :NNUMCAD AND             \
+             USU_CODAPF = :NCODAPF7",NERRO, AERRO);
+  }
+  se(atipope7 = "Alterar")
+  {
+      EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM7,    \
+                                         USU_HORMES = :NHORMES7     \
+                      WHERE                                         \
+                      USU_NUMEMP = :NNUMEMP AND                     \
+                      USU_TIPCOL = :NTIPCOL AND                     \
+                      USU_NUMCAD = :NNUMCAD AND                     \
+                      USU_CODAPF = :NCODAPF7",NERRO, AERRO);
+       
+  }
+}
+@=============================================@
+@============= Final Sétima Linha ============@ 
+@=============================================@
+
+
+
+@==============================================@
+@  Verificando Oitava linha - Não Obrigatória  @
+@==============================================@
+se((atipope8 <> "") e (atipope8 <> " "))
+{
+  @ALFAPARAINT(ahorsem1, NHORSEM1);@
+  ALFAPARAINT(acodapf8, NCODAPF8);
+                                    
+  nhora8 = 0;
+  ahora8 = ahorsem8; 
+  aminutos8 = ahorsem8; 
+  COPIARALFA(ahora8,0,2); 
+  COPIARALFA(aminutos8,4,2);        
+  ALFAPARAINT(ahora8,nhora8); 
+  ALFAPARAINT(aminutos8,nminutos8); 
+  NHORSEM8 = (nhora8 * 60) + nminutos8;
+    
+  NHORMES8 = NHORSEM8 * 4.5;
+    
+  /*ntotalsemana = ntotalsemana + NHORSEM8;
+  ntotalmes = ntotalmes + NHORMES8; */
+  
+  se(atipope8 = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF8, :NHORSEM8, :NHORMES8)";
+  }
+  se(atipope8 = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+             USU_NUMEMP = :NNUMEMP AND             \                                                 
+             USU_TIPCOL = :NTIPCOL AND             \
+             USU_NUMCAD = :NNUMCAD AND             \
+             USU_CODAPF = :NCODAPF8",NERRO, AERRO);
+  }
+  se(atipope8 = "Alterar")
+  {
+      EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM8,    \
+                                         USU_HORMES = :NHORMES8     \
+                      WHERE                                         \
+                      USU_NUMEMP = :NNUMEMP AND                     \
+                      USU_TIPCOL = :NTIPCOL AND                     \
+                      USU_NUMCAD = :NNUMCAD AND                     \
+                      USU_CODAPF = :NCODAPF8",NERRO, AERRO);
+       
+  }
+}
+@=============================================@
+@============= Final Oitava Linha ============@ 
+@=============================================@
+
+
+
+@==============================================@
+@   Verificando Nona linha - Não Obrigatória   @
+@==============================================@
+se((atipope9 <> "") e (atipope9 <> " "))
+{
+  @ALFAPARAINT(ahorsem1, NHORSEM1);@
+  ALFAPARAINT(acodapf9, NCODAPF9);
+                                    
+  nhora9 = 0;
+  ahora9 = ahorsem9; 
+  aminutos9 = ahorsem9; 
+  COPIARALFA(ahora9,0,2); 
+  COPIARALFA(aminutos9,4,2);        
+  ALFAPARAINT(ahora9,nhora9); 
+  ALFAPARAINT(aminutos9,nminutos9); 
+  NHORSEM9 = (nhora9 * 60) + nminutos9;
+    
+  NHORMES9 = NHORSEM9 * 4.5;
+      
+  /*ntotalsemana = ntotalsemana + NHORSEM9;
+  ntotalmes = ntotalmes + NHORMES9;  */
+  
+  se(atipope9 = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF9, :NHORSEM9, :NHORMES9)";
+  }
+  se(atipope9 = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+             USU_NUMEMP = :NNUMEMP AND             \                                                 
+             USU_TIPCOL = :NTIPCOL AND             \
+             USU_NUMCAD = :NNUMCAD AND             \
+             USU_CODAPF = :NCODAPF9",NERRO, AERRO);
+  }
+  se(atipope9 = "Alterar")
+  {
+      EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM9,    \
+                                         USU_HORMES = :NHORMES9     \
+                      WHERE                                         \
+                      USU_NUMEMP = :NNUMEMP AND                     \
+                      USU_TIPCOL = :NTIPCOL AND                     \
+                      USU_NUMCAD = :NNUMCAD AND                     \
+                      USU_CODAPF = :NCODAPF9",NERRO, AERRO);
+       
+  }
+}
+@=============================================@
+@ ============= Final Nona Linha ============ @ 
+@=============================================@
+
+
+
+
+@==============================================@
+@  Verificando Décima linha - Não Obrigatória  @
+@==============================================@
+se((atipope10 <> "") e (atipope10 <> " "))
+{
+  @ALFAPARAINT(ahorsem1, NHORSEM1);@
+  ALFAPARAINT(acodapf10, NCODAPF10);
+                                    
+  nhora10 = 0;
+  ahora10 = ahorsem10; 
+  aminutos10 = ahorsem10; 
+  COPIARALFA(ahora10,0,2); 
+  COPIARALFA(aminutos10,4,2);        
+  ALFAPARAINT(ahora10,nhora10); 
+  ALFAPARAINT(aminutos10,nminutos10); 
+  NHORSEM10 = (nhora10 * 60) + nminutos10;
+    
+  NHORMES10 = NHORSEM10 * 4.5;
+        
+  /*ntotalsemana = ntotalsemana + NHORSEM10;
+  ntotalmes = ntotalmes + NHORMES10; */
+  
+  se(atipope10 = "Adicionar")
+  {    
+    EXECSQL "INSERT INTO USU_TEMPCH2                                                \
+            (USU_NUMEMP, USU_TIPCOL, USU_NUMCAD, USU_CODAPF, USU_HORSEM, USU_HORMES)\ 
+            VALUES                                                                  \
+            (:NNUMEMP, :NTIPCOL, :NNUMCAD, :NCODAPF10, :NHORSEM10, :NHORMES10)";
+  }
+  se(atipope10 = "Excluir")
+  {
+    EXECSQLEX ("DELETE USU_TEMPCH2 WHERE           \                                 
+             USU_NUMEMP = :NNUMEMP AND             \                                                 
+             USU_TIPCOL = :NTIPCOL AND             \
+             USU_NUMCAD = :NNUMCAD AND             \
+             USU_CODAPF = :NCODAPF10",NERRO, AERRO);
+  }
+  se(atipope10 = "Alterar")
+  {
+      EXECSQLEX ("UPDATE USU_TEMPCH2 SET USU_HORSEM = :NHORSEM10,    \
+                                         USU_HORMES = :NHORMES10     \
+                      WHERE                                         \
+                      USU_NUMEMP = :NNUMEMP AND                     \
+                      USU_TIPCOL = :NTIPCOL AND                     \
+                      USU_NUMCAD = :NNUMCAD AND                     \
+                      USU_CODAPF = :NCODAPF10",NERRO, AERRO);
+       
+  }
+}
+@=============================================@
+@ ============ Final Décima Linha =========== @ 
+@=============================================@
+nhorsem = 0;
+nhormes = 0;
+ntotalsemana = 0;
+ntotalmes = 0;
+
+cur_totalizador.sql"select usu_horsem, usu_hormes              \
+               from usu_tempch2                                \
+               where                                           \
+               usu_numemp = :anumemp and                       \
+               usu_tipcol = :atipcol and                       \
+               usu_numcad = :anumcad";
+               
+cur_totalizador.abrircursor();
+enquanto(cur_totalizador.achou)
+{
+  nhorsem = cur_totalizador.usu_horsem;
+  nhormes = cur_totalizador.usu_hormes;
+    
+  ntotalsemana = ntotalsemana + nhorsem;
+  ntotalmes = ntotalmes + nhormes;
+  cur_totalizador.proximo();
+}
+cur_totalizador.fecharcursor();                     
+
+@Verifica se teve redução de CH@
+se(ntotalsemana < nhorsematu)
+{
+  getDiferencaCH.reducao = "Teve Tedução";
+}
+se(ntotalsemana >= nhorsematu)
+{
+  getDiferencaCH.reducao = "Não Teve Tedução";
+}
+
+@Verifica se Ultrapassou limite do Sindicato@
+se(ntotalsemana > nhorsemsin)
+{
+  getDiferencaCH.sindicato = "Ultrapassou Limite de Carga Horária";
+}
+se(ntotalsemana <= nhorsemsin)
+{
+  getDiferencaCH.sindicato = "Dentro do Limite de Carga Horária";
+}
+@ntotalmes = ntotalsemana * 4.5;@
+
+convertemascara(4, ntotalsemana, atotalsemana, "hh:mm");
+convertemascara(4, ntotalmes, atotalmes, "hh:mm");
+
+getDiferencaCH.stotalmes = atotalmes;
+getDiferencaCH.stotalsemana = atotalsemana;
+getDiferencaCH.carregar = "Carregado";

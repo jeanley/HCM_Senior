@@ -1,0 +1,125 @@
+DEFINIR ALFA CUSU;
+DEFINIR ALFA ASQL;
+
+DEFINIR NUMERO NNUMEMP;
+DEFINIR NUMERO NCODFIL;
+
+DEFINIR ALFA ANUMEMP;
+DEFINIR ALFA ACODFIL;
+DEFINIR ALFA ATIPUNI;
+DEFINIR ALFA APAPGES;
+DEFINIR ALFA APAPRHL;
+DEFINIR ALFA APAPCSCFRE;
+DEFINIR ALFA APAPREG;
+DEFINIR ALFA APAPCSCFPG;
+DEFINIR ALFA APAPDIRARE;
+Definir Alfa aQVGesUni;
+Definir Alfa aQVPapUni;
+Definir Alfa aQVDirAre;
+Definir Alfa aQVPapDGG;
+Definir Alfa aQVPapSub;
+Definir Alfa aVSPapeBP;
+Definir Alfa aVSPapRem;
+Definir Alfa aVSPapAdm;
+Definir Alfa aVSPapFin;
+
+ANUMEMP = getConfigBpm.enumemp;
+ACODFIL = getConfigBpm.ecodfil;
+
+ALFAPARAINT(ANUMEMP, NNUMEMP);
+ALFAPARAINT(ACODFIL, NCODFIL);
+
+/*
+ASQL= "SELECT USU_NUMEMP,                                                      \
+              USU_CODFIL,                                                      \
+              USU_TIPUNI,                                                      \
+              USU_PAPGES,                                                      \
+              USU_PAPRHL,                                                      \
+              USU_PAPCSCFRE,                                                   \
+              USU_PAPREG,                                                      \
+              USU_PAPCSCFPG,                                                   \
+              USU_PAPDIRARE,                                                   \
+              USU_QVGesUni,                                                    \
+              USU_QVPapUni,                                                    \
+              USU_QVDirAre,                                                    \
+              USU_QVPapDGG,                                                    \
+              USU_QVPapSup,                                                    \
+              USU_VSPapeBP,                                                    \
+              USU_VSPapRem,                                                    \
+              USU_VSPapAdm,                                                    \
+              USU_VSPapFin                                                     \
+                FROM USU_TBPM_CFG                                              \
+                  WHERE USU_NUMEMP = :NNUMEMP                                  \
+                    AND USU_CODFIL = :NCODFIL ";  
+*/
+
+ASQL= "SELECT USU_NUMEMP,                                                      \
+              USU_CODFIL,                                                      \
+              USU_TIPUNI,                                                      \
+              USU_PAPGES,                                                      \
+              USU_PAPRHL,                                                      \
+              USU_PAPCSCFRE,                                                   \
+              USU_PAPREG,                                                      \
+              USU_PAPCSCFPG,                                                   \
+              USU_PAPDIRARE,                                                   \
+                FROM USU_TBPM_CFG                                              \
+                  WHERE USU_NUMEMP = :NNUMEMP                                  \
+                    AND USU_CODFIL = :NCODFIL ";                                
+
+
+SQL_CRIAR(CUSU);
+SQL_USARABRANGENCIA(CUSU,0);
+SQL_USARSQLSENIOR2(CUSU,0);
+SQL_DEFINIRCOMANDO(CUSU,ASQL);
+SQL_DefinirInteiro(CUSU,"NNUMEMP",NNUMEMP);
+SQL_DefinirInteiro(CUSU,"NCODFIL",NCODFIL);
+SQL_ABRIRCURSOR(CUSU);
+SE(SQL_EOF(CUSU) = 0)
+{
+  SQL_RETORNARINTEIRO(CUSU,"USU_NUMEMP",NNUMEMP);
+  SQL_RETORNARINTEIRO(CUSU,"USU_CODFIL",NCODFIL);
+  SQL_RETORNARALFA(CUSU,"USU_TIPUNI",ATIPUNI); 
+  SQL_RETORNARALFA(CUSU,"USU_PAPGES",APAPGES);  
+  SQL_RETORNARALFA(CUSU,"USU_PAPRHL",APAPRHL);
+  SQL_RETORNARALFA(CUSU,"USU_PAPCSCFRE",APAPCSCFRE);
+  SQL_RETORNARALFA(CUSU,"USU_PAPREG",APAPREG);
+  SQL_RETORNARALFA(CUSU,"USU_PAPREG",APAPCSCFPG);
+  SQL_RETORNARALFA(CUSU,"USU_PAPREG",APAPDIRARE);
+/*  SQL_RETORNARALFA(CUSU,"USU_QVGesUni",aQVGesUni);
+  SQL_RETORNARALFA(CUSU,"USU_QVPapUni",aQVPapUni);
+  SQL_RETORNARALFA(CUSU,"USU_QVDirAre",aQVDirAre);
+  SQL_RETORNARALFA(CUSU,"USU_QVPapDGG",aQVPapDGG);
+  SQL_RETORNARALFA(CUSU,"USU_QVPapSup",aQVPapSub);
+  SQL_RETORNARALFA(CUSU,"USU_VSPapeBP",aVSPapeBP);
+  SQL_RETORNARALFA(CUSU,"USU_VSPapRem",aVSPapRem);
+  SQL_RETORNARALFA(CUSU,"USU_VSPapAdm",aVSPapAdm);
+  SQL_RETORNARALFA(CUSU,"USU_VSPapFin",aVSPapFin);
+*/
+
+  
+  INTPARAALFA(NNUMEMP,ANUMEMP);
+  INTPARAALFA(NCODFIL,ACODFIL);
+            
+  getConfigBpm.snumemp = ANUMEMP;
+  getConfigBpm.scodfil = ACODFIL;
+  getConfigBpm.stipuni = ATIPUNI;
+  getConfigBpm.spapges = APAPGES;
+  getConfigBpm.spaprhl = APAPRHL;
+  getConfigBpm.spapcscfre = APAPCSCFRE;
+  getConfigBpm.spapreg = APAPREG;
+  getConfigBpm.spapcscfpg = APAPCSCFPG;
+  getConfigBpm.spapdirare = APAPDIRARE;
+  getConfigBpm.sqvgesuni = aQVGesUni;
+  getConfigBpm.sqvpapuni = aQVPapUni;
+  getConfigBpm.sqvdirare = aQVDirAre;
+  getConfigBpm.sqvpapdgg = aQVPapDGG;
+  getConfigBpm.sqvpapsub = aQVPapSub;
+  getConfigBpm.svspapebp = aVSPapeBP;
+  getConfigBpm.svspaprem = aVSPapRem;
+  getConfigBpm.svspapadm = aVSPapAdm;
+  getConfigBpm.svspapfin = aVSPapFin;
+   
+  
+}
+SQL_FECHARCURSOR(CUSU);
+SQL_DESTRUIR(CUSU);
