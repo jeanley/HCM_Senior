@@ -1,0 +1,21 @@
+Definir Cursor cR22GRA ;
+
+
+
+cR22GRA.Sql "SELECT * FROM R022GRA \
+             ORDER BY GRAINS";
+cR22GRA.AbrirCursor();
+Enquanto(cR22GRA.Achou) {
+
+   getGraIins.grauinstrucao.Criarlinha() ;
+   getGraIins.grauinstrucao.grains =   cR22GRA.GraIns ;
+   getGraIins.grauinstrucao.desgra =   cR22GRA.desgra;
+   
+   cR22GRA.Proximo();
+   
+   
+
+   
+
+}
+cR22GRA.FecharCursor();

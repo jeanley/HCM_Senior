@@ -1,0 +1,170 @@
+                                         /*
+    Consultor: Lucas Ferreira
+    Data de Criação: 04/07/2025
+    Descrição: Busca Código do Evento e Descrição do Evento onde estão como liberados no campos USU_BPMFolha
+*/
+/*
+
++-----------------------------------------+------------------------------------------+
+|                            Busca Eventos (getEventos)                              |
++-----------------------------------------+------------------------------------------+
+|              ENTRADA                    |                  SAÍDAS                  |
++-----------------------------------------+------------------------------------------+
+| ecodeve: string                         | stinfoeve.scodeve: string                |
+|                                         | stinfoeve.sdeseve: string                |
++-----------------------------------------+------------------------------------------+
+
+*/
+
+
+/* ~~~~~~ Start Code ~~~~~~ */
+
+/* Definição de Variáveis*/
+/*         ALFAS         */
+DEFINIR ALFA acodeve; @Saida@
+DEFINIR ALFA aecodeve; @Entrada@
+DEFINIR ALFA adeseve;
+DEFINIR ALFA avaleve;
+DEFINIR ALFA arefeve;
+DEFINIR ALFA acodccu;
+DEFINIR ALFA adesccu;
+DEFINIR ALFA atipinf;
+DEFINIR ALFA alike;
+DEFINIR ALFA aentrada;
+DEFINIR ALFA atipeve;
+
+/*        NUMEROS        */
+DEFINIR NUMERO nacodeve;
+DEFINIR NUMERO ntipeve;
+
+/*       CURSORES        */
+DEFINIR CURSOR cEveFolha;
+
+
+/* Atribuição de Valores Iniciais */
+@aecodeve = getEventos.ecodeve;   @
+
+/* Consultas */
+
+SE((aecodeve <> "" ) E (aecodeve <> " "))
+{
+  retTipoVar = VerificaNumeroAlfa(aecodeve);
+  
+  @ Se for número, busca pelo código @
+  SE(retTipoVar = 1) 
+  {
+    ALFAPARAINT(aecodeve,nacodeve);
+    cEveFolha.sql "SELECT codeve, \
+                          deseve,\   
+                          tipinf, \
+                          tipeve  \
+                   FROM          \
+                          R008EVC \
+                   WHERE           \
+                          USU_BPMFolha = 'S' \
+                    AND codeve = :nacodeve \
+                   ORDER BY codeve";
+  }
+  SENAO @Busque pela descrição @
+  {
+    aentrada = "AND deseve LIKE '%"+aecodeve+"%'";
+
+    cEveFolha.sql "SELECT codeve, \
+                          deseve,\   
+                          tipinf, \
+                          tipeve  \
+                   FROM          \
+                          R008EVC \
+                   WHERE           \
+                        USU_BPMFolha = 'S' \
+                   __inserir(:aentrada) \
+                   ORDER BY codeve";
+  }
+
+}
+SENAO
+{
+   cEveFolha.sql "SELECT                   \ 
+                 codeve,               \ 
+                 deseve,                 \
+                 tipinf, \
+                 tipeve  \
+             FROM                      \ 
+                 R008EVC               \ 
+             WHERE                     \  
+                 USU_BPMFolha = 'S'";     
+}
+
+cEveFolha.abrircursor();
+ENQUANTO(cEveFolha.achou)
+{
+    ncodeve = cEveFolha.codeve;
+    adeseve = cEveFolha.deseve;
+    atipinf = cEveFolha.tipinf;
+    ntipeve = cEveFolha.tipeve;
+    
+    intparaalfa(ncodeve,acodeve);
+    intparaalfa(ntipeve,atipeve);
+    
+
+@Verifica Tipo da Informação@    
+      SE(atipinf = "H")
+      {
+        atipinf = "Horas";
+      }
+      SENAO
+      SE(atipinf = "N")
+      {
+        atipinf = "Horas";
+      }
+      SENAO
+      SE(atipinf = "Q")
+      {
+        atipinf = "Valor";
+      }
+      SENAO
+      SE(atipinf = "V")
+      {
+        atipinf = "Valor";
+      }
+      
+@Verifica Tipo do Evento@
+      SE(ntipeve = 1){
+        atipeve = " - P";
+      }
+      SENAO
+      SE(ntipeve = 2){
+          atipeve = " - V";
+      }
+      SENAO
+      SE(ntipeve = 3){
+        atipeve = " - D";
+      }
+      SENAO
+      SE(ntipeve = 4){
+        atipeve = " - O";
+      }
+      SENAO
+      SE(ntipeve = 5){
+        atipeve = " - Env. P";
+      }
+      SENAO
+      SE(ntipeve = 6){
+        atipeve = " - Env. D";
+      }
+     @Concatenação da Descrição e Tipo do Evento@ 
+     adeseve = adeseve + atipeve; 
+      
+
+  getEventos.stinfoeve.criarlinha();
+  getEventos.stinfoeve.scodeve = acodeve;
+  getEventos.stinfoeve.sdeseve = adeseve;
+  getEventos.stinfoeve.stipinf = atipinf;
+
+  cEveFolha.proximo();
+}
+cEveFolha.fecharcursor();
+
+
+
+/* ~~~~~~ End Code ~~~~~~   */

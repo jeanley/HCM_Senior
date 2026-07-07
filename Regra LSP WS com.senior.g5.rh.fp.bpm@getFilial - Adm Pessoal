@@ -1,0 +1,69 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 09/12/2024
+*/
+
+z=z;
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aNomEmp;
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+Definir Alfa aNomFil;
+
+aNomFil = getFilial.enomfil;
+aNumEmp = getFilial.enumemp;
+aCodFil = getFilial.ecodfil;
+
+
+
+
+
+EstaNulo (aNumEmp,nEmpNul);
+
+
+Se (nEmpNul =  0) {
+
+    PosicaoAlfa ("-", aNumEmp,nPosAlf);
+    
+    Se (nPosAlf > 0) 
+       ListaItem(aNumEmp, "-", 1, aNumEmp);
+    
+}
+
+aSQL = "SELECT CODFIL, NOMFIL FROM R030FIL WHERE NUMEMP = :aNumEmp";
+            
+Se((aCodFil <> "") e (aCodFil <> " "))
+aSQL = aSQL + " AND CODFIL = " + aCodFil;
+
+Se((aNomFil <> "") e (aNomFil <> " "))
+aSQL = aSQL + " AND NOMFIL LIKE '%" + aNomFil + "%'";
+
+aSQL = aSQL + " ORDER BY NUMEMP, CODFIL, NOMFIL";
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,ASQL);
+SQL_DefinirAlfa (cBusca, "aNumEmp", aNumEmp);
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarAlfa(cBusca, "NOMFIL", aNomFil);
+  SQL_RetornarInteiro(cBusca, "CODFIL", nCodFil);
+  
+  @ConverteMascara(1, nCodFil, aCodFil, "ZZ9999");@
+  INTPARAALFA(nCodFil, aCodFil);
+    
+  getFilial.filiais.CriarLinha();  
+  getFilial.filiais.scodfil = aCodFil;
+  getFilial.filiais.snomfil = aNomFil;
+  getFilial.filiais.filial = aCodFil +  " - "   + aNomFil; 
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

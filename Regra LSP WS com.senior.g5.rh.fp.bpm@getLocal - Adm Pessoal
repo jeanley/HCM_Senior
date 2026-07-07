@@ -1,0 +1,63 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 11/12/2024
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aTabOrg;
+Definir Alfa aNumLoc;
+Definir Alfa aNomLoc;
+Definir Alfa aCodLoc;
+Definir Alfa aNomLoc;
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+
+aNumEmp = getLocal.enumemp;
+aCodFil = getLocal.ecodfil;
+aNomLoc = getLocal.enomloc;
+
+
+aSQL = "SELECT DISTINCT CAR.NUMLOC, CAR.TABORG, ORN.NOMLOC, HIE.CODLOC         \
+          FROM R017CAR CAR, R016ORN ORN, R016HIE HIE                           \         
+            WHERE ORN.TABORG = HIE.TABORG                                      \
+              AND ORN.NUMLOC = HIE.NUMLOC                                      \
+              AND CAR.TABORG = ORN.TABORG                                      \
+              AND CAR.NUMLOC = ORN.NUMLOC";
+
+Se((aNumEmp <> "") e (aNumEmp <> " "))
+aSQL = aSQL + " AND CAR.NUMEMP = " + aNumEmp;
+                  
+Se((aCodFil <> "") e (aCodFil <> " "))
+aSQL = aSQL + " AND CAR.CODFIL = " + aCodFil;
+
+Se((aNomLoc <> "") e (aNomLoc <> " "))
+aSQL = aSQL + " AND ORN.NOMLOC LIKE '%" + aNomLoc + "%'";
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,aSQL);
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarInteiro(cBusca, "TABORG", nTabOrg);
+  SQL_RetornarInteiro(cBusca, "NUMLOC", nNumLoc);
+  SQL_RetornarAlfa(cBusca, "NOMLOC", aNomLoc);
+  SQL_RetornarAlfa(cBusca, "CODLOC", aCodLoc);
+  
+  IntParaAlfa(nTabOrg, aTabOrg);
+  IntParaAlfa(nNumLoc, aNumLoc);
+  
+  getLocal.locais.CriarLinha();  
+  getLocal.locais.staborg = aTabOrg;
+  getLocal.locais.snumloc = aNumLoc;
+  getLocal.locais.snomloc = aNomLoc;
+  getLocal.locais.scodloc = aCodLoc;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

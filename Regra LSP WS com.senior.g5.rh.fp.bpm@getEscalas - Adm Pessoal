@@ -1,0 +1,104 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 23/05/2024      
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;        
+Definir Alfa aCodEsc;
+Definir Alfa aNomEsc;
+Definir Alfa aHorSem;
+Definir Alfa aHorMes;
+Definir Alfa aTipOrg;
+Definir Alfa aHorSemT;
+Definir Alfa aHorMesT;
+
+Definir Numero nFaiIni;
+Definir Numero nFaiFim;
+
+aCodEsc = getEscalas.ecodesc;       
+aNomEsc = getEscalas.enomesc;
+aTipOrg = getEscalas.etiporg;
+nFaiIni = getEscalas.efaiini;
+nFaiFim = getEscalas.efaifim;
+
+aTipOrg = "Unidade";
+
+aSQL = "SELECT CODESC, NOMESC, HORSEM, HORMES FROM R006ESC WHERE 1 = 1";
+
+Se((aCodEsc <> "") e (aCodEsc <> " "))
+aSQL = aSQL + " AND CODESC = " + aCodEsc;
+
+
+
+
+nNumero =  VerificaNumeroAlfa(aNomEsc);
+
+Se((aNomEsc <> "") e (aNomEsc <> " ")) {
+   
+   Se (nNumero = 0) {
+      aSQL = aSQL + " AND NOMESC LIKE '%" + aNomEsc + "%'";
+   }
+   Senao {
+       aSQL = aSQL + " AND CAST(codesc AS varchar(9)) LIKE '" + aNomEsc + "%'";
+   
+   } 
+}
+aSQL = aSQL + " ORDER BY CODESC, NOMESC";
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,ASQL);          
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarAlfa(cBusca, "NOMESC", aNomEsc);
+  SQL_RetornarInteiro(cBusca, "CODESC", nCodEsc);
+  SQL_RetornarInteiro(cBusca, "HORSEM", nHorSem);
+  SQL_RetornarInteiro(cBusca, "HORMES", nHorMes);
+  
+  nHorSem = nHorSem / 60;
+  nHorMes = nHorMes / 60;
+  
+  Se(aTipOrg = "Unidade"){
+    nValIni = (nFaiIni / 220) * nHorMes;
+    nValFim = (nFaiFim / 220) * nHorMes;
+  }
+  Senao
+  {
+    nValIni = (nFaiIni / 210) * nHorMes;
+    nValFim = (nFaiFim / 210) * nHorMes;
+  }
+  
+  ArredondarValor (nValIni, 2);
+  ArredondarValor (nValFim, 2);
+  
+  ConverteMascara(1, nCodEsc, aCodEsc, "9[4]");
+  
+  @RENAN@
+  IntParaAlfa(nHorSem, aHorSem);
+  IntParaAlfa(nHorMes, aHorMes);
+  nHorSemMin = HoraParaMinuto(nHorSem,0);
+  nHorMesMin = HoraParaMinuto(nHorMes,0);
+  ConverteMascara (4,nHorSemMin,aHorSemT,"#Q#hh:mm");
+  ConverteMascara (4,nHorMesMin,aHorMesT,"hhh:mm");
+    
+  getEscalas.escalas.CriarLinha();  
+  getEscalas.escalas.scodesc = aCodEsc;
+  getEscalas.escalas.snomesc = aNomEsc;
+  getEscalas.escalas.shorsem = aHorSem;
+  getEscalas.escalas.shormes = aHorMes;
+  getEscalas.escalas.sfaiini = nValIni;
+  getEscalas.escalas.sfaifim = nValFim;
+  @RENAN@
+  getEscalas.escalas.thorsem = aHorSemT;
+  getEscalas.escalas.thormes = aHorMesT;       
+  getEscalas.escalas.escala =  aCodEsc + " - " +  aNomEsc ;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 
