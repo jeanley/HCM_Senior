@@ -1,0 +1,84 @@
+
+Definir interno.com.senior.g5.rh.fp.historicos.Posto_4   ALTERAPOSTO; 
+Definir interno.com.senior.g5.rh.fp.historicos.Salario_2 ALTERALARIO; 
+Definir interno.com.senior.g5.rh.fp.historicos.Escala    ALTERAESCALA; 
+
+Definir ALfa TIPO_MOVIMENTACAO;
+
+Definir Alfa MOVIMENTACAO_SALARIAL;
+Definir Alfa MOVIMENTACAO_TRANSFERENCIA;
+Definir ALfa MOVIMENTACAO_CARGAHORAIA;
+Definir Alfa MOVIMENTACAO_ENQUADRAMENTO;
+Definir Alfa TIPO_CONTRATO ;
+Definir Alfa CONTRATO_DOSCENTE;
+Definir ALfa CONTRATO_ADMINISTRATIVO;
+
+Definir ALfa MOTIVO_SALARIAL;
+Definir ALfa MOTIVO_ENQUADRAMENTO;  MOTIVO_ENQUADRAMENTO = "ENQUADRAMENTO";
+Definir Alfa MOTIVO_MERITO;         MOTIVO_MERITO = "MERITO"; 
+Definir Alfa MOTIVO_PROMOCAO;       MOTIVO_PROMOCAO = "PROMOCAO";
+
+Definir Alfa aNumEmp ;
+Definir Alfa aTipCol;
+Definir Alfa aNumCad;
+
+Definir Numero nNumEmp;
+Definir Numero nTipCol;
+Definir Numero nNumCad;
+Definir Numero nCodMot;   
+
+Definir Numero nTipSal;
+Definir Numero nValSal;
+
+
+aNumEmp = setMovPessoal.NumEmp;
+aTipCol = setMovPessoal.TipCol;
+aNumCad = setMovPessoal.NumCad;
+
+
+
+MOTIVO_SALARIAL = setMovPessoal.MotSal;
+
+TiraEspacos (MOTIVO_SALARIAL, MOTIVO_SALARIAL);
+TiraAcentos (MOTIVO_SALARIAL, MOTIVO_SALARIAL);
+
+
+AlfaParaInt(aNumEmp,nNumEmp);
+AlfaParaInt(aTipCol,nTpCol);
+AlfaParaInt(aNumCad,nNumCad);
+
+
+
+Se (TIPO_MOVIMENTACAO = MOVIMENTACAO_SALARIAL)
+{
+
+   Se (MOTIVO_SALARIAL = MOTIVO_ENQUADRAMENTO)
+     nCodMot = 4;
+     
+   Se (MOTIVO_SALARIAL = MOTIVO_ENQUADRAMENTO)
+     nCodMot = 5; 
+     
+   Se (MOTIVO_SALARIAL = MOTIVO_PROMOCAO )
+     nCodMot = 5;  
+   
+   
+   ALTERALARIO.TipOpe = "I";
+   ALTERALARIO.NumEmp = nNumEmp ;
+   ALTERALARIO.TipCol = nTipCol;
+   ALTERALARIO.NumCad = nNUmCad;
+   ALTERALARIO.DatAlt = dDatMov;
+   ALTERALARIO.SeqAlt = 1;
+   
+   /*ALTERALARIO.CodEst = nCodest;
+   ALTERALARIO.ClaSal = aClaSAl;*/
+   
+   /*ALTERALARIO.NivSal = aNivSaL;*/
+   ALTERALARIO.CodMot = 004;
+   ALTERALARIO.tipsal = nTipSal;
+   ALTERALARIO.ValSal = nTipSal;
+             
+
+
+}
+
+

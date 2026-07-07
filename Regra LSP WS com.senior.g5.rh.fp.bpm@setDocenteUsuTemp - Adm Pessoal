@@ -1,0 +1,68 @@
+@ - 20/02/2025 - @
+@ Lucas Ferreira @
+
+@ - Declaração - @
+definir alfa anumemp;
+definir alfa atipcol;                                
+definir alfa anumcad;
+definir alfa atipope;
+definir alfa acmpini;
+definir alfa aidbpm;
+definir alfa amensagem;                                                                                
+                                                                                                         
+definir numero nerro;
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad;
+definir numero ncmpini;        
+
+definir data dcmpini;
+
+@ - Populando Variáveis - @
+anumemp = setDocenteUsuTemp.enumemp;
+atipcol = setDocenteUsuTemp.etipcol;
+anumcad = setDocenteUsuTemp.enumcad;
+atipope = setDocenteUsuTemp.etipope;
+acmpini = setDocenteUsuTemp.ecmpini;
+aidbpm =  setDocenteUsuTemp.eidbpm;                                                                                      
+
+alfaparaint(anumemp, nnumpemp);
+alfaparaint(atipcol, ntipcol);
+alfaparaint(anumcad, nnumcad);
+                                                                               
+acmpini = "01/" + acmpini;
+alfaparadata(acmpini, "DD/MM/YYYY", dcmpini);
+
+@ - Lógica - @                                                                                  
+SE (atipope = "i")
+{
+
+  iniciartransacao();
+  execsqlex("insert into usu_tempatv                                           \
+           (usu_numemp, usu_tipcol, usu_numcad, usu_compet, usu_idbpm)         \
+           values                                                              \                                  
+           (  :anumemp,   :atipcol,   :anumcad,   :dcmpini,   :aidbpm)",nerro, amensagem);
+   
+    se(nerro = 0)
+    {
+      finalizartransacao();                                                               
+    }
+    senao
+    {
+      desfazertransacao();
+    }                                                  
+}
+SE (atipope = "a")
+{
+  iniciartransacao();
+  execsqlex("delete from usu_tempatv where usu_idbpm = :aidbpm ",nerro, amensagem);          
+   
+    se(nerro = 0)
+    {
+      finalizartransacao();                                                               
+    }
+    senao
+    {
+      desfazertransacao();
+    } 
+}

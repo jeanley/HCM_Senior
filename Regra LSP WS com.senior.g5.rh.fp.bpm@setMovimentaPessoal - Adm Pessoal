@@ -1,0 +1,930 @@
+@--------------DECLARAÇÃO SERVIÇOS -----------------------------------@
+Definir interno.com.senior.g5.rh.fp.historicos.Posto_4   ALTERAPOSTO; 
+Definir interno.com.senior.g5.rh.fp.historicos.Salario_2 ALTERALARIO; 
+Definir interno.com.senior.g5.rh.fp.historicos.Escala    ALTERAESCALA; 
+
+                                                    
+@------------- VARAIVEIS GLOBAIS------------------------------------------@
+Definir ALfa TIPO_MOVIMENTACAO;
+Definir Alfa MOVIMENTACAO_SALARIAL;      MOVIMENTACAO_SALARIAL      = "ALTERACAO SALARIAL";
+Definir Alfa MOVIMENTACAO_TRANSFERENCIA; MOVIMENTACAO_TRANSFERENCIA = "TRANSFERENCIA DE PESSOAL" ;
+Definir ALfa MOVIMENTACAO_CARGAHORAIA;   MOVIMENTACAO_CARGAHORAIA   = "ALTERACAO CARGA HORARIA" ;
+Definir Alfa MOVIMENTACAO_ENQUADRAMENTO; MOVIMENTACAO_ENQUADRAMENTO = "ENQUADRAMENTO DE CARGO"; 
+Definir Alfa TIPO_CONTRATO;
+Definir Alfa TIPO_CONTRATO_DESTINO;
+                  
+Definir Alfa CONTRATO_DOSCENTE;       CONTRATO_DOSCENTE = "10";
+Definir ALfa CONTRATO_ADMINISTRATIVO; CONTRATO_ADMINISTRATIVO = "1";
+
+
+Definir ALfa MOTIVO_SALARIAL;
+Definir ALfa MOTIVO_ENQUADRAMENTO;  MOTIVO_ENQUADRAMENTO = "ENQUADRAMENTO";
+Definir Alfa MOTIVO_MERITO;         MOTIVO_MERITO = "MERITO"; 
+Definir Alfa MOTIVO_PROMOCAO;       MOTIVO_PROMOCAO = "PROMOCAO";
+
+Definir Alfa MOTIVO_TRANSFERENCIA ;
+
+@--------------VARIAVEIS ALFA-----------------------------------@
+Definir Alfa aNumEmp ;
+Definir Alfa aTipCol;
+Definir Alfa aNumCad;
+Definir Alfa aMsgRet;
+Definir Alfa aCmpHis;
+Definir Alfa aPosDes;  
+Definir Alfa aEstDes;
+Definir Alfa aEscDes;
+Definir Alfa aBpmId;
+Definir Alfa aPosSub ;
+
+@--------------- VARIAVEIS NUEMRICAS------------------------------@
+Definir Numero nNumEmp;
+Definir Numero nTipCol;
+Definir Numero nNumCad;
+Definir Numero nCodMot;   
+Definir Numero nTipSal;
+Definir Numero nValSal;
+Definir Numero nEstDes;
+Definir Numero nEscDes;
+Definir Numero nValSalRem;
+
+           
+@--------------- VARIAVEIS DATA------------------------------@
+Definir Data dDatMov;
+Definir Data dFimAti ;
+
+
+                                  
+@----------DLARAÇÃO DE FUNÇÕES-------------------@
+
+
+/* 
+   A função CarregaAtividades2 Quando tem uma alteração de carga hoaria
+   ela encerra a ativdade Alterada e inseri uma nova 
+   para manter historico.
+*/
+
+
+Definir Funcao CarregaAtividades2();
+Definir Funcao CarregaAtividades();
+@Lista de Retorno da Função@
+Definir Lista lstAtivdades;
+lstAtivdades.DefinirCampos();
+lstAtivdades.AdicionarCampo("CodOpe", Alfa);
+lstAtivdades.AdicionarCampo("CodAti", Alfa);
+lstAtivdades.AdicionarCampo("CodRat", Alfa);
+lstAtivdades.AdicionarCampo("HorSem", Numero);
+lstAtivdades.AdicionarCampo("VlrApf", Numero);
+lstAtivdades.AdicionarCampo("SeqAti", Numero);
+lstAtivdades.AdicionarCampo("DatIni", Data);
+lstAtivdades.AdicionarCampo("ObsAtv", Alfa);
+lstAtivdades.AdicionarCampo("TipAlt", Numero);
+lstAtivdades.EfetivarCampos();
+
+Definir Funcao AtualizasCampos(Numero pTipAtu);
+@varaivel de Retorno da Funcao@
+Definir Alfa ATU_MsgReg;
+
+@@
+Definir Funcao PersistenciaMovimentacao(Numero pTipPer, Numero End pRetPer);
+
+Definir Funcao InserirAtividadesProfessor();
+@Retorno Funcao@
+Definir alfa ATI_MsgRet; 
+Definir Alfa aTipCon;
+
+
+Definir Funcao InserirAtividadesProfessorV2();
+@Retorno Funcao@
+Definir alfa ATI_MsgRet; 
+
+@------------CARREGA VARIAVEIS---------------------@
+aNumEmp = setMovimentaPessoal.NumEmp;
+aTipCol = setMovimentaPessoal.TipCol;
+aNumCad = setMovimentaPessoal.NumCad;
+aCmpHis = setMovimentaPessoal.CmpHis;
+nBpmId =  setMovimentaPessoal.BpmId;
+aEscDes = setMovimentaPessoal.EscDes;
+
+aPosDes =   setMovimentaPessoal.Posdes;
+aEstDes =   setMovimentaPessoal.EstDes;
+aPosSub =  setMovimentaPessoal.Possub ;
+
+TIPO_MOVIMENTACAO      = setMovimentaPessoal.TipMov;
+MOTIVO_TRANSFERENCIA   = setMovimentaPessoal.mottra ;
+MOTIVO_SALARIAL        = setMovimentaPessoal.MotSal;
+TIPO_CONTRATO_DESTINO  = setMovimentaPessoal.CONDES;
+TIPO_CONTRATO          =  setMovimentaPessoal.TipCon ;
+aTipCon =    TIPO_CONTRATO ;
+
+
+Se (TIPO_CONTRATO <> "10")
+   TIPO_CONTRATO = CONTRATO_ADMINISTRATIVO ;
+
+setMovimentaPessoal.tipRet = "1";
+
+EstaNulo (aPosSub,nRetNul);
+Se (nRetNul = 0)  {
+    ListaItem(aPosSub,"-", 1,aPosDes);
+
+
+}
+ 
+Se (setMovimentaPessoal.CONDES <> "10")
+  TIPO_CONTRATO_DESTINO = CONTRATO_ADMINISTRATIVO ;
+  
+  
+aLFAPaRAINT(TIPO_CONTRATO_DESTINO,nTipCon);
+
+nQtdAti = 0 ;
+
+bAltEsc = 0;
+bAltAti = 0; 
+bAltSal = 0;
+@-------TRATAR VARIAVEIS ENTRADA WEBSEVRICE ----------------------------@
+aCmpHis =  setMovimentaPessoal.CmpHis;
+aCmpHis = "01/"+ aCmpHis;
+AlfaParaData(aCmpHis,"DD/MM/YYYY",dDatMov);
+
+dFimAti =   dDatMov - 1 ;
+
+
+
+TiraEspacos (MOTIVO_SALARIAL, MOTIVO_SALARIAL);
+TiraAcentos (MOTIVO_SALARIAL, MOTIVO_SALARIAL);
+TiraAcentos (TIPO_MOVIMENTACAO,TIPO_MOVIMENTACAO );
+
+
+AlfaParaInt(aNumEmp,nNumEmp);
+AlfaParaInt(aTipCol,nTipCol);
+AlfaParaInt(aNumCad,nNumCad);  
+AlfaParaint(aEstDes,nEstDes);
+AlfaParaint(aEscDes,nEscDes);
+intParaAlfa(nBpmId,aBpmId);  
+
+EstaNulo (aEscDes,nAltEsc);
+
+Se (setMovimentaPessoal.TipSal = "Mensalista")
+  nTipSal = 1 ;
+Senao
+  nTipSal = 2 ;  
+
+
+
+Se ((MOVIMENTACAO_CARGAHORAIA = TIPO_MOVIMENTACAO) e (TIPO_CONTRATO_DESTINO = CONTRATO_DOSCENTE))
+      nQtdAti = setMovimentaPessoal.atividades.QtdLinhas; 
+
+
+@ALTERAÇÃO SALRIAL@
+Se ((TIPO_MOVIMENTACAO = MOVIMENTACAO_SALARIAL)  ou (TIPO_MOVIMENTACAO =  MOVIMENTACAO_TRANSFERENCIA) OU ((TIPO_MOVIMENTACAO =  MOVIMENTACAO_ENQUADRAMENTO)))    {
+
+   @verifica se terá troca de escala@
+   Se ((TIPO_CONTRATO_DESTINO = CONTRATO_ADMINISTRATIVO) e (nAltEsc = 0))
+     bAltEsc = 1;
+  
+  
+   @carega lista de atividades@
+   Se ((TIPO_CONTRATO_DESTINO = CONTRATO_DOSCENTE)  e (nQtdAti > 0)) {
+      CarregaAtividades2();
+      bAltAti = 1 ;  
+    
+   }  
+
+   nValSal =   setMovimentaPessoal.ValSal ;
+   Se (nValSal > 1)
+     bAltSal = 1 ;
+   
+   Se (MOTIVO_SALARIAL = MOTIVO_PROMOCAO)
+      nCodMot = 2 ; 
+          
+   Se ((MOTIVO_SALARIAL = MOTIVO_ENQUADRAMENTO)  ou   (TIPO_MOVIMENTACAO =  MOVIMENTACAO_ENQUADRAMENTO))
+      nCodMot = 5; 
+         
+   Se (MOTIVO_SALARIAL = MOTIVO_MERITO)
+      nCodMot = 3;
+      
+   Se (TIPO_MOVIMENTACAO = MOVIMENTACAO_TRANSFERENCIA)
+      nCodMot = 4;     
+
+}
+Senao Se (TIPO_MOVIMENTACAO = MOVIMENTACAO_CARGAHORAIA) {
+
+   Se (TIPO_CONTRATO = CONTRATO_ADMINISTRATIVO) {
+      nCodMot = 16;
+      nValSal =   setMovimentaPessoal.ValSal_Esc ;
+   
+   }
+   Senao {
+      Definir alfa aValSal;
+      aValSal  = setMovimentaPessoal.ValSal_Ati ;
+      AlfaParaint(aValSal,nValSal);
+      CarregaAtividades2();
+      bAltAti = 1 ; 
+   }
+   
+   @salario alterado pelo remuneração@
+   nValSalRem = setMovimentaPessoal.valsal_rem  ;
+   
+   Se (nValSalRem > 0)
+     nValSal  = nValSalRem;
+     
+
+
+} 
+
+@-------REGAS DE NEGOCIO----------------------------@
+
+Se ((TIPO_MOVIMENTACAO = MOVIMENTACAO_SALARIAL)  ou (TIPO_MOVIMENTACAO =  MOVIMENTACAO_TRANSFERENCIA) OU ((TIPO_MOVIMENTACAO =  MOVIMENTACAO_ENQUADRAMENTO)))
+{
+   Se ((MOTIVO_SALARIAL = MOTIVO_PROMOCAO ) ou (TIPO_MOVIMENTACAO =  MOVIMENTACAO_TRANSFERENCIA) ou (TIPO_MOVIMENTACAO =  MOVIMENTACAO_ENQUADRAMENTO)) {
+     @ALTERA POSTO@
+     @PERSISTENCIA POSTO@
+     PersistenciaMovimentacao(2,nRetPer);  
+     Se (nRetPer = 0) {
+       
+        ExecSql "UPDATE R017CAR \
+                  SET TIPCON = 0 \
+                  WHERE POSTRA =  :aPosDes \
+                   and  numemp =:nNumEmp "; 
+     
+        ALTERAPOSTO.TipOpe = "I" ;  
+        ALTERAPOSTO.NumEmp = nNumEmp ;
+        ALTERAPOSTO.TipCol = nTipCol ;
+        ALTERAPOSTO.NumCad = nNumCad ;
+        ALTERAPOSTO.IniAtu = dDatMov;               
+        ALTERAPOSTO.CodTap = 001  ;
+        ALTERAPOSTO.MotPos = nCodMot;
+        ALTERAPOSTO.Postra = aPosDes ;
+        ALTERAPOSTO.obsPos = "BPM Instancia:"+aBpmId  ;
+        ALTERAPOSTO.ModoExecucao = 2;
+        
+        ALTERAPOSTO.Executar();
+        aMsgRet =   ALTERAPOSTO.erroExecucao;
+        EstaNulo (aMsgRet,nRetNull);
+        Se (nRetNull = 1) {
+           aMsgRet = "OK" ;
+           AtualizasCampos(2);
+        
+        }   
+     }
+     Senao
+      aMsgRet = "OK" ;
+     
+        ExecSql "UPDATE R017CAR \
+                  SET TIPCON = :nTipCon \
+                  WHERE POSTRA  = :aPosDes \
+                   and  numemp =:nNumEmp "; 
+      
+ 
+     @ALTERA ESCALA@
+     Se ((bAltEsc = 1) e (aMsgRet = "OK")){
+        @persistencia escala@
+        PersistenciaMovimentacao(3,nRetPer);
+        Se (nRetPer = 0) {
+           ALTERAESCALA.TipOpe = "I";
+           ALTERAESCALA.NumEmp = nNumemp;
+           ALTERAESCALA.TipCol = nTipCol;
+           ALTERAESCALA.NumCad = nNumCad;
+           ALTERAESCALA.DatAlt = dDatMov;
+           ALTERAESCALA.CodEsc = nEscDes; 
+           ALTERAESCALA.CodTma = 1;
+           ALTERAESCALA.ModoExecucao = 2 ;
+           ALTERAESCALA.Executar();
+           aMsgRet =   ALTERAESCALA.erroExecucao;
+           
+           EstaNulo (aMsgRet,nRetNull);
+           Se (nRetNull = 1) {
+              aMsgRet = "OK" ;
+              AtualizasCampos(3);
+           }   
+        }
+        Senao
+           aMsgRet = "OK" ; 
+     }
+     
+     @Atividades prfessores@
+     Se ((bAltAti = 1) e (aMsgRet = "OK")){ 
+        PersistenciaMovimentacao(4,nRetPer);
+        Se (nRetPer = 0) {
+           InserirAtividadesProfessor();
+           aMsgRet =   ATI_MsgRet;
+        }
+        Senao 
+           aMsgRet = "OK";
+     }
+     
+    @ALTERA SALARIO@
+    PersistenciaMovimentacao(1,nRetPer);
+    Se((nRetPer = 0) e (aMsgRet = "OK") e (nValSal > 0)) {
+       ALTERALARIO.TipOpe = "I";
+       ALTERALARIO.NumEmp = nNumEmp;
+       ALTERALARIO.TipCol = nTipCol;
+       ALTERALARIO.NumCad = nNUmCad;
+       ALTERALARIO.DatAlt = dDatMov;
+       ALTERALARIO.SeqAlt = 1;
+       ALTERALARIO.CodMot = nCodMot;
+       Se (nNUmCad = 40010937){
+          ALTERALARIO.ClaSal= "02.03";
+          ALTERALARIO.NivSal= "100%";
+       
+       }
+       
+       ALTERALARIO.tipsal = nTipSal;
+       ALTERALARIO.ValSal = nValSal;
+   
+       ALTERALARIO.ModoExecucao = 2 ;
+       ALTERALARIO.Executar();
+     
+       aMsgRet =   ALTERALARIO.erroExecucao;
+       EstaNulo (aMsgRet,nRetNull);
+     
+       Se (nRetNull = 1) {
+          aMsgRet = "OK" ;
+          AtualizasCampos(1);
+       }   
+    }   
+   }      
+   Senao { @MERITO E ENQUADRAMENTO@
+      PersistenciaMovimentacao(1,nRetPer);
+      Se(nRetPer = 0) {
+       
+         ALTERALARIO.TipOpe = "I";
+         ALTERALARIO.NumEmp = nNumEmp;
+         ALTERALARIO.TipCol = nTipCol;
+         ALTERALARIO.NumCad = nNUmCad;
+         ALTERALARIO.DatAlt = dDatMov;
+         ALTERALARIO.SeqAlt = 1;
+         ALTERALARIO.CodMot = nCodMot;
+         ALTERALARIO.tipsal = nTipSal;
+         Se (nNUmCad = 40010937){
+          ALTERALARIO.ClaSal= "02.03";
+          ALTERALARIO.NivSal= "100%";
+       
+       }
+         ALTERALARIO.ValSal = nValSal;
+       
+         ALTERALARIO.ModoExecucao = 2 ;
+         ALTERALARIO.Executar();
+       
+         aMsgRet =   ALTERALARIO.erroExecucao;
+         EstaNulo (aMsgRet,nRetNull);
+       
+         Se (nRetNull = 1) {
+            aMsgRet = "OK" ;
+            AtualizasCampos(1);
+         }   
+      }
+      Senao
+         aMsgRet = "OK" ; 
+   }          
+}
+Senao Se (TIPO_MOVIMENTACAO = MOVIMENTACAO_CARGAHORAIA) {
+
+   Se (TIPO_CONTRATO = CONTRATO_ADMINISTRATIVO) {
+      
+      PersistenciaMovimentacao(3,nRetPer);
+      Se (nRetPer = 0) {
+         ALTERAESCALA.TipOpe = "I";
+         ALTERAESCALA.NumEmp = nNumemp;
+         ALTERAESCALA.TipCol = nTipCol;
+         ALTERAESCALA.NumCad = nNumCad;
+         ALTERAESCALA.DatAlt = dDatMov;
+         ALTERAESCALA.CodEsc = nEscDes; 
+         ALTERAESCALA.CodTma = 1;
+         ALTERAESCALA.ModoExecucao = 2 ;
+         ALTERAESCALA.Executar();
+         aMsgRet =   ALTERAESCALA.erroExecucao;
+           
+         EstaNulo (aMsgRet,nRetNull);
+         Se (nRetNull = 1) {
+            aMsgRet = "OK" ;
+            AtualizasCampos(3);
+         }   
+      }
+      Senao
+         aMsgRet = "OK" ; 
+   
+   
+      @ALTERA SALARIO@
+      PersistenciaMovimentacao(1,nRetPer);
+      Se((nRetPer = 0) e (aMsgRet = "OK") e (nValSal > 0)) {
+         ALTERALARIO.TipOpe = "I";
+         ALTERALARIO.NumEmp = nNumEmp;
+         ALTERALARIO.TipCol = nTipCol;
+         ALTERALARIO.NumCad = nNUmCad;
+         ALTERALARIO.DatAlt = dDatMov;
+         ALTERALARIO.SeqAlt = 1;
+         ALTERALARIO.CodMot = nCodMot;
+         ALTERALARIO.tipsal = nTipSal;
+         ALTERALARIO.ValSal = nValSal;
+     
+         ALTERALARIO.ModoExecucao = 2 ;
+         ALTERALARIO.Executar();
+       
+         aMsgRet =   ALTERALARIO.erroExecucao;
+         EstaNulo (aMsgRet,nRetNull);
+       
+         Se (nRetNull = 1) {
+            aMsgRet = "OK" ;
+            AtualizasCampos(1);
+         }   
+      }   
+   }
+   Senao Se (TIPO_CONTRATO = CONTRATO_DOSCENTE) {
+   
+      PersistenciaMovimentacao(4,nRetPer);
+       Se (nRetPer = 0) {
+          InserirAtividadesProfessor();
+          aMsgRet =   ATI_MsgRet;
+       }
+       Senao
+          aMsgRet = "OK" ;
+      
+      @ALTERA SALARIO@
+      PersistenciaMovimentacao(1,nRetPer);
+      Se((nRetPer = 0) e (aMsgRet = "OK") e (nValSal > 0)) {
+   
+         ALTERALARIO.TipOpe = "I";
+         ALTERALARIO.NumEmp = nNumEmp;
+         ALTERALARIO.TipCol = nTipCol;
+         ALTERALARIO.NumCad = nNUmCad;
+         ALTERALARIO.DatAlt = dDatMov;
+         ALTERALARIO.SeqAlt = 1;
+         ALTERALARIO.CodMot = nCodMot;
+         ALTERALARIO.tipsal = nTipSal;
+         ALTERALARIO.ValSal = nValSal;
+     
+         ALTERALARIO.ModoExecucao = 2 ;
+         ALTERALARIO.Executar();
+       
+         aMsgRet =   ALTERALARIO.erroExecucao;
+         EstaNulo (aMsgRet,nRetNull);
+       
+         Se (nRetNull = 1) {
+            aMsgRet = "OK" ;
+            AtualizasCampos(1);
+         }   
+     
+      }
+            
+   }
+}   
+
+setMovimentaPessoal.Retorno = aMsgRet ;
+
+Se (aMsgRet = "OK") {
+  setMovimentaPessoal.tipRet = "1";
+
+}
+Senao {
+  setMovimentaPessoal.tipRet = "2"; 
+}
+
+@--------------------------FUUNÇÕES-----------------------------------@
+
+Funcao AtualizasCampos(Numero pTipAtu);{
+  ATU_MsgReg = ""; 
+  
+  Se (pTipAtu = 1) {
+    ExecSqlEx("                           \
+        UPDATE R038HSA                    \
+           SET USU_INSBPM = :nBpmId       \
+         WHERE NUMEMP = :nNumEmp          \
+           AND TIPCOL = :nTipCol          \
+           AND NUMCAD = :nNumCad          \
+           AND DATALT = :dDatMov          \
+           AND CODMOT = :nCodMot          \
+           AND SEQALT = 1                 \
+         ",nErrSql,ATU_MsgReg);                             
+  }
+  Se (pTipAtu = 2) {
+    ExecSqlEx("                           \
+        UPDATE R038HPO                    \
+           SET USU_INSBPM = :nBpmId       \
+         WHERE NUMEMP = :nNumEmp          \
+           AND TIPCOL = :nTipCol          \
+           AND NUMCAD = :nNumCad          \
+           AND INIATU = :dDatMov          \
+           AND MOTALT = :nCodMot         \ 
+           AND ESTPOS = :nEstDes         \
+           AND POSTRA = :aPosDes        \
+         ",nErrSql,ATU_MsgReg);  
+  }
+    
+  Se (pTipAtu = 3) {
+    ExecSqlEx("                           \
+        UPDATE R038HES                    \
+           SET USU_INSBPM = :nBpmId       \
+         WHERE NUMEMP = :nNumEmp          \
+           AND TIPCOL = :nTipCol          \
+           AND NUMCAD = :nNumCad          \
+           AND DATALT = :dDatMov          \
+           AND CODESC = :nEscDes          \
+         ",nErrSql,ATU_MsgReg);        
+                                    
+  }
+}
+
+
+Funcao CarregaAtividades(); {
+
+   Definir Alfa aVarAux;
+   Definir Alfa aCodAti;
+   Definir Alfa aCodOpe;
+   Definir Alfa aCodRat;
+   Definir Alfa aSeqApf;
+   Definir Numero nSeqApf;
+   Definir Numero nHorSem;
+   Definir Numero nVlrApf;
+   Definir Alfa  aDatIni;
+   Definir Data dDatIni;
+   
+   nQtdLin  = setMovimentaPessoal.atividades.QtdLinhas;
+   nLinAtu  = 0 ;
+   
+   lstAtivdades.limpar();
+    
+   Enquanto (nLinAtu < nQtdLin) {
+      setMovimentaPessoal.atividades.LinhaAtual = nLinAtu ;
+      aCodOpe  = setMovimentaPessoal.atividades.lst_atividades_carga_horaria_nova_operara;
+      aVarAux = setMovimentaPessoal.atividades.lst_atividades_carga_horaria_codigo1;
+      ListaItem(aVarAux, "|", 2, aCodAti);
+      ListaItem(aVarAux, "|", 3, aSeqApf);
+      ListaItem(aVarAux, "|", 4, aDatIni);
+     
+   
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;             
+      
+      Se ((aCodOpe = "Inserir") ou (aCodOpe = "Alterar") ou (aCodOpe = "Encerrar")) {
+         nHorSem =      setMovimentaPessoal.atividades.lst_atividades_carga_horaria_hora_decimal  ;   
+         lstAtivdades.HorSem = nHorSem;
+      
+         Se (aCodOpe = "Inserir") {
+            aVarAux=  setMovimentaPessoal.atividades.lst_atividades_carga_horaria_centro_de_custo1 ;  
+            ListaItem(aVarAux, "-", 1, aCodRat);        
+            lstAtivdades.CodRat = aCodRat ;
+            
+            aVarAux =  setMovimentaPessoal.atividades.lst_atividades_carga_horaria_valor_hora_1;
+            AlfaParaInt(aVarAux,nVlrApf);
+            lstAtivdades.VlrApf =  nVlrApf;    
+         }
+         Se ((aCodOpe = "Alterar") ou (aCodOpe = "Encerrar")) {
+        
+             AlfaParaint(aSeqApf,nSeqApf);
+             AlfaParaData (aDatIni,"DD/MM/YYYY",dDatIni);
+             lstAtivdades.SeqAti = nSeqApf;
+             lstAtivdades.Datini = dDatIni;
+         }   
+    }      
+    lstAtivdades.Gravar();   
+    nLinAtu  ++;
+    
+   }
+       
+}
+
+
+Funcao CarregaAtividades2(); {
+
+   Definir Alfa aVarAux;
+   Definir Alfa aCodAti;
+   Definir Alfa aCodOpe;
+   Definir Alfa aCodRat;
+   Definir Alfa aSeqApf;
+   Definir Numero nSeqApf;
+   Definir Numero nHorSem;
+   Definir Numero nVlrApf;
+   Definir Alfa  aDatIni;
+   Definir Data dDatIni;
+   Definir Alfa aOpeAux;
+   Definir alfa aRatAtv;
+  
+   
+   nQtdLin  = setMovimentaPessoal.atividades.QtdLinhas;
+   nLinAtu  = 0 ;
+   
+   lstAtivdades.limpar();
+    
+   Enquanto (nLinAtu < nQtdLin) {
+      setMovimentaPessoal.atividades.LinhaAtual = nLinAtu ;
+      aCodOpe  = setMovimentaPessoal.atividades.lst_atividades_carga_horaria_nova_operara;
+      aOpeAux  = aCodOpe ;
+      aVarAux = setMovimentaPessoal.atividades.lst_atividades_carga_horaria_codigo1;
+      
+      ListaItem(aVarAux, "|", 2, aCodAti);
+      ListaItem(aVarAux, "|", 3, aSeqApf);
+      ListaItem(aVarAux, "|", 4, aDatIni);
+      ListaItem(aVarAux, "|", 5, aRatAtv);
+      
+      nHorSem =  setMovimentaPessoal.atividades.lst_atividades_carga_horaria_hora_decimal  ; 
+      aVarAux =  setMovimentaPessoal.atividades.lst_atividades_carga_horaria_valor_hora_1;
+      AlfaParaInt(aVarAux,nVlrApf); 
+      
+      AlfaParaint(aSeqApf,nSeqApf); 
+      
+      Se (aCodope = "Inserir")
+         aDatIni = "31/12/1900";
+        
+      AlfaParaData (aDatIni,"DD/MM/YYYY",dDatIni);
+     
+     
+     @Encerrar a atvidade atual e sera inserida uma nova@
+      Se (aCodOpe = "Alterar") {
+         aCodOpe = "Encerrar" ;
+      }
+      
+      lstAtivdades.Adicionar();
+      lstAtivdades.CodOpe =  aCodOpe;
+      lstAtivdades.CodAti =  aCodAti ;
+      lstAtivdades.HorSem =  nHorSem;    
+      lstAtivdades.VlrApf =  nVlrApf; 
+      
+      Se (aCodOpe = aOpeAux)        
+         lstAtivdades.TipAlt = 1 ;
+      Senao
+          lstAtivdades.TipAlt = 2 ;
+        
+      lstAtivdades.SeqAti = nSeqApf;
+      lstAtivdades.Datini = dDatIni;
+      
+      Se (aCodOpe = "Inserir") {
+         aVarAux=  setMovimentaPessoal.atividades.lst_atividades_carga_horaria_centro_de_custo1 ; 
+         ListaItem(aVarAux, "-", 1, aCodRat);  
+         
+         Se ((aCodRat = "0") ou (aCodRat = "") ou (aCodRat = " ")) {
+            aVarAux =  setMovimentaPessoal.atividades.lst_atividades_carga_horaria_centro_de_custoat ;
+            ListaItem(aVarAux, "-", 1, aCodRat); 
+         }
+               
+         lstAtivdades.CodRat = aCodRat ;
+         lstAtivdades.ObsAtv = "BPM Instancia:"+aBpmId+", Nova Atvidade" ; 
+      
+      }
+      Se (aCodOpe = "Encerrar") {
+        Se (aCodOpe = aOpeAux)
+           lstAtivdades.ObsAtv = "BPM Instancia:"+aBpmId+", Atvidade Encerrada" ;
+        Senao
+           lstAtivdades.ObsAtv = "BPM Instancia:"+aBpmId+", (Encerrada) Alteração Carga Horaria" ;
+         
+      }
+      
+      lstAtivdades.Gravar();
+      
+      @Alteração de atividade encerra a atual e inserir uma nova para manter historico de alteraçao@
+      Se (aOpeAux <> aCodOpe){
+         lstAtivdades.Adicionar();
+         lstAtivdades.CodOpe = "Inserir" ;
+         lstAtivdades.CodAti =  aCodAti ;
+         lstAtivdades.HorSem = nHorSem;
+         lstAtivdades.CodRat = aRatAtv ;
+         lstAtivdades.VlrApf = nVlrApf ;
+         lstAtivdades.ObsAtv = "BPM Instancia:"+aBpmId+", Alteração Carga Horaria" ;
+         lstAtivdades.Gravar();
+      }
+      nLinAtu  ++;
+    }    
+}
+
+Funcao PersistenciaMovimentacao (Numero pTipPer, Numero End pRetPer);{
+   Definir Alfa aCurAux ;
+   pRetPer = 0;
+   @PERISTENCIA HIISTORICO SALARIAL@
+   SQl_Criar(aCurAux);
+   Sql_UsarSqlSenior2(aCurAux,0);
+   Sql_UsarAbrangencia(aCurAux,0);
+   
+   Se (pTipPer = 1) {
+      Sql_DefinirComando(aCurAux,"SELECT                         \
+                                      NUMEMP                     \
+                                  FROM                           \
+                                      R038HSA                    \
+                                  WHERE                          \
+                                      NUMEMP     = :NUMEMP       \
+                                      AND TIPCOL = :TIPCOL       \
+                                      AND NUMCAD = :NUMCAD       \
+                                      AND USU_InsBPM = :BPMID    \
+                                      AND DATALT = :DATALT       \
+                                      AND CODMOT = :CODMOT") ;  
+   }
+   Se (pTipPer = 2) {
+      Sql_DefinirComando(aCurAux,"SELECT                       \
+                                      NUMEMP                   \
+                                  FROM                         \
+                                      R038HPO                  \
+                                  WHERE                        \
+                                      NUMEMP     = :NUMEMP     \
+                                      AND TIPCOL = :TIPCOL     \
+                                      AND NUMCAD = :NUMCAD     \
+                                      AND USU_InsBPM = :BPMID  \
+                                      AND INIATU = :DATALT     \
+                                      AND POSTRA = :POSTRA     \
+                                      AND MOTALT = :CODMOT"); 
+   }
+   Se (pTipPer = 3) {
+      Sql_DefinirComando(aCurAux,"SELECT                          \
+                                      NUMEMP                      \
+                                  FROM                            \
+                                      R038HES                     \
+                                  WHERE                           \
+                                      NUMEMP     = :NUMEMP        \
+                                      AND TIPCOL = :TIPCOL        \
+                                      AND NUMCAD = :NUMCAD        \
+                                      AND USU_InsBPM = :BPMID     \
+                                      AND DATALT = :DATALT        \
+                                      AND CODESC = :CODESC") ;
+   }
+   Se (pTipPer = 4) {
+      Sql_DefinirComando(aCurAux,"SELECT                          \
+                                      NUMEMP                      \
+                                  FROM                            \
+                                      R171APF                     \
+                                  WHERE                           \
+                                      NUMEMP     = :NUMEMP        \
+                                      AND TIPCOL = :TIPCOL        \
+                                      AND NUMCAD = :NUMCAD        \
+                                      AND USU_InsBPM = :BPMID     \
+                                      AND (DATINI = :DATALT OR DATFIM =:DATALT )") ;
+   }
+   
+   Sql_DefinirInteiro  (aCurAux, "NUMEMP",nNumEmp);
+   Sql_DefinirInteiro  (aCurAux, "TIPCOL",nTipCol);
+   Sql_DefinirInteiro  (aCurAux, "NUMCAD",nNumCad);
+   Sql_DefinirFlutuante(aCurAux,"BPMID",nBpmId);  
+   Sql_DefinirData     (aCurAux,"DATALT",dDatMov);
+   
+   Se ((pTipPer <> 3) e (pTipPer <> 4))
+       Sql_DefinirInteiro  (aCurAux, "CODMOT",nCodMot);
+   Se (pTipPer = 2)
+      Sql_DefinirAlfa     (aCurAux,"POSTRA",aPosDes);
+   Se (pTipPer = 3)
+     Sql_DefinirInteiro   (aCurAux,"CODESC",nEscDes);   
+     
+   Sql_AbrirCursor(aCurAux);
+   Se(SQL_EOF(aCurAux) = 0)
+     pRetPer = 1;
+       
+   Sql_FecharCursor(aCurAux);
+   Sql_Destruir(aCurAux); 
+
+}
+
+Funcao InserirAtividadesProfessor();  {
+   
+   Definir Alfa aCodApf ;
+   Definir Alfa aCodRat;
+   Definir Data dDatZer;
+   Definir Data dDatIni;
+   Definir Alfa aObsApf;
+   Definir Numero nHorSem;
+   ATI_MsgRet = "";
+   lstAtivdades.Primeiro();
+   lstAtivdades.Anterior(); 
+
+   IniciarTransacao() ;
+   Enquanto (lstAtivdades.Proximo() = 1)  {
+   
+      aCodOpe =  lstAtivdades.CodOpe ;
+      aCodApf =  lstAtivdades.CodAti;
+      nHorSem =  lstAtivdades.HorSem * 60;
+      aCodRat =  lstAtivdades.CodRat;
+      nValApf  = lstAtivdades.VlrApf;
+      nSeqApf = lstAtivdades.SeqAti;
+      dDatIni = lstAtivdades.Datini;
+      aObsApf = lstAtivdades.ObsAtv ;
+         
+      nHorMes = nHorSem * 4.5;
+      AlfaParaInt(aCodRat,nCodRat);
+      AlfaParaint(aCodApf,nCodApf);
+     
+      Se (aCodope  = "Inserir") {
+         ExecSqlEx("INSERT INTO R171APF  \ 
+                  (                      \
+                      numemp,            \
+                      tipcol,            \
+                      numcad,            \
+                      codapf,            \
+                      seqapf,            \
+                      datini,            \
+                      hormes,            \
+                      valapf,            \
+                      clasal,            \
+                      nivsal,            \
+                      hormno,            \
+                      horsem,            \
+                      horsno,            \
+                      horseg,            \
+                      horter,            \
+                      horqua,            \
+                      horqui,            \
+                      horsex,            \
+                      horsab,            \
+                      hordom,            \
+                      estsal,            \
+                      refapf,            \
+                      oriapf,            \
+                      obsapf,            \
+                      datfim,            \
+                      codrat,            \
+                      marpto,            \
+                      USU_InsBPM         \ 
+                  )                      \
+                  VALUES                 \
+                  (                      \
+                      :nNumEmp,          \
+                      :nTipCol,          \
+                      :nNumCad,          \
+                      :nCodApf,         \
+                      (SELECT ISNULL(MAX(SEQAPF), 0) + 1  FROM R171APF WHERE NUMEMP  = :nNumEmp and TIPCOL = :nTipCol And  NUMCAD = :nNumCad AND DatIni =:dDatMov),          \
+                      :dDatMov,          \
+                      :nHorMes,         \
+                      :nValApf,          \
+                      ' ',               \
+                      ' ',               \
+                      0,                 \
+                      :nHorSem,                 \
+                      0,                 \
+                      0,                 \
+                      0,                 \
+                      0,                 \
+                      0,                 \
+                      0,                 \
+                      0,                 \
+                      0,                 \
+                      0,                 \
+                      0,                 \
+                      'A',               \
+                      :aObsApf,               \
+                      :dDatZer,          \
+                      :nCodRat,          \
+                      'N',               \
+                      :nBpmId            \
+                  )",nErrSql,ATI_MsgRet);
+         
+         Se (nErrSql > 0){
+            DesfazerTRansacao();
+            VaPara FinalAtividade;
+         }
+                        
+      }
+      Se (aCodOpe = "Encerrar") {
+     
+     
+         ExecSqlEx("UPDATE R171APF                   \
+                       SET DATFIM       = :dFimAti,  \
+                           USU_InsBPM   = :nBpmId,    \
+                           OBSAPF =  CASE                                                   \ 
+                                         WHEN OBSAPF IS NULL OR LTRIM(RTRIM(OBSAPF)) = ''   \
+                                              THEN :aObsApf                                    \
+                                         ELSE OBSAPF + CHAR(13) + CHAR(10) + :aObsApf       \
+                                      END                                                   \
+                     WHERE NUMEMP = :nNumEmp         \
+                       AND TIPCOL = :nTipCol         \
+                       AND NUMCAD = :nNumCad         \
+                       AND CODAPF = :nCodApf         \
+                       AND DATFIM = :dDatZer\
+                       AND SEQAPF = :nSeqApf \
+                       AND DATINI = :dDatIni",nErrSql,ATI_MsgRet) ;
+         Se (nErrSql > 0){
+            
+            VaPara FinalAtividade;
+         }
+         
+      }
+      
+      Se (aCodOpe = "Alterar") {
+      
+         ExecSqlEx("UPDATE R171APF                   \
+                       SET HORMES     = :nHorMes,  \
+                           VALAPF     = :nValApf,  \
+                           USU_InsBPM = :nBpmId,    \
+                           OBSAPF =  CASE                                                   \ 
+                                         WHEN OBSAPF IS NULL OR LTRIM(RTRIM(OBSAPF)) = ''   \
+                                              THEN :aObsApf                                    \
+                                         ELSE OBSAPF + CHAR(13) + CHAR(10) + :aObsApf       \
+                                      END            \
+                     WHERE NUMEMP = :nNumEmp         \
+                       AND TIPCOL = :nTipCol         \
+                       AND NUMCAD = :nNumCad         \
+                       AND CODAPF = :nCodApf         \
+                       AND DATFIM = :dDatZer        \
+                       AND SEQAPF = :nSeqApf \
+                       AND DATINI = :dDatIni ",nErrSql,ATI_MsgRet) ;
+         Se (nErrSql > 0){
+           
+            VaPara FinalAtividade;
+         }
+         
+      }
+   }
+   
+   FinalAtividade:
+   Se (nErrSql = 0) {
+     FinalizarTransacao();
+     ATI_MsgRet = "OK" ;
+   }  
+   Senao { 
+     DesfazerTransacao();  
+      ATI_MsgRet = "Erro Inserir Atvividade: " + ATI_MsgRet ; 
+   }
+}

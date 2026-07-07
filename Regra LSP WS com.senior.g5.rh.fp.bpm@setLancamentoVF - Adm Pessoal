@@ -1,0 +1,945 @@
+/*
+    Consultor: Lucas Ferreira
+    Descrição: Script para setar o lançamento de na folha (R0044MOV e R044FIX) e Verificar limite filial.
+    Web Service: setLancamentoVF
+*/
+
+/* Definição de Variáveis*/
+/*         ALFAS         */
+DEFINIR ALFA Cur_Cursor;
+DEFINIR ALFA aSqlBuscaCmp;
+DEFINIR ALFA aSqlBuscaRat;                             
+DEFINIR ALFA aSqlBuscaCcu;
+DEFINIR ALFA anumemp;
+DEFINIR ALFA atipcol;
+DEFINIR ALFA anumcad;
+DEFINIR ALFA acodcal;
+DEFINIR ALFA acodeve;
+DEFINIR ALFA arefeve;
+DEFINIR ALFA aeveval;
+DEFINIR ALFA acmpini;
+DEFINIR ALFA acmpfim;
+DEFINIR ALFA acmpigual;
+DEFINIR ALFA aeveccu;
+DEFINIR ALFA atabeve;
+DEFINIR ALFA aeveccucol;
+DEFINIR ALFA xMensagem;
+DEFINIR ALFA afiltro;
+DEFINIR ALFA alimitefil;
+DEFINIR ALFA xRetornoLimite;
+
+/*        NUMEROS        */
+DEFINIR NUMERO ncodcal;
+DEFINIR NUMERO ncodrat;
+DEFINIR NUMERO vnQtdLinhas;
+DEFINIR NUMERO vnContador;
+DEFINIR NUMERO ntabeve;
+DEFINIR NUMERO nnumemp;
+DEFINIR NUMERO ntipcol;
+DEFINIR NUMERO nnumcad;
+DEFINIR NUMERO ncodeve;
+DEFINIR NUMERO nrefeve;
+DEFINIR NUMERO neveval;
+DEFINIR NUMERO ncodrat;
+DEFINIR NUMERO vnErroGeral;
+DEFINIR NUMERO nTotValEve;
+DEFINIR NUMERO nvaleve;
+DEFINIR NUMERO nlimitefil;
+
+
+/*       CURSORES        */
+DEFINIR CURSOR Cur_BuscaCmp;
+DEFINIR CURSOR Cur_BuscaRat;
+DEFINIR CURSOR Cur_BuscaCcu;
+Definir Cursor cE008EVC ;
+
+/*        DATAS          */
+DEFINIR DATA dcmpini;
+DEFINIR DATA dcmpfim;
+
+
+
+
+/* Atribuição de Valores Iniciais */
+ntabeve = 100;
+nTotValEve = 0;
+xRetornoLimite = "Dentro";
+
+anumemp = setLancamentoVF.enumemp;
+atipcol = setLancamentoVF.etipcol;
+acmpini = setLancamentoVF.ecmpini;
+acmpfim = setLancamentoVF.ecmpfim;
+afiltro = setLancamentoVF.efiltro;
+alimitefil = setLancamentoVF.elmtfil;
+
+/* Validações de Competência */
+SE(acmpini = acmpfim)
+{
+    acmpigual = "S";
+}
+SENAO
+{
+    acmpigual = "N";
+}
+
+/* Conversões de Tipos */
+acmpini = "01/" + acmpini;
+acmpfim = "30/" + acmpfim;
+
+alfaparadata(acmpini, "DD/MM/YYYY",dcmpini);
+alfaparadata(acmpfim, "DD/MM/YYYY",dcmpfim);
+
+alfaparaint(anumemp,nnumemp);
+alfaparaint(atipcol,ntipcol);
+alfaparaint(alimitefil, nlimitefil);
+
+/*=================================== MODO INSERÇÃO ==========================================*/
+SE (afiltro = "INSERT")
+{
+    /* Se competência inicial e final for igual, verifica se existe cálculo */
+        /* Procura Cálculo para a Competência e Lógica Inserções*/
+            Cur_BuscaCmp.sql "SELECT \
+                                codcal \
+                            FROM \
+                                R044CAL \
+                            WHERE \
+                                inicmp = :dcmpini \   
+                            AND numemp = :nnumemp";
+
+            Cur_BuscaCmp.abrircursor();
+            @ Verifica se existe o cálculo @
+            SE(Cur_BuscaCmp.achou)
+            {
+                ncodcal = Cur_BuscaCmp.codcal;
+
+                @ Obter quantidade de linhas retornadas @
+                vnQtdLinhas = setLancamentoVF.coleve.QtdLinhas;
+                        
+                @ Verificar se há dados @
+                SE (vnQtdLinhas > 0) {
+                    IniciarTransacao();
+                    vnErroGeral = 0;
+                    vnContador = 0;
+
+                    ENQUANTO (vnContador < vnQtdLinhas) 
+                    {
+                    setLancamentoVF.coleve.LinhaAtual = vnContador;
+                    anumcad = setLancamentoVF.coleve.colaboradores__eventos_matricula_colaborador;
+                    TROCASTRING(anumcad, ".", "", anumcad);
+
+                    /* Conversão de Tipos*/
+                    alfaparaint(anumcad, nnumcad);
+                  Cur_BuscaCcu.sql "SELECT codccu \
+                                    FROM R034FUN \
+                                    WHERE numemp = :nnumemp \
+                                    AND numcad = :nnumcad \
+                                    AND tipcol = :ntipcol";
+                    Cur_BuscaCcu.abrircursor();
+                    SE(Cur_BuscaCcu.achou) {
+                        aeveccucol = Cur_BuscaCcu.codccu;
+                    }
+
+                    vnEvento = 1;
+
+                    ENQUANTO (vnEvento <= 24) {
+                        SE (vnEvento = 1) {
+                            acodeve = setLancamentoVF.coleve.evento1;
+                            arefeve = setLancamentoVF.coleve.refeve;
+                            aeveval = setLancamentoVF.coleve.colaboradores__eventos_valor;
+                            aeveccu = setLancamentoVF.coleve.eveccu;
+                        } 
+                        SENAO 
+                        SE (vnEvento = 2) {
+                            acodeve = setLancamentoVF.coleve.evento2;
+                            arefeve = setLancamentoVF.coleve.refeve2;
+                            aeveval = setLancamentoVF.coleve.eveval2;
+                            aeveccu = setLancamentoVF.coleve.eveccu2;
+                        } 
+                        SENAO
+                        SE (vnEvento = 3) {
+                            acodeve = setLancamentoVF.coleve.evento3;
+                            arefeve = setLancamentoVF.coleve.refeve3;
+                            aeveval = setLancamentoVF.coleve.eveval3;
+                            aeveccu = setLancamentoVF.coleve.eveccu3;
+                        } 
+                        SENAO 
+                        SE (vnEvento = 4) {
+                            acodeve = setLancamentoVF.coleve.evento4;
+                            arefeve = setLancamentoVF.coleve.refeve4;
+                            aeveval = setLancamentoVF.coleve.eveval4;
+                            aeveccu = setLancamentoVF.coleve.eveccu4;
+                        } 
+                        SENAO
+                        SE (vnEvento = 5) {
+                            acodeve = setLancamentoVF.coleve.evento5;
+                            arefeve = setLancamentoVF.coleve.refeve5;
+                            aeveval = setLancamentoVF.coleve.eveval5;
+                            aeveccu = setLancamentoVF.coleve.eveccu5;
+                        } 
+                        SENAO
+                        SE (vnEvento = 6) {
+                            acodeve = setLancamentoVF.coleve.evento6;
+                            arefeve = setLancamentoVF.coleve.refeve6;
+                            aeveval = setLancamentoVF.coleve.eveval6;
+                            aeveccu = setLancamentoVF.coleve.eveccu6;
+                        } 
+                        SENAO
+                        SE (vnEvento = 7) {
+                            acodeve = setLancamentoVF.coleve.evento7;
+                            arefeve = setLancamentoVF.coleve.refeve7;
+                            aeveval = setLancamentoVF.coleve.eveval7;
+                            aeveccu = setLancamentoVF.coleve.eveccu7;
+                        }
+                        SENAO
+                        SE (vnEvento = 8) {
+                            acodeve = setLancamentoVF.coleve.evento8;
+                            arefeve = setLancamentoVF.coleve.refeve8;
+                            aeveval = setLancamentoVF.coleve.eveval8;
+                            aeveccu = setLancamentoVF.coleve.eveccu8;
+                        } 
+                        SENAO
+                        SE (vnEvento = 9) {
+                            acodeve = setLancamentoVF.coleve.evento9;
+                            arefeve = setLancamentoVF.coleve.refeve9;
+                            aeveval = setLancamentoVF.coleve.eveval9;
+                            aeveccu = setLancamentoVF.coleve.eveccu9;
+                        } 
+                        SENAO
+                        SE (vnEvento = 10) {
+                            acodeve = setLancamentoVF.coleve.evento10;
+                            arefeve = setLancamentoVF.coleve.refeve10;
+                            aeveval = setLancamentoVF.coleve.eveval10;
+                            aeveccu = setLancamentoVF.coleve.eveccu10;
+                        }                         
+                        SENAO
+                        SE (vnEvento = 11) {
+                            acodeve = setLancamentoVF.coleve.evento11;
+                            arefeve = setLancamentoVF.coleve.refeve11;
+                            aeveval = setLancamentoVF.coleve.eveval11;
+                            aeveccu = setLancamentoVF.coleve.eveccu11;
+                        } 
+                        SENAO
+                        SE (vnEvento = 12) {
+                            acodeve = setLancamentoVF.coleve.evento12;
+                            arefeve = setLancamentoVF.coleve.refeve12;
+                            aeveval = setLancamentoVF.coleve.eveval12;
+                            aeveccu = setLancamentoVF.coleve.eveccu12;
+                        } 
+                        SENAO
+                        SE (vnEvento = 13) {
+                            acodeve = setLancamentoVF.coleve.evento13;
+                            arefeve = setLancamentoVF.coleve.refeve13;
+                            aeveval = setLancamentoVF.coleve.eveval13;
+                            aeveccu = setLancamentoVF.coleve.eveccu13;
+                        } 
+                        SENAO
+                        SE (vnEvento = 14) {
+                            acodeve = setLancamentoVF.coleve.evento14;
+                            arefeve = setLancamentoVF.coleve.refeve14;
+                            aeveval = setLancamentoVF.coleve.eveval14;
+                            aeveccu = setLancamentoVF.coleve.eveccu14;
+                        } 
+                        SENAO
+                        SE (vnEvento = 15) {
+                            acodeve = setLancamentoVF.coleve.evento15;
+                            arefeve = setLancamentoVF.coleve.refeve15;
+                            aeveval = setLancamentoVF.coleve.eveval15;
+                            aeveccu = setLancamentoVF.coleve.eveccu15;
+                        } 
+                        SENAO
+                        SE(vnEvento = 16) {
+                            acodeve = setLancamentoVF.coleve.evento16;
+                            arefeve = setLancamentoVF.coleve.refeve16;
+                            aeveval = setLancamentoVF.coleve.eveval16;
+                            aeveccu = setLancamentoVF.coleve.eveccu16;
+                        } 
+                        SENAO
+                        SE(vnEvento = 17) {
+                            acodeve = setLancamentoVF.coleve.evento17;
+                            arefeve = setLancamentoVF.coleve.refeve17;
+                            aeveval = setLancamentoVF.coleve.eveval17;
+                            aeveccu = setLancamentoVF.coleve.eveccu17;
+                        } 
+                        SENAO
+                        SE (vnEvento = 18) {
+                            acodeve = setLancamentoVF.coleve.evento18;
+                            arefeve = setLancamentoVF.coleve.refeve18;
+                            aeveval = setLancamentoVF.coleve.eveval18;
+                            aeveccu = setLancamentoVF.coleve.eveccu18;
+                        }
+                        SENAO
+                        SE(vnEvento = 19) {
+                            acodeve = setLancamentoVF.coleve.evento19;
+                            arefeve = setLancamentoVF.coleve.refeve19;
+                            aeveval = setLancamentoVF.coleve.eveval19;
+                            aeveccu = setLancamentoVF.coleve.eveccu19;
+                        }
+                        SENAO
+                        SE(vnEvento = 20) {
+                            acodeve = setLancamentoVF.coleve.evento20;
+                            arefeve = setLancamentoVF.coleve.refeve20;
+                            aeveval = setLancamentoVF.coleve.eveval20;
+                            aeveccu = setLancamentoVF.coleve.eveccu20;
+                        }
+                        SENAO
+                        SE(vnEvento = 21) {
+                            acodeve = setLancamentoVF.coleve.evento21;
+                            arefeve = setLancamentoVF.coleve.refeve21;
+                            aeveval = setLancamentoVF.coleve.eveval21;
+                            aeveccu = setLancamentoVF.coleve.eveccu21;
+                        }
+                        SENAO
+                        SE(vnEvento = 22) {
+                            acodeve = setLancamentoVF.coleve.evento22;
+                            arefeve = setLancamentoVF.coleve.refeve22;
+                            aeveval = setLancamentoVF.coleve.eveval22;
+                            aeveccu = setLancamentoVF.coleve.eveccu22;
+                        }
+                        SENAO
+                        SE(vnEvento = 23) {
+                            acodeve = setLancamentoVF.coleve.evento23;
+                            arefeve = setLancamentoVF.coleve.refeve23;
+                            aeveval = setLancamentoVF.coleve.eveval23;
+                            aeveccu = setLancamentoVF.coleve.eveccu23;
+                        }
+                        SENAO
+                        SE(vnEvento = 24) {
+                            acodeve = setLancamentoVF.coleve.evento24;
+                            arefeve = setLancamentoVF.coleve.refeve24;
+                            aeveval = setLancamentoVF.coleve.eveval24;
+                            aeveccu = setLancamentoVF.coleve.eveccu24;
+                        }
+
+                        SE (aeveccu = "") 
+                        {
+                            aeveccu = aeveccucol; @CCU DO COLABORADOR -- @
+                        }
+
+                        SE (acodeve <> "") 
+                        {
+                        
+                            TiraEspacos (aeveval,aeveval);
+                            TrocaString(aeveval,".","", aeveval);
+                          
+                            /* Conversão de Tipos*/
+                            alfaparaint(acodeve, ncodeve);
+                            alfaparaint(arefeve, nrefeve);
+                            alfaparaint(aeveval, neveval);
+                            alfaparaint(aeveccu, neveccu);
+                            
+                   
+                            
+                            Cur_BuscaRat.sql "SELECT codrat \
+                                            FROM R018CCU \
+                                            WHERE codccu = :aeveccu \
+                                            AND numemp = :nnumemp";
+                            Cur_BuscaRat.abrircursor();
+                            Se (Cur_BuscaRat.achou) {
+                                ncodrat = Cur_BuscaRat.codrat;
+                                
+                              /*
+                                  RENAN ROBERTO RAIMUNDO
+                                  TRATAR ENVENTOS TIPO HORAS INSERINDO 
+                                  ENVENTOS DO TIPO HORA TEM QUE MULTIPLICAR POR 60(minutos) POIS pois no bpm eless informar em horas
+                                  e no banco grava em minutos 
+                                  
+                              */ 
+                              
+                              Se (nrefeve > 0) {
+                              
+                                 cE008EVC.Sql "SELECT TIPINF FROM R008EVC \
+                                               WHERE codtab = :ntabeve \
+                                                AND  CodEve = :ncodeve \
+                                                AND  TipInf IN ('H','N')" ;
+                              
+                                 cE008EVC.AbrirCursor();
+                                 Se (cE008EVC.Achou) {
+                                    nrefeve = nrefeve * 60 ;   
+                                 
+                                 }
+                                 cE008EVC.FecharCursor();
+                              
+                              }
+                              
+                              
+                              @ RENAN  ROBERTO RAIMUNDO não deixar inserir com valores zerados tratativa bpm deixa uma linha em@ 
+                              Se ((nrefeve > 0) ou (neveval > 0))  {
+                              
+                                 ExecSQLEx ("INSERT INTO R044MOV ( \
+                                                          NumEmp, \ 
+                                                          TipCol, \
+                                                          NumCad, \
+                                                          CodCal, \
+                                                          TabEve, \ 
+                                                          CodEve, \
+                                                          CodRat, \
+                                                          SeqEve, \
+                                                          RefEve, \
+                                                          ValEve \
+                                                      )  \
+                                                      VALUES ( \
+                                                          :nnumemp,  \
+                                                          :ntipcol, \
+                                                          :nnumcad, \
+                                                          :ncodcal, \
+                                                          :ntabeve, \
+                                                          :ncodeve, \
+                                                          :ncodrat, \
+                                                          ISNULL(( \
+                                                              SELECT MAX(SeqEve) + 1 \
+                                                              FROM R044MOV \
+                                                              WHERE NumEmp = :nnumemp \
+                                                              AND TipCol = :ntipcol \
+                                                              AND NumCad = :nnumcad \
+                                                              AND TabEve = :ntabeve \
+                                                              AND CodEve = :ncodeve \
+                                                              AND CodRat = :ncodrat \
+                                                          ), 1),  \
+                                                          :nrefeve, \
+                                                          :neveval)", xErro, xMensagem);
+  
+                                   SE (xErro <> 0) {
+                                      vnErroGeral = 1;
+                                      Mensagem(Erro, xMensagem);
+                                      Pare; 
+                                  }
+                              }    
+                            } 
+                            SENAO
+                            {
+                                Definir Alfa avnevento;
+                                intparaalfa(vnEvento, avnevento);
+                                Definir Alfa msgLog;
+                                msgLog = "Rateio não encontrado para evento " + avnevento + " - CCU: " + aeveccu;
+                                MensagemLog(msgLog);
+                            }
+                        }
+                        vnEvento = vnEvento + 1;
+                    }
+
+                    vnContador =  vnContador + 1;
+
+                    } /* Fim do ENQUANTO */
+
+                    SE (vnErroGeral = 0) {
+                        FinalizarTransacao();
+                    } SENAO {
+                        DesfazerTransacao();
+                    }
+                }
+                
+            }
+            SENAO /* Para este caso, não existe cálculo, portanto insere na R044FIX*/
+            {
+                    @ Obter quantidade de linhas retornadas @
+                    vnQtdLinhas = setLancamentoVF.coleve.QtdLinhas;
+                            
+                    @ Verificar se há dados @
+                    SE (vnQtdLinhas > 0) {
+                        IniciarTransacao();
+                        vnErroGeral = 0;
+                        vnContador = 0;
+
+                        ENQUANTO (vnContador < vnQtdLinhas) 
+                            {
+                            setLancamentoVF.coleve.LinhaAtual = vnContador;
+                            anumcad = setLancamentoVF.coleve.colaboradores__eventos_matricula_colaborador;
+
+                            TROCASTRING(anumcad, ".", "", anumcad);
+
+                            /* Conversão de Tipos*/
+                            alfaparaint(anumcad, nnumcad);
+                        Cur_BuscaCcu.sql "SELECT codccu \
+                                            FROM R034FUN \
+                                            WHERE numemp = :nnumemp \
+                                            AND numcad = :nnumcad \
+                                            AND tipcol = :ntipcol";
+                            Cur_BuscaCcu.abrircursor();
+                            SE(Cur_BuscaCcu.achou) {
+                                aeveccucol = Cur_BuscaCcu.codccu;
+                            }
+
+                            vnEvento = 1;
+
+                            ENQUANTO (vnEvento <= 24) {
+                                SE (vnEvento = 1) {
+                                    acodeve = setLancamentoVF.coleve.evento1;
+                                    arefeve = setLancamentoVF.coleve.refeve;
+                                    aeveval = setLancamentoVF.coleve.colaboradores__eventos_valor;
+                                    aeveccu = setLancamentoVF.coleve.eveccu;
+                                } 
+                                SENAO 
+                                SE (vnEvento = 2) {
+                                    acodeve = setLancamentoVF.coleve.evento2;
+                                    arefeve = setLancamentoVF.coleve.refeve2;
+                                    aeveval = setLancamentoVF.coleve.eveval2;
+                                    aeveccu = setLancamentoVF.coleve.eveccu2;
+                                } 
+                                SENAO
+                                SE (vnEvento = 3) {
+                                    acodeve = setLancamentoVF.coleve.evento3;
+                                    arefeve = setLancamentoVF.coleve.refeve3;
+                                    aeveval = setLancamentoVF.coleve.eveval3;
+                                    aeveccu = setLancamentoVF.coleve.eveccu3;
+                                } 
+                                SENAO 
+                                SE (vnEvento = 4) {
+                                    acodeve = setLancamentoVF.coleve.evento4;
+                                    arefeve = setLancamentoVF.coleve.refeve4;
+                                    aeveval = setLancamentoVF.coleve.eveval4;
+                                    aeveccu = setLancamentoVF.coleve.eveccu4;
+                                } 
+                                SENAO
+                                SE (vnEvento = 5) {
+                                    acodeve = setLancamentoVF.coleve.evento5;
+                                    arefeve = setLancamentoVF.coleve.refeve5;
+                                    aeveval = setLancamentoVF.coleve.eveval5;
+                                    aeveccu = setLancamentoVF.coleve.eveccu5;
+                                } 
+                                SENAO
+                                SE (vnEvento = 6) {
+                                    acodeve = setLancamentoVF.coleve.evento6;
+                                    arefeve = setLancamentoVF.coleve.refeve6;
+                                    aeveval = setLancamentoVF.coleve.eveval6;
+                                    aeveccu = setLancamentoVF.coleve.eveccu6;
+                                } 
+                                SENAO
+                                SE (vnEvento = 7) {
+                                    acodeve = setLancamentoVF.coleve.evento7;
+                                    arefeve = setLancamentoVF.coleve.refeve7;
+                                    aeveval = setLancamentoVF.coleve.eveval7;
+                                    aeveccu = setLancamentoVF.coleve.eveccu7;
+                                }
+                                SENAO
+                                SE (vnEvento = 8) {
+                                    acodeve = setLancamentoVF.coleve.evento8;
+                                    arefeve = setLancamentoVF.coleve.refeve8;
+                                    aeveval = setLancamentoVF.coleve.eveval8;
+                                    aeveccu = setLancamentoVF.coleve.eveccu8;
+                                } 
+                                SENAO
+                                SE (vnEvento = 9) {
+                                    acodeve = setLancamentoVF.coleve.evento9;
+                                    arefeve = setLancamentoVF.coleve.refeve9;
+                                    aeveval = setLancamentoVF.coleve.eveval9;
+                                    aeveccu = setLancamentoVF.coleve.eveccu9;
+                                } 
+                                SENAO
+                                SE (vnEvento = 10) {
+                                    acodeve = setLancamentoVF.coleve.evento10;
+                                    arefeve = setLancamentoVF.coleve.refeve10;
+                                    aeveval = setLancamentoVF.coleve.eveval10;
+                                    aeveccu = setLancamentoVF.coleve.eveccu10;
+                                }                         
+                                SENAO
+                                SE (vnEvento = 11) {
+                                    acodeve = setLancamentoVF.coleve.evento11;
+                                    arefeve = setLancamentoVF.coleve.refeve11;
+                                    aeveval = setLancamentoVF.coleve.eveval11;
+                                    aeveccu = setLancamentoVF.coleve.eveccu11;
+                                } 
+                                SENAO
+                                SE (vnEvento = 12) {
+                                    acodeve = setLancamentoVF.coleve.evento12;
+                                    arefeve = setLancamentoVF.coleve.refeve12;
+                                    aeveval = setLancamentoVF.coleve.eveval12;
+                                    aeveccu = setLancamentoVF.coleve.eveccu12;
+                                } 
+                                SENAO
+                                SE (vnEvento = 13) {
+                                    acodeve = setLancamentoVF.coleve.evento13;
+                                    arefeve = setLancamentoVF.coleve.refeve13;
+                                    aeveval = setLancamentoVF.coleve.eveval13;
+                                    aeveccu = setLancamentoVF.coleve.eveccu13;
+                                } 
+                                SENAO
+                                SE (vnEvento = 14) {
+                                    acodeve = setLancamentoVF.coleve.evento14;
+                                    arefeve = setLancamentoVF.coleve.refeve14;
+                                    aeveval = setLancamentoVF.coleve.eveval14;
+                                    aeveccu = setLancamentoVF.coleve.eveccu14;
+                                } 
+                                SENAO
+                                SE (vnEvento = 15) {
+                                    acodeve = setLancamentoVF.coleve.evento15;
+                                    arefeve = setLancamentoVF.coleve.refeve15;
+                                    aeveval = setLancamentoVF.coleve.eveval15;
+                                    aeveccu = setLancamentoVF.coleve.eveccu15;
+                                } 
+                                SENAO
+                                SE(vnEvento = 16) {
+                                    acodeve = setLancamentoVF.coleve.evento16;
+                                    arefeve = setLancamentoVF.coleve.refeve16;
+                                    aeveval = setLancamentoVF.coleve.eveval16;
+                                    aeveccu = setLancamentoVF.coleve.eveccu16;
+                                } 
+                                SENAO
+                                SE(vnEvento = 17) {
+                                    acodeve = setLancamentoVF.coleve.evento17;
+                                    arefeve = setLancamentoVF.coleve.refeve17;
+                                    aeveval = setLancamentoVF.coleve.eveval17;
+                                    aeveccu = setLancamentoVF.coleve.eveccu17;
+                                } 
+                                SENAO
+                                SE (vnEvento = 18) {
+                                    acodeve = setLancamentoVF.coleve.evento18;
+                                    arefeve = setLancamentoVF.coleve.refeve18;
+                                    aeveval = setLancamentoVF.coleve.eveval18;
+                                    aeveccu = setLancamentoVF.coleve.eveccu18;
+                                }
+                                SENAO
+                                SE(vnEvento = 19) {
+                                    acodeve = setLancamentoVF.coleve.evento19;
+                                    arefeve = setLancamentoVF.coleve.refeve19;
+                                    aeveval = setLancamentoVF.coleve.eveval19;
+                                    aeveccu = setLancamentoVF.coleve.eveccu19;
+                                }
+                                SENAO
+                                SE(vnEvento = 20) {
+                                    acodeve = setLancamentoVF.coleve.evento20;
+                                    arefeve = setLancamentoVF.coleve.refeve20;
+                                    aeveval = setLancamentoVF.coleve.eveval20;
+                                    aeveccu = setLancamentoVF.coleve.eveccu20;
+                                }
+                                SENAO
+                                SE(vnEvento = 21) {
+                                    acodeve = setLancamentoVF.coleve.evento21;
+                                    arefeve = setLancamentoVF.coleve.refeve21;
+                                    aeveval = setLancamentoVF.coleve.eveval21;
+                                    aeveccu = setLancamentoVF.coleve.eveccu21;
+                                }
+                                SENAO
+                                SE(vnEvento = 22) {
+                                    acodeve = setLancamentoVF.coleve.evento22;
+                                    arefeve = setLancamentoVF.coleve.refeve22;
+                                    aeveval = setLancamentoVF.coleve.eveval22;
+                                    aeveccu = setLancamentoVF.coleve.eveccu22;
+                                }
+                                SENAO
+                                SE(vnEvento = 23) {
+                                    acodeve = setLancamentoVF.coleve.evento23;
+                                    arefeve = setLancamentoVF.coleve.refeve23;
+                                    aeveval = setLancamentoVF.coleve.eveval23;
+                                    aeveccu = setLancamentoVF.coleve.eveccu23;
+                                }
+                                SENAO
+                                SE(vnEvento = 24) {
+                                    acodeve = setLancamentoVF.coleve.evento24;
+                                    arefeve = setLancamentoVF.coleve.refeve24;
+                                    aeveval = setLancamentoVF.coleve.eveval24;
+                                    aeveccu = setLancamentoVF.coleve.eveccu24;
+                                }
+                                SE (aeveccu = "") 
+                                {
+                                    aeveccu = aeveccucol; @CCU DO COLABORADOR -- @
+                                }
+
+                                SE (acodeve <> "") 
+                                {
+                                    /* Conversão de Tipos*/
+                                    alfaparaint(acodeve, ncodeve);
+                                    alfaparaint(arefeve, nrefeve);
+                                    alfaparaint(aeveval, neveval);
+                                    alfaparaint(aeveccu, neveccu);
+                                    alfaparaint(anumcad, nnumcad);
+
+
+                                    Cur_BuscaRat.sql "SELECT codrat \
+                                                    FROM R018CCU \
+                                                    WHERE codccu = :neveccu \
+                                                    AND numemp = :nnumemp";
+                                    Cur_BuscaRat.abrircursor();
+                                    Se (Cur_BuscaRat.achou) {
+                                        ncodrat = Cur_BuscaRat.codrat;
+                                        
+                                    
+                                    @ RENAN  ROBERTO RAIMUNDO não deixar inserir com valores zerados tratativa bpm deixa uma linha em branco@
+                                    Se (neveval > 0) {
+                                      ExecSQLEx ("INSERT INTO R044FIX ( \
+                                                                  NumEmp, \ 
+                                                                  TipCol, \
+                                                                  NumCad, \
+                                                                  TabEve, \ 
+                                                                  CodEve, \
+                                                                  CodRat, \
+                                                                  ValEve, \
+                                                                  DatIni, \
+                                                                  DatFim \
+                                                              )  \
+                                                              VALUES ( \
+                                                                  :nnumemp,  \
+                                                                  :ntipcol, \
+                                                                  :nnumcad, \
+                                                                  :ntabeve, \
+                                                                  :ncodeve, \
+                                                                  :ncodrat, \
+                                                                  :neveval, \
+                                                                  :dcmpini, \
+                                                                  :dcmpfim)", xErro, xMensagem);
+                                          SE (xErro <> 0) {
+                                              vnErroGeral = 1;
+                                              Mensagem(Erro, xMensagem);
+                                              Pare; 
+                                          }
+                                      }    
+                                    } 
+                                    SENAO
+                                    {    
+                                        Definir Alfa avnevento;
+                                        intparaalfa(vnEvento, avnevento);
+                                        Definir Alfa msgLog;
+                                        msgLog = "Rateio não encontrado para evento " + avnevento + " - CCU: " + aeveccu;
+                                        MensagemLog(msgLog);
+                                    }
+                                }
+                                vnEvento = vnEvento + 1;
+                            }
+
+                            vnContador = vnContador + 1;
+                        }
+                    
+                        SE (vnErroGeral = 0) {
+                            FinalizarTransacao();
+                        } SENAO {
+                            DesfazerTransacao();
+                        }
+
+                    @ DEFINIR ALFA xmensagem; @
+                    @ xmensagem = "Cálculo para a competência " + acmpini + " não encontrado."; @
+                    @ MensagemLog(xmensagem); @
+                }
+             
+            }
+            Cur_BuscaCmp.fecharcursor(); 
+            /* 
+                SENAO
+                SE(acmpigual = "N")
+                {
+                } 
+            */
+}
+/*===================================== FIM INSERÇÃO ========================================*/
+
+
+/*======================================= MODO CONSULTA ==========================================*/
+    SE(afiltro = "CONSULTA")
+    {
+        @ Obter quantidade de linhas retornadas @
+        vnQtdLinhas = setLancamentoVF.coleve.QtdLinhas;
+                
+        @ Verificar se há dados @
+        SE (vnQtdLinhas > 0) {
+            vnErroGeral = 0;
+            vnContador = 0;
+
+            ENQUANTO (vnContador < vnQtdLinhas) 
+            {
+            setLancamentoVF.coleve.LinhaAtual = vnContador;
+
+            vnEvento = 1;
+
+            ENQUANTO (vnEvento <= 24) {
+                SE (vnEvento = 1) {
+                    acodeve = setLancamentoVF.coleve.evento1;
+                    arefeve = setLancamentoVF.coleve.refeve;
+                    aeveval = setLancamentoVF.coleve.colaboradores__eventos_valor;
+                } 
+                SENAO 
+                SE (vnEvento = 2) {
+                    acodeve = setLancamentoVF.coleve.evento2;
+                    arefeve = setLancamentoVF.coleve.refeve2;
+                    aeveval = setLancamentoVF.coleve.eveval2;
+                } 
+                SENAO
+                SE (vnEvento = 3) {
+                    acodeve = setLancamentoVF.coleve.evento3;
+                    arefeve = setLancamentoVF.coleve.refeve3;
+                    aeveval = setLancamentoVF.coleve.eveval3;
+                } 
+                SENAO 
+                SE (vnEvento = 4) {
+                    acodeve = setLancamentoVF.coleve.evento4;
+                    arefeve = setLancamentoVF.coleve.refeve4;
+                    aeveval = setLancamentoVF.coleve.eveval4;
+                } 
+                SENAO
+                SE (vnEvento = 5) {
+                    acodeve = setLancamentoVF.coleve.evento5;
+                    arefeve = setLancamentoVF.coleve.refeve5;
+                    aeveval = setLancamentoVF.coleve.eveval5;
+                } 
+                SENAO
+                SE (vnEvento = 6) {
+                    acodeve = setLancamentoVF.coleve.evento6;
+                    arefeve = setLancamentoVF.coleve.refeve6;
+                    aeveval = setLancamentoVF.coleve.eveval6;
+                } 
+                SENAO
+                SE (vnEvento = 7) {
+                    acodeve = setLancamentoVF.coleve.evento7;
+                    arefeve = setLancamentoVF.coleve.refeve7;
+                    aeveval = setLancamentoVF.coleve.eveval7;
+                }
+                SENAO
+                SE (vnEvento = 8) {
+                    acodeve = setLancamentoVF.coleve.evento8;
+                    arefeve = setLancamentoVF.coleve.refeve8;
+                    aeveval = setLancamentoVF.coleve.eveval8;
+                } 
+                SENAO
+                SE (vnEvento = 9) {
+                    acodeve = setLancamentoVF.coleve.evento9;
+                    arefeve = setLancamentoVF.coleve.refeve9;
+                    aeveval = setLancamentoVF.coleve.eveval9;
+                } 
+                SENAO
+                SE (vnEvento = 10) {
+                    acodeve = setLancamentoVF.coleve.evento10;
+                    arefeve = setLancamentoVF.coleve.refeve10;
+                    aeveval = setLancamentoVF.coleve.eveval10;
+                }                         
+                SENAO
+                SE (vnEvento = 11) {
+                    acodeve = setLancamentoVF.coleve.evento11;
+                    arefeve = setLancamentoVF.coleve.refeve11;
+                    aeveval = setLancamentoVF.coleve.eveval11;
+                } 
+                SENAO
+                SE (vnEvento = 12) {
+                    acodeve = setLancamentoVF.coleve.evento12;
+                    arefeve = setLancamentoVF.coleve.refeve12;
+                    aeveval = setLancamentoVF.coleve.eveval12;
+                } 
+                SENAO
+                SE (vnEvento = 13) {
+                    acodeve = setLancamentoVF.coleve.evento13;
+                    arefeve = setLancamentoVF.coleve.refeve13;
+                    aeveval = setLancamentoVF.coleve.eveval13;
+                } 
+                SENAO
+                SE (vnEvento = 14) {
+                    acodeve = setLancamentoVF.coleve.evento14;
+                    arefeve = setLancamentoVF.coleve.refeve14;
+                    aeveval = setLancamentoVF.coleve.eveval14;
+                } 
+                SENAO
+                SE (vnEvento = 15) {
+                    acodeve = setLancamentoVF.coleve.evento15;
+                    arefeve = setLancamentoVF.coleve.refeve15;
+                    aeveval = setLancamentoVF.coleve.eveval15;
+                } 
+                SENAO
+                SE(vnEvento = 16) {
+                    acodeve = setLancamentoVF.coleve.evento16;
+                    arefeve = setLancamentoVF.coleve.refeve16;
+                    aeveval = setLancamentoVF.coleve.eveval16;
+                } 
+                SENAO
+                SE(vnEvento = 17) {
+                    acodeve = setLancamentoVF.coleve.evento17;
+                    arefeve = setLancamentoVF.coleve.refeve17;
+                    aeveval = setLancamentoVF.coleve.eveval17;
+                } 
+                SENAO
+                SE (vnEvento = 18) {
+                    acodeve = setLancamentoVF.coleve.evento18;
+                    arefeve = setLancamentoVF.coleve.refeve18;
+                    aeveval = setLancamentoVF.coleve.eveval18;
+                }
+                SENAO
+                SE(vnEvento = 19) {
+                    acodeve = setLancamentoVF.coleve.evento19;
+                    arefeve = setLancamentoVF.coleve.refeve19;
+                    aeveval = setLancamentoVF.coleve.eveval19;
+                }
+                SENAO
+                SE(vnEvento = 20) {
+                    acodeve = setLancamentoVF.coleve.evento20;
+                    arefeve = setLancamentoVF.coleve.refeve20;
+                    aeveval = setLancamentoVF.coleve.eveval20;
+                }
+                SENAO
+                SE(vnEvento = 21) {
+                    acodeve = setLancamentoVF.coleve.evento21;
+                    arefeve = setLancamentoVF.coleve.refeve21;
+                    aeveval = setLancamentoVF.coleve.eveval21;
+                }
+                SENAO
+                SE(vnEvento = 22) {
+                    acodeve = setLancamentoVF.coleve.evento22;
+                    arefeve = setLancamentoVF.coleve.refeve22;
+                    aeveval = setLancamentoVF.coleve.eveval22;
+                }
+                SENAO
+                SE(vnEvento = 23) {
+                    acodeve = setLancamentoVF.coleve.evento23;
+                    arefeve = setLancamentoVF.coleve.refeve23;
+                    aeveval = setLancamentoVF.coleve.eveval23;
+                }
+                SENAO
+                SE(vnEvento = 24) {
+                    acodeve = setLancamentoVF.coleve.evento24;
+                    arefeve = setLancamentoVF.coleve.refeve24;
+                    aeveval = setLancamentoVF.coleve.eveval24;
+                }
+
+                /* Conversão de Tipos*/
+                alfaparaint(acodeve, ncodeve);
+                alfaparaint(arefeve, nrefeve);
+                alfaparaint(aeveval, neveval);
+
+            SE(nnumcad = nnumcadaux){
+
+                SE((arefeve = "") OU (arefeve = " ")) 
+                {
+                    @ SE ENTROU AQUI, O EVENTO USA O VALOR PARA INSERÇÕES @
+
+                    nTotValEve = nTotValEve + neveval;
+
+                }
+                SENAO
+                {
+                    @ SE ENTROU AQUI, O EVENTO USA REFERÊNCIA COM VALOR @
+
+                    DEFINIR CURSOR Cur_BuscaValCal;
+
+                    Cur_BuscaValCal.sql "SELECT valcal \
+                                        FROM R008EVC \
+                                        WHERE codtab = :ntabeve \
+                                         AND codeve = :ncodeve";
+                                        
+                    Cur_BuscaValCal.abrircursor();
+                    SE (Cur_BuscaValCal.achou) {
+                        nvaleve = Cur_BuscaValCal.valcal;
+                    }
+
+                    nTotValEve = nTotValEve + (nrefeve * nvaleve);
+                }
+                
+                nTotValEve = 0 ;
+                SE(nTotValEve > nlimitefil) {
+                    xRetornoLimite = "Passou";
+                }
+                @temporario até decidir@
+                xRetornoLimite = "Dentro" ;
+            }
+            SENAO
+            {
+
+            }
+                    
+                vnEvento = vnEvento + 1;
+            }
+
+            vnContador =  vnContador + 1;
+
+            } /* Fim do ENQUANTO */
+
+            setLancamentoVF.sretornolim = "Dentro";
+
+        }
+    }
+
+
+/*=================================== FIM DO MODO CONSULTA =======================================*/
+/* ~~~~~~ End Code ~~~~~~   */
