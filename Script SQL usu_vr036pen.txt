@@ -1,0 +1,146 @@
+select a.numemp,a.tipcol,a.numcad,a.codcal,a.oripen,a.tippen,sum(a.valpen) valpen,b.perref,b.datpag,
+       c.codban,c.codage,c.tpctba,c.conban,c.digban,d.digage,c.ruadep,c.codcep,c.codcid,c.codbai,
+       f.codfil,c.usu_nomfav,c.usu_cpffav
+  from r036pjp a,
+       r044cal b,
+       r036pju c,
+       r012age d,
+       r036dep e,
+       r038hfi f
+ where a.numemp = b.numemp 
+   and a.codcal = b.codcal
+   and a.numemp = c.numemp 
+   and a.tipcol = c.tipcol 
+   and a.numcad = c.numcad 
+   and a.coddep = c.coddep
+   and c.codban = d.codban
+   and c.codage = d.codage
+   and a.numemp = e.numemp
+   and a.tipcol = e.tipcol 
+   and a.numcad = e.numcad 
+   and a.coddep = e.coddep
+   and a.numemp = f.numemp 
+   and a.tipcol = f.tipcol 
+   and a.numcad = f.numcad 
+   and f.datalt = (select max(f2.datalt) 
+                     from r038hfi f2
+                    where f.numemp = f2.numemp
+                      and f.tipcol = f2.tipcol 
+                      and f.numcad = f2.numcad 
+                      and f2.datalt <= eomonth(b.perref))
+   and e.penjud = 'S'
+   and c.modpag = 'R'
+   and a.oripen = 'C'
+group by a.numemp,a.tipcol,a.numcad,a.codcal,a.oripen,a.tippen,b.perref,b.datpag,
+       c.codban,c.codage,c.tpctba,c.conban,c.digban,d.digage,c.ruadep,c.codcep,c.codcid,c.codbai,
+       f.codfil,c.usu_nomfav,c.usu_cpffav
+union
+select a.numemp,a.tipcol,a.numcad,a.codcal,a.oripen,a.tippen,sum(a.valpen) valpen,a.datrf1,a.datrf3,
+       b.codban,b.codage,b.tpctba,b.conban,b.digban,c.digage,b.ruadep,b.codcep,b.codcid,b.codbai,
+       e.codfil,b.usu_nomfav,b.usu_cpffav
+  from r036pjp a,
+       r036pju b,
+       r012age c,
+       r036dep d,
+       r038hfi e
+ where a.numemp = b.numemp 
+   and a.tipcol = b.tipcol 
+   and a.numcad = b.numcad 
+   and a.coddep = b.coddep
+   and b.codban = c.codban
+   and b.codage = c.codage
+   and a.numemp = d.numemp
+   and a.tipcol = d.tipcol 
+   and a.numcad = d.numcad 
+   and a.coddep = d.coddep
+   and a.numemp = e.numemp
+   and a.tipcol = e.tipcol 
+   and a.numcad = e.numcad 
+   and e.datalt = (select max(e2.datalt) 
+                     from r038hfi e2
+                    where e.numemp = e2.numemp
+                      and e.tipcol = e2.tipcol 
+                      and e.numcad = e2.numcad 
+                      and e2.datalt <= a.datrf3)
+   and d.penjud = 'S'
+   and b.modpag = 'R'
+   and a.oripen = 'F'
+group by a.numemp,a.tipcol,a.numcad,a.codcal,a.oripen,a.tippen,a.datrf1,a.datrf3,
+       b.codban,b.codage,b.tpctba,b.conban,b.digban,c.digage,d.nomdep,d.numcpf,b.ruadep,b.codcep,
+       b.codcid,b.codbai,e.codfil,b.usu_nomfav,b.usu_cpffav
+union
+select a.numemp,a.tipcol,a.numcad,a.codcal,a.oripen,'' tippen,sum(a.valpen) valpen,a.datrf1,b.datpag,
+       c.codban,c.codage,c.tpctba,c.conban,c.digban,d.digage,c.ruadep,c.codcep,c.codcid,c.codbai,
+       f.codfil,c.usu_nomfav,c.usu_cpffav
+   from r036pjp a,
+        r042rcm b,
+        r036pju c,
+        r012age d,
+        r036dep e,
+        r038hfi f
+  where a.numemp = b.numemp
+    and a.tipcol = b.tipcol 
+    and a.numcad = b.numcad 
+    and a.numemp = c.numemp 
+    and a.tipcol = c.tipcol 
+    and a.numcad = c.numcad 
+    and a.coddep = c.coddep
+    and c.codban = d.codban
+    and c.codage = d.codage
+    and a.numemp = e.numemp
+    and a.tipcol = e.tipcol 
+    and a.numcad = e.numcad 
+    and a.coddep = e.coddep
+    and a.numemp = f.numemp
+    and a.tipcol = f.tipcol 
+    and a.numcad = f.numcad 
+    and f.datalt = (select max(f2.datalt) 
+                      from r038hfi f2
+                     where f.numemp = f2.numemp
+                       and f.tipcol = f2.tipcol 
+                       and f.numcad = f2.numcad 
+                       and f2.datalt <= b.datpag)
+    and e.penjud = 'S'
+    and c.modpag = 'R'
+    and a.oripen = 'R'
+ group by a.numemp,a.tipcol,a.numcad,a.codcal,a.oripen,a.datrf1,b.datpag,c.codban,
+          c.codage,c.tpctba,c.conban,c.digban,d.digage,c.ruadep,c.codcep,c.codcid,c.codbai,
+          f.codfil,c.usu_nomfav,c.usu_cpffav
+union
+select a.numemp,a.tipcol,a.numcad,a.codcal,a.oripen,'' tippen,sum(a.valpen) valpen,a.datrf1,b.datpag,
+       c.codban,c.codage,c.tpctba,c.conban,c.digban,d.digage,c.ruadep,c.codcep,c.codcid,c.codbai,
+       f.codfil,c.usu_nomfav,c.usu_cpffav
+   from r036pjp a,
+        r042rcs b,
+        r036pju c,
+        r012age d,
+        r036dep e,
+        r038hfi f
+  where a.numemp = b.numemp
+    and a.tipcol = b.tipcol 
+    and a.numcad = b.numcad 
+    and a.numemp = c.numemp 
+    and a.tipcol = c.tipcol 
+    and a.numcad = c.numcad 
+    and a.coddep = c.coddep
+    and c.codban = d.codban
+    and c.codage = d.codage
+    and a.numemp = e.numemp
+    and a.tipcol = e.tipcol 
+    and a.numcad = e.numcad 
+    and a.coddep = e.coddep
+    and a.numemp = f.numemp
+    and a.tipcol = f.tipcol 
+    and a.numcad = f.numcad 
+    and f.datalt = (select max(f2.datalt) 
+                      from r038hfi f2
+                     where f.numemp = f2.numemp
+                       and f.tipcol = f2.tipcol 
+                       and f.numcad = f2.numcad 
+                       and f2.datalt <= b.datpag)
+    and e.penjud = 'S'
+    and c.modpag = 'R'
+    and a.oripen = 'P'
+ group by a.numemp,a.tipcol,a.numcad,a.codcal,a.oripen,a.datrf1,b.datpag,c.codban,
+          c.codage,c.tpctba,c.conban,c.digban,d.digage,c.ruadep,c.codcep,c.codcid,c.codbai,
+          f.codfil,c.usu_nomfav,c.usu_cpffav 

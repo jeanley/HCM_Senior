@@ -1,0 +1,168 @@
+select 'FF' tipver,a.numemp,c.codban,d.codfil,a.codcal,b.tipcal,b.perref,b.datpag,
+sum(case 
+     when e.tipeve = 3 
+       then a.valeve * -1
+     else a.valeve end) valeve
+  from r046ver a,
+       r044cal b,
+       r034fun c,
+       r038hfi d,
+       r008evc e
+ where a.numemp = b.numemp 
+   and a.codcal = b.codcal 
+   and a.numemp = c.numemp 
+   and a.tipcol = c.tipcol 
+   and a.numcad = c.numcad 
+   and a.numemp = d.numemp 
+   and a.tipcol = d.tipcol 
+   and a.numcad = d.numcad 
+   and d.datalt = (select max(d2.datalt) 
+                     from r038hfi d2
+                    where d.numemp = d2.numemp 
+                      and d.tipcol = d2.tipcol 
+                      and d.numcad = d2.numcad 
+                      and d2.datalt <= eomonth(b.perref))
+   and a.tabeve = e.codtab 
+   and a.codeve = e.codeve 
+   and a.tipcol = 1
+   and e.tipeve in (1,2,3)
+   and c.modpag = 'R'
+   group by a.numemp,c.codban,d.codfil,a.codcal,b.tipcal,b.perref,b.datpag
+   union
+   select 'FE' tipver,a.numemp,c.codban,d.codfil,0 codcal,0 tipcal,b.datpag perref,b.datpag,
+   sum(case 
+        when e.tipeve = 3 
+          then a.valeve * -1
+        else a.valeve end) valeve
+     from r040fev a,
+          r040fem b,
+          r034fun c,
+          r038hfi d,
+          r008evc e
+    where a.numemp = b.numemp 
+      and a.tipcol = b.tipcol
+      and a.numcad = b.numcad 
+      and a.iniper = b.iniper 
+      and a.inifer = b.inifer 
+      and a.numemp = c.numemp 
+      and a.tipcol = c.tipcol 
+      and a.numcad = c.numcad 
+      and a.numemp = d.numemp 
+      and a.tipcol = d.tipcol 
+      and a.numcad = d.numcad 
+      and d.datalt = (select max(d2.datalt) 
+                        from r038hfi d2
+                       where d.numemp = d2.numemp 
+                         and d.tipcol = d2.tipcol 
+                         and d.numcad = d2.numcad 
+                         and d2.datalt <= b.inifer)
+      and a.tabeve = e.codtab 
+      and a.codeve = e.codeve 
+      and a.tipcol = 1
+      and e.tipeve in (1,2,3)
+      and c.modpag = 'R'
+   group by a.numemp,c.codban,d.codfil,b.datpag
+   union
+   select 'RN' tipver,a.numemp,c.codban,d.codfil,0 codcal,0 tipcal,b.datpag perref,b.datpag,
+      sum(case 
+           when e.tipeve = 3 
+             then a.valeve * -1
+           else a.valeve end) valeve
+        from r042rcv a,
+             r042rcm b,
+             r034fun c,
+             r038hfi d,
+             r008evc e
+       where a.numemp = b.numemp 
+         and a.tipcol = b.tipcol
+         and a.numcad = b.numcad
+         and a.datpag = b.datpag
+         and a.numemp = c.numemp 
+         and a.tipcol = c.tipcol 
+         and a.numcad = c.numcad 
+         and a.numemp = d.numemp 
+         and a.tipcol = d.tipcol 
+         and a.numcad = d.numcad 
+         and d.datalt = (select max(d2.datalt) 
+                           from r038hfi d2
+                          where d.numemp = d2.numemp 
+                            and d.tipcol = d2.tipcol 
+                            and d.numcad = d2.numcad 
+                            and d2.datalt <= b.datdem)
+         and a.tabeve = e.codtab 
+         and a.codeve = e.codeve 
+         and a.tipcol = 1
+         and e.tipeve in (1,2,3)
+         and e.crteve <> '49C'
+         and c.modpag = 'R'
+group by a.numemp,c.codban,d.codfil,b.datpag
+union
+select 'RC' tipver,a.numemp,c.codban,d.codfil,0 codcal,0 tipcal,b.datpag perref,b.datpag,
+   sum(case 
+        when e.tipeve = 3 
+          then a.valeve * -1
+        else a.valeve end) valeve
+     from r042rcv a,
+          r042rcs b,
+          r034fun c,
+          r038hfi d,
+          r008evc e
+    where a.numemp = b.numemp 
+      and a.tipcol = b.tipcol
+      and a.numcad = b.numcad
+      and a.datpag = b.datpag
+      and a.numemp = c.numemp 
+      and a.tipcol = c.tipcol 
+      and a.numcad = c.numcad 
+      and a.numemp = d.numemp 
+      and a.tipcol = d.tipcol 
+      and a.numcad = d.numcad 
+      and d.datalt = (select max(d2.datalt) 
+                        from r038hfi d2
+                       where d.numemp = d2.numemp 
+                         and d.tipcol = d2.tipcol 
+                         and d.numcad = d2.numcad 
+                         and d2.datalt <= b.datpag)
+      and a.tabeve = e.codtab 
+      and a.codeve = e.codeve 
+      and a.tipcol = 1
+      and e.tipeve in (1,2,3)
+      and e.crteve <> '49C'
+      and c.modpag = 'R'
+group by a.numemp,c.codban,d.codfil,b.datpag
+union
+select 'RE' tipver,c.numemp,c.codban,d.codfil,0 codcal,0 tipcal,b.usu_datpag perref,b.usu_datpag,
+   sum(case 
+        when e.tipeve = 3 
+          then a.usu_valeve * -1
+        else a.usu_valeve end) valeve
+     from usu_tr042rev a,
+          usu_tr042res b,
+          r034fun c,
+          r038hfi d,
+          r008evc e
+    where a.usu_numemp = b.usu_numemp 
+      and a.usu_tipcol = b.usu_tipcol
+      and a.usu_numcad = b.usu_numcad
+      and a.usu_datini = b.usu_datini
+      and a.usu_seqapf = b.usu_seqapf 
+      and a.usu_numemp = c.numemp 
+      and a.usu_tipcol = c.tipcol 
+      and a.usu_numcad = c.numcad 
+      and a.usu_numemp = d.numemp 
+      and a.usu_tipcol = d.tipcol 
+      and a.usu_numcad = d.numcad 
+      and d.datalt = (select max(d2.datalt) 
+                        from r038hfi d2
+                       where d.numemp = d2.numemp 
+                         and d.tipcol = d2.tipcol 
+                         and d.numcad = d2.numcad 
+                         and d2.datalt <= b.usu_datpag)
+      and a.usu_tabeve = e.codtab 
+      and a.usu_codeve = e.codeve 
+      and a.usu_tipcol = 1
+      and e.tipeve in (1,2,3)
+      and e.crteve <> '49C'
+      and c.modpag = 'R'
+      and b.usu_forpag = 'R'
+group by c.numemp,c.codban,d.codfil,b.usu_datpag,b.usu_datpag 
