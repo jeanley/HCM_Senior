@@ -1,0 +1,53 @@
+select fun.numemp, fun.tipcol, fun.numcad, fun.nomfun,          
+          fun.codcar, fun.numloc, fun.sitafa, fun.datadm,                 
+          fun.numcpf, fun.codfil, cpl.emacom, car.titcar,                 
+          car.codcar, car.estcar, ccu.nomccu, sit.dessit,                 
+          pos.despos, orn.nomloc, orn.taborg, fil.nomfil,                 
+          fil.codest, fun.tipcon, fil.numcgc, fun.datafa,                 
+          fil.codcid, cid.nomcid, orn.numloc, hie.codloc, ccu.codccu,     
+          emp.nomemp, fun.estpos, fun.postra                              
+          from r034fun fun, r034cpl cpl, r024car car, r017pos pos,        
+               r018ccu ccu, r010sit sit, r074cid cid, r016hie hie,        
+               r016orn orn, r030fil fil, r030emp emp                      
+          where                                                                                           
+          emp.numemp = fun.numemp and                                        
+          hie.numloc = orn.numloc and                                     
+          hie.taborg = orn.taborg and                                     
+          fun.sitafa = sit.codsit and                                     
+          fun.numemp = ccu.numemp and                                     
+          fun.codccu = ccu.codccu and                                     
+          fun.numemp = cpl.numemp and                                     
+          fun.tipcol = cpl.tipcol and                                     
+          fun.numcad = cpl.numcad and                                     
+          fun.postra = pos.postra and                                     
+          fun.estpos = pos.estpos and                                     
+          fun.codcar = car.codcar and                                     
+          fun.estcar = car.estcar and                                     
+          fun.taborg = orn.taborg and                                     
+          fun.numloc = orn.numloc and                                     
+          fun.numemp = fil.numemp and                                     
+          fun.codfil = fil.codfil and                                     
+          fil.codcid = cid.codcid and                                     
+          fun.tipcol = 1 and                                              
+          fun.sitafa <> 7 and                                             
+          not exists (select usu_numcad from usu_tadmarista ad            
+                      where                                               
+                      fun.numemp = ad.usu_numemp and                      
+                      fun.tipcol = ad.usu_tipcol and                      
+                      fun.numcad = ad.usu_numcad and                      
+                      ad.usu_status = 'OK' and                            
+                      ad.usu_datenv = (select max(dat.usu_datenv)         
+                                        from usu_tadmarista dat           
+                                        where                             
+                                        dat.usu_numemp = fun.numemp and   
+                                        dat.usu_tipcol = fun.tipcol and   
+                                        dat.usu_numcad = fun.numcad and   
+                                        dat.usu_status = 'OK') and        
+                      ad.usu_horenv = (select max(hor.usu_horenv)         
+                                        from usu_tadmarista hor                                       
+                                        where                             
+                                        hor.usu_numemp = fun.numemp and   
+                                        hor.usu_tipcol = fun.tipcol and   
+                                        hor.usu_numcad = fun.numcad and   
+                                        hor.usu_datenv = ad.usu_datenv    
+                                        and hor.usu_status = 'OK'))
