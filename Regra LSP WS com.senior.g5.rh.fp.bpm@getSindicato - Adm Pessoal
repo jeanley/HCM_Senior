@@ -1,0 +1,52 @@
+/*
+  Luis Gustavo Nardello
+  Data de Criação: 11/12/2024
+*/
+
+Definir Alfa aSQL;
+Definir Alfa cBusca;
+Definir Alfa aCodSin;
+Definir Alfa aNomSin;
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+
+aNumEmp = getSindicato.enumemp;
+aCodFil = getSindicato.ecodfil;
+aNomSin = getSindicato.enomsin;
+
+aSQL = "SELECT DISTINCT CAR.CODSIN, SIN.NOMSIN                                 \
+          FROM R017CAR CAR, R014SIN SIN                                        \
+            WHERE CAR.CODSIN = SIN.CODSIN ";
+
+Se((aNumEmp <> "") e (aNumEmp <> " "))
+aSQL = aSQL + " AND CAR.NUMEMP = " + aNumEmp;
+                  
+Se((aCodFil <> "") e (aCodFil <> " "))
+aSQL = aSQL + " AND CAR.CODFIL = " + aCodFil;
+
+Se((aNomSin <> "") e (aNomSin <> " "))
+aSQL = aSQL + " AND SIN.NOMSIN LIKE '%" + aNomSin + "%'";
+ 
+
+SQL_Criar(cBusca);
+SQL_UsarAbrangencia(cBusca,0);
+SQL_UsarSQLSenior2 (cBusca,0);
+SQL_DefinirComando (cBusca,aSQL);
+
+SQL_AbrirCursor(cBusca);
+
+Enquanto(SQL_EOF(cBusca)=0)
+{ 
+  SQL_RetornarInteiro(cBusca, "CODSIN", nCodSin);
+  SQL_RetornarAlfa(cBusca, "NOMSIN", aNomSin);
+  
+  IntParaAlfa(nCodSin, aCodSin);
+  
+  getSindicato.sindicatos.CriarLinha();  
+  getSindicato.sindicatos.scodsin = aCodSin;
+  getSindicato.sindicatos.snomsin = aNomSin;
+  
+  SQL_Proximo(cBusca);
+}
+SQL_FecharCursor(cBusca);
+SQL_Destruir(cBusca); 

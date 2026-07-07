@@ -1,0 +1,381 @@
+Definir Alfa aSQlAux ;
+Definir Alfa aCurAux; 
+Definir Alfa aNumEmp;
+Definir Alfa aTipCol;
+Definir Alfa aNumCad ;
+Definir Alfa aCurSol;
+Definir Alfa aUsuChe ;
+Definir Alfa aPostra ;
+
+
+Definir Alfa aTipCol ;
+Definir Alfa aNumCad ;
+Definir Alfa aEmpChe;
+Definir Alfa aTipChe ;
+Definir Alfa aCadChe;
+Definir Alfa aNomChe ; 
+Definir Alfa aCondAux ;
+
+
+Definir Data dDatZer ;
+
+aPostra   = getSuperior.postra ;
+EstaNulo (aPostra,nPosNull);
+
+aNumEmp = getSuperior.numemp ;
+aTipCol = getSuperior.TipCol ;
+aNumCad = getSuperior.NumCad ;
+
+nIdeSol =  getSuperior.idesol ; 
+
+
+
+
+
+PosicaoAlfa ("-",aNumEmp,nPosAlf);
+
+Se (nPosAlf > 0)
+  ListaItem(aNumEmp, "-", 1, aNumEmp);
+
+PosicaoAlfa ("-",aNumCad,nPosAlf);
+Se (nPosAlf > 0)
+  ListaItem(aNumCad, "-", 1, aNumCad);
+  
+  
+
+Se (nPosNull = 0) {  
+  PosicaoAlfa ("-",aPostra,nPosAlf);
+  Se (nPosAlf > 0)
+    ListaItem(aPostra, "-", 1, aPostra);
+  
+}  
+
+AlfaParaInt(aNumEmp,nNumEmp);
+AlfaParaInt(aTipCol,nTipCol);
+AlfaParaInt(aNumCad,nNumCad);
+/*
+Se (nNumCad = 40008211) {  
+
+   aUsuChe = "admin";
+   vapara Final ;
+}*/
+
+
+getSuperior.msgret  = "OK"  ; 
+
+
+@econtra superior por colaborador@
+aSQlAux = "SELECT r017hie.idepos                                                \
+                            FROM   r034fun,                                                      \
+                                   r017hie                                                       \
+                            WHERE  r034fun.numemp = :NUMEMP                                      \
+                                   AND r034fun.tipcol = :TIPCOL                                 \
+                                   AND r034fun.numcad = :NUMCAD                                 \
+                                   AND r034fun.estpos = r017hie.estpos                           \
+                                   AND r034fun.postra = r017hie.postra                           \
+                                   AND r017hie.codthp = 1                                        \
+                                   AND r017hie.revhie = (SELECT Max(TAB1.revhie)                 \
+                                                         FROM   r017hie TAB1                     \
+                                                         WHERE  r017hie.estpos = TAB1.estpos     \
+                                                                AND r017hie.postra = TAB1.postra \
+                                                                AND r017hie.codthp = TAB1.codthp)" ;
+@econtra superior por posto@                                                                
+Se (nPosNull = 0) {
+
+   aSQlAux =  "SELECT r017hie.idepos                                                             \                                          
+                            FROM   R017POS,                                                      \
+                                   r017hie                                                       \
+                            WHERE  R017POS.POSTRA = :POSTRA                                      \                     
+                                   AND R017POS.estpos = r017hie.estpos                           \
+                                   AND R017POS.postra = r017hie.postra                           \
+                                   AND r017hie.codthp = 1                                        \
+                                   AND r017hie.revhie = (SELECT Max(TAB1.revhie)                 \
+                                                         FROM   r017hie TAB1                     \
+                                                         WHERE  r017hie.estpos = TAB1.estpos     \
+                                                                AND r017hie.postra = TAB1.postra  \
+                                                                AND r017hie.codthp = TAB1.codthp)" ;
+
+}                                                                
+                                                                
+
+@VERIRFICA O NIVEL DO SOLICITANTE@
+SQl_Criar(aCurSol);
+Sql_UsarSqlSenior2(aCurSol,0);
+SQl_UsarAbrangencia(aCurSol,0); 
+SQl_DefinirComando(aCurSol,aSQlAux) ;
+
+Se (nPosNull = 1) {
+   Sql_DefinirInteiro(aCurSol,"NUMEMP",nNumEmp);
+   Sql_DefinirInteiro(aCurSol,"TIPCOL",nTipCol);                                                                
+   Sql_DefinirInteiro(aCurSol,"NUMCAD",nNumCad);
+}
+Senao
+  Sql_DefinirAlfa(aCurSol,"POSTRA",aPosTra) ;   
+Sql_AbrirCursor(aCurSol);
+Se (SQL_EOF(aCurSol) = 0)
+   Sql_RetornarInteiro(aCurSol,"idepos",nIdePos);
+
+Sql_FecharCursor(aCurSol);
+SQl_Destruir(aCurSol);
+
+/*
+      SE A POSIÇÃO DE POSTO PEDIDA FOR IGUAL A POSIÇÃO DO POSTO
+      DO SOLCITANTE SOBE UM NIVEL NA HIERARQUIA 
+
+*/
+Se ((nIdeSol = nIdePos) ou (nIdeSol = 0))
+  nIdeSol =  nIdePos - 1 ; 
+  
+  
+aSQlAux = "SELECT                                                                     \
+                            R034FUN1.NUMEMP AS NUMEMP1,                                                \
+                            R034FUN1.TIPCOL AS TIPCOL1,                                                \
+                            R034FUN1.NUMCAD AS NUMCAD1,                                                \
+                            R034FUN1.NOMFUN AS NOMFUN_CHEFE,                                           \
+                            R034FUN1.POSTRA,                                                           \
+                            R017POS1.DESPOS,                                                           \
+                            R017POS1.PERPOS,                                                           \
+                            LEN(R017HIE1.POSPOS) AS LEN_POSPOS_CHEFE,                                  \
+                            LEN(R017HIE2.POSPOS) AS LEN_POSPOS_SUB,                                    \
+                            R017HIE1.POSPOS AS POSCHE,                                                 \
+                            R034FUN2.NOMFUN AS NOMFUN_SUB,                                             \
+                            R017HIE2.POSPOS,                                                           \
+                            R034FUN2.POSTRA AS POSSOL,                                                 \
+                            r999usu.NOMUSU,                                                            \
+                            (                                                                          \
+                                SELECT MAX(R017CAR1.CODHIE)                                            \
+                                FROM R017CAR R017CAR1                                                  \
+                                WHERE R017CAR1.ESTPOS = R038HPO1.ESTPOS                                \
+                                  AND R017CAR1.POSTRA = R038HPO1.POSTRA                                \
+                                  AND (                                                                \
+                                        R017CAR1.DATFIM = :DATZER               \
+                                     OR R017CAR1.DATFIM > :DATATU               \
+                                  )                                                                    \
+                                  AND R017CAR1.DATINI = (                                              \
+                                        SELECT MAX(R017CAR2.DATINI)                                    \
+                                        FROM R017CAR R017CAR2                                          \
+                                        WHERE R017CAR2.ESTPOS = R038HPO1.ESTPOS                        \
+                                          AND R017CAR2.POSTRA = R038HPO1.POSTRA                        \
+                                          AND (                                                        \
+                                                R017CAR2.DATFIM = :DATZER       \
+                                             OR R017CAR2.DATFIM > :DATATU       \
+                                          )                                                            \
+                                          AND R017CAR2.DATINI <= :DATATU        \
+                                  )                                                                    \
+                            ) AS CODHIE                                                                \
+                        FROM R034FUN R034FUN1                                                          \
+                        INNER JOIN R010SIT R010SIT1                                                    \
+                            ON R010SIT1.CODSIT = R034FUN1.SITAFA                                       \
+                        INNER JOIN R038HPO R038HPO1                                                    \
+                            ON R038HPO1.NUMEMP = R034FUN1.NUMEMP                                       \
+                           AND R038HPO1.TIPCOL = R034FUN1.TIPCOL                                       \
+                           AND R038HPO1.NUMCAD = R034FUN1.NUMCAD                                       \
+                           AND R038HPO1.INIATU <= :DATATU                       \
+                           AND (                                                                       \
+                                R038HPO1.TERATU = :DATZER                       \
+                             OR R038HPO1.TERATU > :DATATU                      \
+                           )                                                                           \
+                        INNER JOIN R017TAP R017TAP1                                                    \
+                            ON R017TAP1.CODTAP = R038HPO1.CODTAP                                       \
+                        INNER JOIN R017RHP R017RHP1                                                    \
+                            ON R017RHP1.ESTPOS = R038HPO1.ESTPOS                                       \
+                           AND R017RHP1.CODTHP = 1                                                     \
+                        INNER JOIN R017HIE R017HIE1                                                    \
+                            ON R017HIE1.ESTPOS = R038HPO1.ESTPOS                                       \
+                           AND R017HIE1.POSTRA = R038HPO1.POSTRA                                       \
+                           AND R017HIE1.CODTHP = R017RHP1.CODTHP                                       \
+                           AND R017HIE1.REVHIE = R017RHP1.REVHIE                                       \
+                        INNER JOIN R017HIE R017HIE2                                                    \
+                            ON R017HIE2.ESTPOS = R017HIE1.ESTPOS                                       \
+                           AND R017HIE2.CODTHP = R017HIE1.CODTHP                                       \
+                           AND R017HIE2.REVHIE = R017HIE1.REVHIE                                       \
+                           AND R017HIE2.POSPOS LIKE CONCAT(R017HIE1.POSPOS, '%')                       \
+                        INNER JOIN R038HPO R038HPO2                                                    \
+                            ON R038HPO2.ESTPOS = R017HIE2.ESTPOS                                       \
+                           AND R038HPO2.POSTRA = R017HIE2.POSTRA                                       \
+                           AND R038HPO2.INIATU <= :DATATU                                              \
+                           AND (                                                                       \
+                                R038HPO2.TERATU = :DATZER                                              \
+                             OR R038HPO2.TERATU > :DATATU                                              \
+                           )                                                                           \
+                        INNER JOIN R017TAP R017TAP2                                                    \
+                            ON R017TAP2.CODTAP = R038HPO2.CODTAP                                       \
+                        INNER JOIN R034FUN R034FUN2                                                    \
+                            ON R034FUN2.NUMEMP = R038HPO2.NUMEMP                                       \
+                           AND R034FUN2.TIPCOL = R038HPO2.TIPCOL                                       \
+                           AND R034FUN2.NUMCAD = R038HPO2.NUMCAD                                       \
+                        INNER JOIN R017POS R017POS1                                                    \
+                            ON R017POS1.ESTPOS = R034FUN1.ESTPOS                                       \
+                           AND R017POS1.POSTRA = R034FUN1.POSTRA                                       \
+                        LEFT JOIN R034USU                                                              \
+                            ON R034USU.NUMEMP = R034FUN1.NUMEMP                                        \
+                           AND R034USU.TIPCOL = R034FUN1.TIPCOL                                        \
+                           AND R034USU.NUMCAD = R034FUN1.NUMCAD                                        \
+                        LEFT JOIN r999usu                                                              \
+                            ON r999usu.CODUSU = R034USU.CODUSU                                         \
+                        WHERE                                                                          \
+                            R034FUN2.NUMEMP = :NUMEMP                                                  \
+                        AND R034FUN2.TIPCOL = :TIPCOL                                                  \
+                        AND R034FUN2.NUMCAD = :NUMCAD                                                  \
+                        AND R010SIT1.TIPSIT <> 7                                                       \
+                        AND R017TAP1.TIPATU = 'T'                                                      \
+                        AND R017TAP2.TIPATU = 'T'                                                      \
+                        AND R017RHP1.DATREV = (                                                        \
+                            SELECT MAX(R017RHP3.DATREV)                                                \
+                            FROM R017RHP R017RHP3                                                      \
+                            WHERE R017RHP3.ESTPOS = R017RHP1.ESTPOS                                    \
+                              AND R017RHP3.CODTHP  = R017RHP1.CODTHP                                   \
+                              AND R017RHP3.DATREV <= :DATATU                                           \
+                        )                                                                              \
+                        AND R017HIE1.idepos = :IDEPOS                                                  \
+                        ORDER BY                                                                       \
+                            R017HIE1.POSPOS DESC,                                                      \
+                            R034FUN1.NUMEMP,                                                           \
+                            R034FUN1.TIPCOL,                                                           \
+                            R034FUN1.NUMCAD" ;  
+  
+
+
+Se (nPosNull = 0) {                                                                      
+   aSQlAux =    "SELECT                                                                        \
+                    R034FUN1.NUMEMP            AS NUMEMP1,                                     \
+                    R034FUN1.TIPCOL            AS TIPCOL1,                                     \
+                    R034FUN1.NUMCAD            AS NUMCAD1,                                     \
+                    R034FUN1.NOMFUN            AS NOMFUN_CHEFE,                                \
+                    R034FUN1.POSTRA,                                                           \
+                    R017POS1.DESPOS,                                                           \
+                    R017POS1.PERPOS,                                                           \
+                    LEN(R017HIE1.POSPOS)       AS LEN_POSPOS_CHEFE,                            \
+                    LEN(R017HIE2.POSPOS)       AS LEN_POSPOS_SUB,                              \
+                    R017HIE1.POSPOS            AS POSCHE,                                      \
+                    R017HIE1.IDEPOS,                                                           \
+                    R017HIE2.IDEPOS            AS IDESOL,                                      \
+                    R017HIE2.POSPOS,                                                           \
+                    r999usu.NOMUSU,                                                            \
+                    (                                                                          \
+                        SELECT MAX(R017CAR1.CODHIE)                                            \
+                        FROM R017CAR R017CAR1                                                  \
+                        WHERE R017CAR1.ESTPOS = R038HPO1.ESTPOS                                \
+                          AND R017CAR1.POSTRA = R038HPO1.POSTRA                                \
+                          AND (                                                                \
+                                R017CAR1.DATFIM = :DATZER             \
+                             OR R017CAR1.DATFIM > :DATATU             \
+                          )                                                                    \
+                          AND R017CAR1.DATINI = (                                              \
+                                SELECT MAX(R017CAR2.DATINI)                                    \
+                                FROM R017CAR R017CAR2                                          \
+                                WHERE R017CAR2.ESTPOS = R038HPO1.ESTPOS                        \
+                                  AND R017CAR2.POSTRA = R038HPO1.POSTRA                        \
+                                  AND (                                                        \
+                                        R017CAR2.DATFIM = :DATZER     \
+                                     OR R017CAR2.DATFIM > :DATATU     \
+                                  )                                                            \
+                                  AND R017CAR2.DATINI <= :DATATU      \
+                          )                                                                    \
+                    ) AS CODHIE                                                                \
+                FROM R034FUN R034FUN1                                                          \
+                INNER JOIN R017POS  R017POS2                                                   \
+                    ON R017POS2.ESTPOS = R034FUN1.ESTPOS                                       \
+                   AND R017POS2.POSTRA = :POSTRA                                            \
+                INNER JOIN R010SIT R010SIT1                                                    \
+                    ON R010SIT1.CODSIT = R034FUN1.SITAFA                                       \
+                INNER JOIN R038HPO R038HPO1                                                    \
+                    ON R038HPO1.NUMEMP = R034FUN1.NUMEMP                                       \
+                   AND R038HPO1.TIPCOL = R034FUN1.TIPCOL                                       \
+                   AND R038HPO1.NUMCAD = R034FUN1.NUMCAD                                       \
+                   AND R038HPO1.INIATU <= :DATATU                     \
+                   AND (                                                                       \
+                        R038HPO1.TERATU = :DATZER                     \
+                     OR R038HPO1.TERATU > :DATATU                     \
+                   )                                                                           \
+                INNER JOIN R017TAP R017TAP1                                                    \
+                    ON R017TAP1.CODTAP = R038HPO1.CODTAP                                       \
+                INNER JOIN R017RHP R017RHP1                                                    \
+                    ON R017RHP1.ESTPOS = R038HPO1.ESTPOS                                       \
+                   AND R017RHP1.CODTHP = 1                                                     \
+                INNER JOIN R017HIE R017HIE1                                                    \
+                    ON R017HIE1.ESTPOS = R038HPO1.ESTPOS                                       \
+                   AND R017HIE1.POSTRA = R038HPO1.POSTRA                                       \
+                   AND R017HIE1.CODTHP = R017RHP1.CODTHP                                       \
+                   AND R017HIE1.REVHIE = R017RHP1.REVHIE                                       \
+                INNER JOIN R017HIE R017HIE2                                                    \
+                    ON R017HIE2.ESTPOS = R017HIE1.ESTPOS                                       \
+                   AND R017HIE2.CODTHP = R017HIE1.CODTHP                                       \
+                   AND R017HIE2.REVHIE = R017HIE1.REVHIE                                       \
+                   AND R017HIE2.ESTPOS = R017POS2.ESTPOS                                       \
+                   AND R017HIE2.POSTRA = R017POS2.POSTRA                                       \
+                   AND R017HIE2.POSPOS LIKE CONCAT(R017HIE1.POSPOS, '%')                       \
+                INNER JOIN R017POS R017POS1                                                    \
+                    ON R017POS1.ESTPOS = R034FUN1.ESTPOS                                       \
+                   AND R017POS1.POSTRA = R034FUN1.POSTRA                                       \
+                LEFT JOIN R034USU                                                              \
+                    ON R034USU.NUMEMP = R034FUN1.NUMEMP                                        \
+                   AND R034USU.TIPCOL = R034FUN1.TIPCOL                                        \
+                   AND R034USU.NUMCAD = R034FUN1.NUMCAD                                        \
+                LEFT JOIN r999usu                                                              \
+                    ON r999usu.CODUSU = R034USU.CODUSU                                         \
+                WHERE R010SIT1.TIPSIT <> 3                                                     \
+                  AND R017TAP1.TIPATU = 'T'                                                    \
+                  AND R017RHP1.DATREV = (                                                      \
+                        SELECT MAX(R017RHP3.DATREV)                                            \
+                        FROM R017RHP R017RHP3                                                  \
+                        WHERE R017RHP3.ESTPOS = R017RHP1.ESTPOS                                \
+                          AND R017RHP3.CODTHP = R017RHP1.CODTHP                                \
+                          AND R017RHP3.DATREV <= :DATATU              \
+                  )                                                                            \
+                  AND R017HIE1.IDEPOS = :IDEPOS                                                \
+                ORDER BY                                                                       \
+                    R017HIE1.POSPOS DESC,                                                      \
+                    R034FUN1.NUMEMP,                                                           \
+                    R034FUN1.TIPCOL,                                                           \
+                    R034FUN1.NUMCAD" ;                                                            
+}
+                                                         
+SQl_Criar(aCurAux);
+Sql_UsarSqlSenior2(aCurAux,0);
+SQl_UsarAbrangencia(aCurAux,0);                                                                               
+SQl_DefinirComando(aCurAux,aSQlAux);
+
+Se (nPosNull =  1) {
+   Sql_DefinirInteiro (aCurAux,"NUMEMP",nNumEmp);                                                                          
+   Sql_DefinirInteiro (aCurAux,"TIPCOL",nTipCol);        
+   Sql_DefinirInteiro (aCurAux,"NUMCAD",nNumCad);
+}
+Senao 
+   Sql_DefinirAlfa(aCurAux,"POSTRA",aPosTra);
+   
+Sql_DefinirData   (aCurAux, "DATATU",DatSis);
+Sql_DefinirData   (aCurAux, "DATZER",dDatZer); 
+Sql_DefinirInteiro (aCurAux,"IDEPOS",nIdeSol); 
+SQl_AbrirCursor(aCurAux);
+Se (Sql_EOF(aCurAux) = 0) {
+
+
+   Sql_RetornarInteiro (aCurAux, "NUMEMP1",nEmpChe) ;
+   Sql_RetornarInteiro (aCurAux, "TIPCOL1", nTipChe) ;
+   Sql_RetornarInteiro (aCurAux, "NUMCAD1",nCadChe) ;
+   Sql_RetornarAlfa    (aCurAux, "NOMUSU",aUsuChe) ;
+   Sql_RetornarAlfa    (aCurAux, "NOMFUN_CHEFE",aNomChe) ;
+}
+Senao {
+   getSuperior.msgret = "Superior não localizado" ;
+
+}
+SQl_FecharCursor(aCurAux);
+SQl_Destruir(aCurAux);
+
+IntParaAlfa(nEmpChe,aEmpChe);
+IntParaAlfa(nTipChe,aTipChe);
+IntParaAlfa(nCadChe,aCadChe); 
+
+Se ((aUsuChe = "") ou (aUsuChe = " "))
+    getSuperior.msgret = "usuario superior não localizado, verifique asssociação usaurio x colaborador" ;
+
+
+Final:
+getSuperior.empche =   aEmpChe ;    
+getSuperior.tipche =   aTipChe ;  
+getSuperior.cadche =   aCadChe ;    
+getSuperior.nomche =   aNomChe ;
+getSuperior.usuche =   aUsuChe ;
+                                                                                          

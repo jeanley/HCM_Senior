@@ -1,0 +1,51 @@
+/* 
+  Lucas Ferreira
+  28/01/2025 - WS para buscar sindicato pelo posto 
+*/
+
+DEFINIR ALFA anomsin; @Nome Sindicato@
+DEFINIR ALFA adesvin; @Descrição Sindicato@
+DEFINIR ALFA aestpos; @Estrutura do Posto@
+DEFINIR ALFA acodpos; @Código Posto@
+DEFINIR ALFA ACURSOR;
+DEFINIR ALFA ASQL;
+
+aestpos = getSindicatoPos.eestpos;
+acodpos = getSindicatoPos.ecodpos;
+
+
+@ BUSCA NO BANCO @
+/* ASQL= "SELECT POS.CodSin, POS.CodVin, SIN.NomSin, VIN.DesVin                   \
+        FROM R017CAR POS, R014SIN SIN, R022VIN VIN                             \             
+        WHERE POS.EstPos = :aestpos AND                                        \
+              POS.PosTra = :acodpos AND                                        \
+              SIN.CodSin = POS.CodSin AND                                      \
+              VIN.CodVin = POS.CodVin";                                       */ 
+              
+ASQL = "SELECT POS.CodSin, POS.CodVin, SIN.NomSin FROM R017CAR POS, R014SIN SIN \
+         WHERE POS.PosTra =  :acodpos AND                                       \
+               POS.EstPos = :aestpos AND                                        \
+               SIN.CodSin = POS.CodSin";                                        
+
+SQL_CRIAR(ACURSOR);
+SQL_USARABRANGENCIA(ACURSOR,0);
+SQL_USARSQLSENIOR2(ACURSOR,0);
+SQL_DEFINIRCOMANDO(ACURSOR,ASQL);
+SQL_DEFINIRALFA(ACURSOR,"aestpos",aestpos);
+SQL_DEFINIRALFA(ACURSOR,"acodpos",acodpos);                                                          
+SQL_ABRIRCURSOR(ACURSOR);
+SE(SQL_EOF(ACURSOR) = 0)
+{
+    SQL_RETORNARALFA(ACURSOR,"NomSin", anomsin);
+    @SQL_RETORNARALFA(ACURSOR,"DesVin", adesvin); @
+    
+    getSindicatoPos.sdados.snomsin = anomsin;
+    getSindicatoPos.sdados.sdesvin = "Não buscando ainda"; @adesvin;@
+    
+}
+SENAO
+{    
+    getSindicatoPos.sdados.snomsin = " NÃO ACHOU NADA ";
+    getSindicatoPos.sdados.sdesvin = " NÃO ACHOU NADA ";
+
+}

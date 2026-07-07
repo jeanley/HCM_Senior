@@ -1,0 +1,142 @@
+/******************************************************************************************
+ * Regra LSP: Definir Alfa cR020RAT
+ *
+ * Objetivo:
+ * ---------
+ * A regra executa uma consulta SQL para obter códigos de rateios (CODRAT) associados a centros
+ * de custo (CODCCU), retornando os dados para cada rateio encontrado.
+ *
+ * Descrição:
+ * ----------
+ * - A variável 'aNumEmp' é definida com o número da empresa obtido via parâmetro de entrada.
+ * - A consulta SQL seleciona os dados das tabelas R020RAT e R018CCU, filtrando pelo número da empresa.
+ * - Para cada rateio encontrado, a linha é criada em 'getRateios.rateios', populando os campos
+ *   CODRAT e DESRAT.
+ *
+ * 
+ * Parâmetros:
+ * -----------
+ * - NUMEMP: Número da empresa (obtido via parâmetro de entrada).
+ *
+ * Tabelas Envolvidas:
+ * -------------------
+ * - R020RAT: Contém informações sobre os rateios.
+ * - R018CCU: Contém informações sobre os centros de custo.
+ *
+ * Observações:
+ * ------------
+ * - Certifique-se de que a variável 'aNumEmp' está corretamente definida.
+ * AUTOR : Renan Roberto
+ ******************************************************************************************/
+
+
+Definir Alfa cR020RAT ;
+Definir Alfa aNumEmp;
+Definir Alfa aCodFil;
+Definir Alfa aDesRat;
+Definir Alfa aCodRat;
+Definir Alfa aOpeAti;
+Definir Alfa aSQlAux;
+Definir Alfa aSQAux2;
+Definir Alfa aEmpSub;
+Definir Alfa aFilSub;
+
+
+
+
+
+
+aSQlAux =  "SELECT  DISTINCT                                                             \
+                RAT.CODRAT,                                                     \
+                RAT.DESRAT                                                      \
+            FROM R020RAT AS RAT                                                 \
+            INNER JOIN R018CCU AS CCU                                           \
+                ON CCU.CODRAT = RAT.CODRAT                                      \
+            INNER JOIN R030POS AS POS                                           \
+                ON POS.NUMEMP = CCU.NUMEMP                                      \
+            INNER JOIN R017CAR AS CAR                                           \
+                ON CAR.NUMEMP = CCU.NUMEMP                                      \
+               AND CAR.CODCCU = CCU.CODCCU                                      \
+               AND CAR.ESTPOS = POS.ESTPOS                                      \
+            WHERE CCU.NUMEMP = :NUMEMP                                          \
+              AND CAR.CODFIL = :CODFIL                                          \
+              AND CAR.DATINI = (                                                \
+                    SELECT MAX(TAB2.DATINI)                                     \
+                    FROM R017CAR AS TAB2                                        \
+                    WHERE TAB2.NUMEMP = CAR.NUMEMP                              \
+                      AND TAB2.ESTPOS = CAR.ESTPOS                              \
+                      AND TAB2.POSTRA = CAR.POSTRA                              \
+                      AND (                                                     \
+                            TAB2.DATFIM > GETDATE()                             \
+                         OR TAB2.DATFIM = CONVERT(DATE, '31/12/1900', 103)      \
+                      )                                                         \
+                )                                                               \
+              AND POS.DATALT = (                                                \
+                    SELECT MAX(TAB1.DATALT)                                     \
+                    FROM R030POS AS TAB1                                        \
+                    WHERE TAB1.NUMEMP = POS.NUMEMP                              \
+                )                                                               \
+              AND (                                                             \
+                    CAR.DATFIM > GETDATE()                                      \
+                 OR CAR.DATFIM = CONVERT(DATE, '31/12/1900', 103)               \
+              )" ;                                                                                                                  
+
+aNumEmp = getRateios.NumEmp ;
+aCodFil = getRateios.CodFil;
+aOpeAti = getRateios.opeati;
+
+aEmpSub =    getRateios.EmpSub ;
+aFilSub =    getRateios.FilSub;
+
+EstaNulo (aEmpSub,nEmpNull);
+EstaNulo (aFilSub,nFilNull);
+
+@Movimentação de Substituição, assume empresa e filial Substituido@
+Se ((nEmpNull = 0) e (nFilNull = 0)) {
+ 
+  ListaItem(aEmpSub, "-", 1, aNumEmp);
+  ListaItem(aFilSub, "-", 1, aCodFil);
+  
+}
+
+
+
+AlfaParaInt(aNumEmp,nNumEmp);
+AlfaParaInt(aCodFil,nCodFil);
+
+Sql_Criar(cR020RAT);
+Sql_UsarSqlSenior2(cR020RAT,0);
+Sql_UsarAbrangencia(cR020RAT,0);
+Sql_DefinirComando(cR020RAT, aSQlAux);
+                              
+Sql_DefinirInteiro(cR020RAT,"NUMEMP",nNumEmp);
+Sql_DefinirInteiro(cR020RAT,"CODFIL",nCodFil); 
+Sql_AbrirCursor(cR020RAT);
+Enquanto(SQL_EOF(cR020RAT) = 0) {
+
+   Sql_RetornarInteiro (cR020RAT, "CODRAT",nCodRat);
+   Sql_RetornarAlfa    (cR020RAT, "DESRAT",aDesRat);
+   
+   IntParaAlfa(nCodRat,aCodRat) ;
+   getRateios.rateios.CriarLinha();
+   getRateios.rateios.CodRat = aCodRat ;
+   getRateios.rateios.DesRat = aDesRat ;
+   getRateios.rateios.rateio = aCodRat + " - " +  aDesRat ;
+   getRateios.rateios.operat = aOpeAti + "|" +aCodRat;
+
+
+   Sql_Proximo(cR020RAT);
+}
+Sql_FecharCursor(cR020RAT);
+Sql_Destruir(cR020RAT);
+ /*
+aSQlAux2 = "SELECT RAT.CODRAT,                    \
+                                     CCU.CODCCU,                    \
+                                     RAT.DESRAT,                     \
+                                     CCU.NOMCCU,                    \
+                                     CCU.CODCCU,                    \
+                                     CCU.CODFIL FROM R020RAT RAT    \
+                                                                    \
+                              INNER JOIN R018CCU CCU ON             \
+                              (CCU .CODRAT = RAT.CODRAT)            \
+                              WHERE CCU.NUMEMP = :NUMEMP";  */
