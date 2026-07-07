@@ -1,0 +1,68 @@
+/* Regra Especial desenvolvida para atender o cálculo de Hora atividade s/ hr
+tem como objetivo buscar o valor e referência do evento 001 - Horas normais docente e realizar o cálculo proventos / horas x 4.5
+somente para o sindicato 1029, conforme solicitado pelo usuário Gilberto, no ticket   561678.
+Cliente: Marista Brasil;
+Autor: Pedro Carli;
+Data(s): 19/03/2026;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+Definir Data dDatAlt;
+Definir Cursor Cur_R038HSI;
+
+/* Variáveis do colaborador */
+nNumEmp = R034FUN.NumEmp;
+nTipCol = R034FUN.TipCol;
+nNumCad = R034FUN.NumCad;
+nCodSin = 0;
+dDatAlt = dFimCmp;
+
+/* Busca último sindicato válido */
+Cur_R038HSI.SQL "Select CodSin, DatAlt \
+                   from R038HSI \
+                  where NumEmp = :nNumEmp \
+                    And TipCol = :nTipCol \
+                    And NumCad = :nNumCad \
+                    And DatAlt <= :dDatAlt \
+                  Order By DatAlt Desc";
+
+Cur_R038HSI.AbrirCursor();
+
+Se (Cur_R038HSI.Achou)
+   Inicio
+      nCodSin = Cur_R038HSI.CodSin;
+   Fim;
+
+Cur_R038HSI.FecharCursor();
+
+/* Inicializa evento */
+ValEvt = 0;
+RefEvt = 0;
+
+/* Aplica regra somente para sindicato 1029 */
+Se (nCodSin = 1029)
+
+   CodEvt = 1;
+   BusEvt = 1;
+
+   Se (RefEv2 > 0) 
+   
+   {
+      RefEvt = 4.5;
+      ValEvt = (ValEv2 / RefEv2) * RefEvt;
+      };
+     
+ /* Busca evento de Licença remunerada, evento 012 e aplica a mesma fórmula.
+    Tratado no chamado 580411, pois estava ocorrendo divisão por zero */
+    
+   CodEvt = 12;
+   BusEvt = 1;
+
+   Se (RefEv2 > 0) 
+   
+   {
+      RefEvt = 4.5;
+      ValEvt = (ValEv2 / RefEv2) * RefEvt;
+      };
+      
+      
+  

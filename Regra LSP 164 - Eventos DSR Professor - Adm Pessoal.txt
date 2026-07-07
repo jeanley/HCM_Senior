@@ -1,0 +1,12 @@
+/* Regra Especial desenvolvida para atender a necessidade da empresa da geração do 
+DSR Professor sobre a base de eventos e não sobre as atividades dos professores.
+O valor da base será dividido por 6 (1/6 regra DSR professor)
+
+Cliente: Marista Brasil;
+Autor: Michael Abreu;
+Data: 29/04/2026;
+Senior Sistemas - Noroeste Paulista */
+
+@=============================================@
+
+ValEvt = BasEvt / 6;

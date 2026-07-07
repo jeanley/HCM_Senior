@@ -1,0 +1,19 @@
+/* Regra especial para efetuar cálculo do evento de DSR para professores (corresponde a 1/6 do valor base);
+Cliente: Marista Brasil;
+Autor: Bruno Martins;
+Data(s): 30/06/2026;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@ Definindo e zerando variáveis @
+nNumEmp = R034FUN.NumEmp;
+nTipCol = R034FUN.TipCol;
+nNumCad = R034FUN.NumCad;
+nTipCon = R034FUN.TipCon;
+
+@ Efetua o cálculo caso seja professor e a base seja maior que zero @
+Se (((nTipCon = 10) ou (nTipCon = 13)) e (BasVal > 0))
+  {
+  ValEvt = BasVal / 6;
+  RefEvt = 16.66;
+  Cancel(1);
+  }

@@ -1,0 +1,52 @@
+@======================================================@
+@  Consultor: Victor Hammes ===========================@
+@  Data: 06/07/2025 ===================================@
+@  Objetivo: Pegar filial legado ======================@
+@  ====================================================@
+@======================================================@
+
+@ Definindo Cursores, Alfas e Datas @ 
+
+Definir Alfa aCodCcu; 
+Definir Alfa aCodReg; 
+Definir Alfa aDebCre; 
+Definir Data dDatCtb;
+Definir alfa aCodFil; 
+Definir Cursor Cur_R030FIL; 
+
+ 
+
+@ Definindo e zerando variáveis @ 
+
+nNumEmp = R048CTB.NumEmp; 
+nTipCol = R048CTB.TipCol; 
+nNumCad = R048CTB.NumCad; 
+nCodFil = R048CTB.CodFil;
+
+
+                       
+@Cur_R030FIL.sql"select USU_CodFil from R030FIL where CodFil = :nCodFil and NumEmp = :nNumEmp";@
+
+Cur_R030FIL.sql"select * from USU_TFILLEG where usu_codfil = :ncodfil and usu_numemp = :nnumemp and usu_legado = 'M'";
+Cur_R030FIL.AbrirCursor();
+Se(Cur_R030FIL.achou)
+{
+  nCodFil = Cur_R030FIL.USU_CodFilLeg;
+  @Tratamento filial 2000@                         
+  Se(nCodFil = 2156)
+    nCodFil = 2001;
+  
+ @ nCodFilADP = Cur_R030FIL.USU_CodFilADP;    @
+}
+Cur_R030FIL.FecharCursor();
+@  Caso seja a integração da empresa 2 ele ira criar a filial com a particularidade  @
+Se((nNumEmp = 2)OU(nNumEmp = 5))
+{
+    ConverteMascara(1,nCodFil,aCodFil,"90999");
+    aCodFil = "000"+aCodFil; 
+    MovCtbAlf(aCodFil); 
+}Senao
+{
+  ConverteMascara(1,nCodFil,aCodFil,"9999"); 
+  MovCtbAlf(aCodFil);  
+}

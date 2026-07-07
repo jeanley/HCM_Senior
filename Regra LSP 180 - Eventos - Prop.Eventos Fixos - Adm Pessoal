@@ -1,0 +1,58 @@
+Definir Cursor cur_fix180;
+
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+Definir Data dDatZer;
+
+Se ((TipCal = 11) ou (TipCal = 62))
+  {
+    Se (TipCal = 62)
+    dFimCmp = R042RCM.DatDem;
+    Senao
+    dFimCmp = FimCmp;
+    
+    DesmontaData(dFimCmp,xDia,xMes,xAno);
+    MontaData(01,xMes,xAno,dIniCmp);
+    
+    nNumEmp = R034FUN.NumEmp;
+    nTipCol = R034FUN.TipCol;
+    nNumCad = R034FUN.NumCad;
+    nCodEve = CodEvt;
+    dDatZer = 0;
+    nEfeFix = 0;
+    
+    cur_fix180.sql "select valeve \
+                      from r044fix \
+                     where valeve > 0 \
+                       and numemp = :nNumEmp \
+                       and tipcol = :nTipCol \
+                       and numcad = :nNumCad \
+                       and codeve = :nCodEve \
+                       and (datini <= :dFimCmp or datini = :dDatZer) \
+                       and (datfim = :dDatZer or datfim is null or datfim >= :dIniCmp)";
+    cur_fix180.AbrirCursor();
+    Se (cur_fix180.Achou)
+    nEfeFix = 1;
+    
+    cur_fix180.FecharCursor();
+    
+    Se (nEfeFix = 1)
+      {
+        Se (TipCal = 62)
+        DesmontaData(R042RCM.DatDem,nDia,xMes,xAno);
+        Senao
+        nDia = 30;
+        
+        nFer = 0;
+        BuscaDiaSit (nNumEmp,nTipCol,nNumCad,dIniCmp,dFimCmp,2,nFer);
+        
+        Se (nFer = 0)
+        BuscaDiaSit (nNumEmp,nTipCol,nNumCad,dIniCmp,dFimCmp,12,nFer);
+        
+        Se (nFer > 0)
+        nDia = nDia - nFer;
+        
+        Se (nDia > 0)
+        ValEvt = (ValEvt / 30) * nDia;
+      }                       
+  }

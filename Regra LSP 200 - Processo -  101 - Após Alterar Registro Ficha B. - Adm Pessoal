@@ -1,0 +1,39 @@
+/*@ Senior Noroeste Paulista @
+@ Consultor: Gustavo Nardello @
+@ Data: 10/06/2026 @
+
+@Inclusão automática da opção de registro de ponto mobilidade para os colaboradores admitidos das empresas 1, 3 e 4, caso seja marcado opção de registra ponto.@
+
+Definir Numero nConRho;
+Definir Numero nNumEmp;
+Definir Numero nTipCol;
+Definir Numero nNumCad;
+Definir Numero nCodFil;
+
+nNumEmp = R034FUN.NumEmp;
+nTipCol = R034FUN.TipCol;
+nNumCad = R034FUN.NumCad;
+nConRho = R034FUN.ConRho;
+nCodFil = R034FUN.CodFil;
+
+Se((nNumEmp = 3) Ou (nNumEmp = 4)) {
+  Se(nConRho = 2) {
+    ExecSQL "UPDATE R034MDL SET INDCON = 'S'                                   \
+               WHERE NUMEMP = :nNumEmp                                         \
+                 AND TIPCOL = :nTipCol                                         \
+                 AND NUMCAD = :nNumCad                                         \
+                 AND CODMOD = 16";
+  }
+}
+Senao
+Se(nNumEmp = 1) { 
+  Se((nCodFil = 1053) Ou (nCodFil = 1076) Ou (nCodFil = 1037) Ou (nCodFil = 1001)) {
+    Se(nConRho = 2) {
+      ExecSQL "UPDATE R034MDL SET INDCON = 'S'                                   \
+                 WHERE NUMEMP = :nNumEmp                                         \
+                   AND TIPCOL = :nTipCol                                         \
+                   AND NUMCAD = :nNumCad                                         \
+                   AND CODMOD = 16";
+    }
+  }  
+}  */

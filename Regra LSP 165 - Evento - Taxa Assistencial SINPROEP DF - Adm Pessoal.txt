@@ -1,0 +1,154 @@
+/* Regra especial para efetuar o desconto do valor da Taxa Assistencial do sindicato SINPROEP DF;
+Cliente: Marista Brasil;
+Autor: Isabella Nassaro;
+Ajustes: Pedro Carli / ChatGPT;
+Data(s): 26/09/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@ Definindo cursores, alfas e datas @
+/*
+Definir Cursor cur_apf141;
+Definir Cursor cur_seg141;
+Definir Cursor cur_vlr141;
+
+Definir Data dDatZer;
+Definir Data dPerRef;
+
+Definir Alfa aCodSeg;
+
+@ Definindo e zerando variáveis @
+nNumEmp = R034FUN.NumEmp;
+nTipCol = R034FUN.TipCol;
+nNumCad = R034FUN.NumCad;
+
+dPerRef = FimCmp;
+
+MontaData (31, 12, 1900, dDatZer);
+
+nCodAti = 0;
+nCodVlr = 0;
+
+aCodSeg = "";
+
+nEnsInf = 0;
+nEnsFun = 0;
+
+nValEIn = 0;
+nValEFu = 0;
+
+@ Se for sócio do sindicato, zera o evento @
+Se ((aSocSin = 'S') e (R034FUN.NumEmp <> 3) e (R034FUN.NumEmp <> 4))
+  {
+  RefEvt = 0;
+  ValEvt = 0;
+  Cancel(1);
+  }
+
+@ Cursor para buscar as atividades ativas do professor @
+cur_apf141.sql "select * from r171apf \
+                  where numemp = :nNumEmp \
+                    and tipcol = :nTipCol \
+                    and numcad = :nNumCad \
+                    and datini <= :dPerRef \
+                    and (datfim is null \
+                     or datfim = :dDatZer \
+                     or datfim >= :dPerRef)";
+
+cur_apf141.AbrirCursor();
+
+Enquanto (cur_apf141.Achou)
+  {
+  
+  nCodAti = cur_apf141.CodApf;
+
+  @ Busca o segmento da atividade @
+  cur_seg141.sql "select USU_TipSeg from r171ati \
+                    where CodApf = :nCodAti";
+
+  cur_seg141.AbrirCursor();
+
+  Se (cur_seg141.Achou)
+    {
+    aCodSeg = cur_seg141.USU_TipSeg;
+    }
+
+  cur_seg141.FecharCursor();
+
+  @ Ensino Infantil @
+  Se (aCodSeg = "EI")
+    {
+    nEnsInf = nEnsInf + 1;
+    }
+
+  @ Ensino Fundamental II @
+  Senao
+  Se (aCodSeg = "EF")
+    {
+    nEnsFun = nEnsFun + 1;
+    }
+
+  nCodAti = 0;
+  aCodSeg = "";
+
+  cur_apf141.Proximo();
+  }
+
+cur_apf141.FecharCursor();
+
+@ Busca os valores parametrizados da Taxa Assistencial @
+cur_vlr141.sql "select * from r026vlr \
+                  where comvlr <= :dPerRef \
+                    and codvlr in (200, 201) \
+                  order by comvlr desc";
+
+cur_vlr141.AbrirCursor();
+
+Enquanto (cur_vlr141.Achou)
+  {
+
+  nCodVlr = cur_vlr141.CodVlr;
+
+  @ Código 200 = Ensino Infantil @
+  Se (nCodVlr = 200)
+    {
+    nValEIn = cur_vlr141.ValVlr;
+    }
+
+  @ Código 201 = Ensino Fundamental II @
+  Senao
+  Se (nCodVlr = 201)
+    {
+    nValEFu = cur_vlr141.ValVlr;
+    }
+
+  nCodVlr = 0;
+
+  cur_vlr141.Proximo();
+  }
+
+cur_vlr141.FecharCursor();
+
+@ Define qual valor será descontado @
+
+@ Prioridade para Fundamental II @
+Se (nEnsFun > 0)
+  {
+  ValEvt = nValEFu;
+  Cancel(1);
+  }
+
+@ Caso não tenha Fundamental II, aplica Infantil @
+Senao
+Se (nEnsInf > 0)
+  {                                                                                           R
+  ValEvt = nValEIn;
+  Cancel(1);
+  }
+
+@ Caso não encontre segmento válido, zera o evento @
+Senao
+  {
+  RefEvt = 0;
+  ValEvt = 0;
+  }   
+ */ 
