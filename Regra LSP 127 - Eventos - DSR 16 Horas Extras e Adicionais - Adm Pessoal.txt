@@ -1,0 +1,17 @@
+/* Regra Especial desenvolvida para atender os cálculos de DSR sobre
+Horas Extras e Adicionais para professores, o qual deverá obedecer a
+regra de sempre ser 1/6 do valor dos adicionais;
+Cliente: Marista Brasil;
+Autor: Bruno Martins;
+Data(s): 27/05/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definindo e Zerando Variáveis =======================@
+nNumEmp = R034FUN.NumEmp;
+nTipCol = R034FUN.TipCol;
+nNumCad = R034FUN.NumCad;
+
+
+@================== Busca a base do evento e efetua o cálculo=================@
+ValEvt = BasVal / 5;
+RefEvt = BasRef / 5;

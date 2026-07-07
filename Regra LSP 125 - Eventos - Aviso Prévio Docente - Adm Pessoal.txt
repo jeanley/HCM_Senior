@@ -1,0 +1,39 @@
+/* Regra Especial desenvolvida para atender o cálculo de férias e 13o Salário
+dos colaboradores professores (docente);
+Deve ser vinculada aos Eventos de férias, abono pecuniário, 13o adto, 13o integral
+ e 13o complementar;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data: 07/11/2024;
+Senior Sistemas - Noroeste Paulista */
+
+@=================== Definição das variáveis padrões ==========================@
+Definir Cursor Cur_R171ATI;
+Definir Cursor Cur_R171APF;
+Definir Data   ddatDem;
+nNumEmp = R034FUN.numemp;
+nTipCol = R034FUN.tipcol;
+nNumCad = R034FUN.numcad;
+dDatDem = R042RCM.datdem;
+nRefAtv = 0;
+nValAtv = 0;
+nTotAtv = 0;
+nCodAtv = 0;
+
+@=================== Buscar Cadastro de Atividades    ==========================@
+Cur_R171ATI.sql "select * from R171ATI";
+
+  Cur_R171ATI.AbrirCursor();
+    Enquanto (Cur_R171ATI.Achou)
+      {
+       nCodAtv = Cur_R171ATI.CodApf;
+       
+       Cur_R171APF.sql "select * from R171APF Where NumEmp = :nNumEmp \
+                                                and TipCol = :nTipCol \
+                                                and NumCad = :nNumCad \
+                                                and CodApf = :nCodAtv ";  
+      }
+  
+    
+  Cur_R171ATI.FecharCursor();
+  

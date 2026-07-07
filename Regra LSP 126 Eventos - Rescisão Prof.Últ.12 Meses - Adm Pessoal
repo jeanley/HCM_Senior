@@ -1,0 +1,340 @@
+/* Regra Especial desenvolvida para atender os cálculos rescisórios quando o 
+Sindicato do(a) colaborador(a) professor(a) possuir o parâmetro customizado 
+"* Maior CH Rescisão Docente Últ.12 meses" como "S - Sim";
+Esta regra deve ser vinculada a todos os Eventos de direito das verbas rescisórias 
+que se fizer direito;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 22/05/2025 e 23/05/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definição das Variáveis Padrões =======================@
+Definir Cursor cur_sin126;
+Definir Cursor cur_dge126;
+Definir Cursor cur_emp126;
+
+Definir Alfa aResPro;
+Definir Alfa aCurRes;
+Definir Alfa aUsaPrf;
+
+Definir Data dIniRes;
+Definir Data dFimRes;
+Definir Data dIniCmp;
+Definir Data dFimCmp;
+
+@===================== Somente qdo existir cálculo de rescisão ================@
+Se (TipoRescisao > 0)
+  {
+@============= Somente qdo for Tipo de Contrato "Professor" ===================@ 
+    Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+      {
+@=== Retorna Sindicato do(a) colaborador(a) vigente na data de desligamento ===@
+        RetSinEmp (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,R042RCM.DatDem);
+        nCodSin = CodSinEmp;
+        aResPro = "";
+
+/*= Cursor no cadastro do sindicato do(a) colaborador(a) p/ buscar o parâmetro 
+customizado "* Maior CH Rescisão Docente Últ.12 meses" =======================*/         
+        cur_sin126.sql "select usu_respro \
+                          from r014sin \
+                         where codsin = :nCodSin";
+        cur_sin126.AbrirCursor();
+        Se (cur_sin126.Achou)
+        aResPro = cur_sin126.usu_respro;
+        
+        cur_sin126.FecharCursor();
+
+@==== Inicia consistência somente se o parâmetro do sindicato for "S - Sim" ===@        
+        Se (aResPro = "S")
+          {
+@======= Variáveis do(a) colaborador(a) vigente no cálculo rescisório =========@
+            nNumEmp = R042RCM.NumEmp;
+            nTipCol = R042RCM.TipCol;
+            nNumCad = R042RCM.NumCad;
+            
+@ Apropriação do período dos últimos 12 meses do mês atual da rescisão p/ trás @
+            DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+            MontaData(01,xMes,xAno,dFimRes);            
+            dIniRes = dFimRes - 360;
+            dIniRes = dIniRes + 40; 
+            DesmontaData(dIniRes,xDia,xMes,xAno);
+            MontaData(01,xMes,xAno,dIniRes);
+
+@======= Assume período inicial se admissão for maior ou igual ao mesmo =======@            
+            Se (R034FUN.DatAdm > dIniRes)
+              {
+                dIniRes = R034FUN.DatAdm;
+                DesmontaData(dIniRes,xDia,xMes,xAno);
+                MontaData(01,xMes,xAno,dIniRes);
+              }
+
+@======== Zera variáveis da lógica a cada cálculo de evento ===================@              
+            xBasSal = 0;
+            xValApf = 0;
+            nHorMes = 0;
+            nRefEvt = 0;
+            aUsaPrf = "";
+            pAdiSex = 0;
+
+@======= cursor para busca o parâmetro da Empresa na rotina de Professores ====@            
+            cur_emp126.sql "select usaprf \
+                              from r030emp \
+                             where numemp = :nNumEmp";
+             cur_emp126.AbrirCursor();
+             Se (cur_emp126.Achou)
+             aUsaPrf = cur_emp126.usaprf;
+             
+             cur_emp126.FecharCursor();  
+             
+@===== busca parâmetro se a rotina de Prof. for proporcional mês ou semana ====@             
+             Se ((aUsaPrf = "P") ou (aUsaPrf = "S"))
+               {
+                 cur_dge126.sql "select mulmes,muldsr \
+                                   from r171dge \
+                                  where numemp = :nNumEmp \
+                                    and mulmes > 0 \
+                                    and muldsr > 0";
+                 cur_dge126.AbrirCursor();
+                 Se (cur_dge126.Achou)
+                 pAdiSex = 1 + (cur_dge126.muldsr / cur_dge126.mulmes);
+                 
+                 cur_dge126.FecharCursor();                                 
+               }
+
+@========== Cursor p/ busca da maior CH e maior Valor, acrescido do 1/6 =======@     
+            SQL_Criar(aCurRes);
+            SQL_UsarAbrangencia(aCurRes,0);
+            SQL_UsarSQLSenior2(aCurRes,0);
+            SQL_DefinirComando(aCurRes,"select codapf,\
+                                               (max(hormes) * max(valapf))/60 valapf,\
+                                               max(hormes) hormes \
+                                          from usu_v171res \
+                                         where numemp = :E \
+                                           and tipcol = :T \
+                                           and numcad = :C \
+                                           and perref between :I and :F \
+                                      group by codapf \
+                                      order by codapf");
+            SQL_DefinirInteiro(aCurRes,"E",nNumEmp);                                      
+            SQL_DefinirInteiro(aCurRes,"T",nTipCol);
+            SQL_DefinirInteiro(aCurRes,"C",nNumCad);
+            SQL_DefinirData(aCurRes,"I",dIniRes);
+            SQL_DefinirData(aCurRes,"F",dFimRes);
+            SQL_AbrirCursor(aCurRes);
+            Enquanto (SQL_EOF(aCurRes) = 0)
+              {
+@================================= valor já apurado ===========================@
+                SQL_RetornarFlutuante(aCurRes,"valapf",xValApf); 
+
+@==================== acúmulo na base de direito do valor apurado =============@
+                Se (xValApf > 0)
+                  {
+                    Se (pAdiSex > 0)
+                    xValApf = xValApf * pAdiSex; 
+                    
+                    xBasSal = xBasSal + xValApf;
+                  }   
+
+@=============================== maior qtde da CH =============================@                
+                SQL_RetornarFlutuante(aCurRes,"hormes",nHorMes);
+
+@=========================== acúmulo da qtde da CH ============================@
+                Se (nHorMes > 0)
+                  {
+                    nHorMes = nHorMes / 60;
+                    
+                    Se (pAdiSex > 0)
+                    nRefEvt = nRefEvt * pAdiSex;
+                    
+                    nRefEvt = nRefEvt + nHorMes;
+                  }  
+
+@========================== zera as variáveis de retorno ======================@                
+                xValApf = 0;
+                nHorMes = 0;
+                
+                SQL_Proximo(aCurRes);
+              }
+            SQL_FecharCursor(aCurRes);
+            SQL_Destruir(aCurRes);
+
+@===== não calcula evento se não tiver valor apurado nos últimos 12 meses =====@          
+            Se (xBasSal = 0)
+              {
+                RefEvt = 0;
+                ValEvt = 0;
+                VaPara Final125;
+              }
+
+@=========== Cálculo de Saldo de Salários e ou Rescisão Complementar ==========@          
+            Se ((TipCal = 62) ou (TipCal = 15))
+              {
+                xDia = 0; 
+
+                DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+                
+                MontaData(01,xMes,xAno,dIniCmp);
+                dFimCmp = dIniCmp;
+                UltimoDia(dFimCmp);
+                
+                Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+                xDia = (R042RCM.DatDem - R034FUN.DatAdm) + 1;
+                Senao
+                xDia = xDia;
+                
+                RefEvt = (nRefEvt / 30) * xDia;                 
+                ValEvt = (xBasSal / 30) * xDia;
+              }
+@=================== Cálculo de Aviso Prévio Indenizado =======================@
+            Senao Se (TipCal = 63)
+              {
+                RefEvt = (nRefEvt / 30) * R042RCM.QtdInd;
+                ValEvt = (xBasSal / 30) * R042RCM.QtdInd; 
+              }
+@=================== Cálculo de Aviso Prévio Reavido ==========================@
+            Senao Se (TipCal = 64)
+              {
+                RefEvt = (nRefEvt / 30) * R042RCM.QtdRea;
+                ValEvt = (xBasSal / 30) * R042RCM.QtdRea; 
+              }
+@======================= Cálculo de Estabilidade ==============================@
+            Senao Se (TipCal = 70)
+              {
+                RefEvt = (nRefEvt / 30) * R042RCM.QtdEst;
+                ValEvt = (xBasSal / 30) * R042RCM.QtdEst; 
+              }
+@============== Cálculo de Indenização Mês Anterior Dissídio ==================@
+            Senao Se (TipCal = 69)
+              {
+                RefEvt = nRefEvt;
+                ValEvt = xBasSal; 
+              }
+@================ Cálculo de Fim Antecipado de Contrato =======================@
+            Senao Se ((TipCal = 65) ou (TipCal = 66))
+              {
+                RefEvt = (nRefEvt / 30) * R042RCM.QtdFca;
+                ValEvt = (xBasSal / 30) * R042RCM.QtdFca; 
+              }
+@==================== Cálculo de 13o Proporcional =============================@
+            Senao Se (TipCal = 71)
+              {
+                DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+                MontaData(16,01,xAno,dIniRes);
+                
+                Se (R034FUN.DatAdm > dIniRes)
+                dIniRes = R034FUN.DatAdm;
+                
+                nAvo = 0;
+                TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                dIniRes,R042RCM.DatDem,3,nAvo);
+                
+                Se (nAvo = 0)
+                  {
+                    DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+                    
+                    MontaData(01,xMes,xAno,dIniCmp);
+                    dFimCmp = dIniCmp;
+                    UltimoDia(dFimCmp);
+                    
+                    Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+                      {
+                        DatIni = dIniRes;
+                        DatFim = R042RCM.DatDem;
+                        TpoSer = 1;
+                        nAvo = TpoSer;
+                      }
+                  }
+                
+                RefEvt = nAvo;
+                ValEvt = (xBasSal / 12) * nAvo; 
+              }
+@====================== Cálculo de 13o Indenizado =============================@
+            Senao Se (TipCal = 72)
+              {
+                nAvo = 0;
+                
+                Se ((R042RCM.QtdInd > 0) e (R042RCM.QtdRea = 0))
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R042RCM.DatDem,R042RCM.DatDem+R042RCM.QtdInd,2,nAvo);
+                    
+                    Se (nAvo = 0)
+                      {
+                        DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+                        
+                        MontaData(01,xMes,xAno,dIniCmp);
+                        dFimCmp = dIniCmp;
+                        UltimoDia(dFimCmp);
+                        
+                        Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+                          {
+                            DatIni = dIniRes;
+                            DatFim = R042RCM.DatDem+R042RCM.QtdInd;
+                            TpoSer = 1;
+                            nAvo = TpoSer;
+                          }
+                      }
+                  }
+                 Senao Se ((R042RCM.QtdInd = 0) e (R042RCM.QtdRea > 0))
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R042RCM.DatDem,R042RCM.DatDem+R042RCM.QtdRea,2,nAvo);
+
+                    Se (nAvo = 0)
+                      {
+                        DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+                        
+                        MontaData(01,xMes,xAno,dIniCmp);
+                        dFimCmp = dIniCmp;
+                        UltimoDia(dFimCmp);
+                        
+                        Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+                         {
+                           DatIni = dIniRes;
+                           DatFim = R042RCM.DatDem+R042RCM.QtdRea;
+                           TpoSer = 1;
+                           nAvo = TpoSer;
+                         }
+                      }
+                  }  
+                
+                Se (nAvo > 3)
+                nAvo = 3;
+                
+                RefEvt = nAvo;
+                ValEvt = (xBasSal / 12) * nAvo; 
+              }
+@======== Cálculo de Férias Vencidas e ou Proporcionais em rescisão ===========@
+            Senao Se (((TipCal >= 75) e (TipCal <= 79)) 
+            ou ((TipCal >= 95) e (TipCal <= 99)))
+              {
+                nAvo = 0;
+
+                Se (R040PER.FimPer >= R042RCM.DatDem)
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R040PER.IniPer,R042RCM.DatDem,1,nAvo);
+                  }
+                Senao
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R040PER.IniPer,R040PER.FimPer,1,nAvo);
+                  }
+
+@ controle p/ apropriar eventos de férias em suas verbas corretas em rescisão =@                
+                Se (((CodCrt = 1301) e (R040PER.AvoFer <> 12)) 
+                 ou ((CodCrt = 1302) e (R040PER.AvoFer = 12)))
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                    VaPara Final125;
+                  }
+
+                RefEvt = (nRefEvt / 12) * nAvo;
+                ValEvt = (xBasSal / 12) * nAvo; 
+              }   
+          }                        
+      }
+  }
+  
+Final125:  

@@ -1,0 +1,260 @@
+/* Regra Especial desenvolvida para atender os cálculos de bases de Insalubridade 
+que forem diferentes do Salário Mínimo, classificado por um novo parâmetro no 
+cadastro do Sindicato do colaborador;
+Esta regra deve ser vinculada a todos os Eventos de direito das verbas de insalubridade 
+que se fizer necessário;
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 29/05/2025 e 30/05/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definição das Variáveis Padrões =======================@
+Definir Cursor cur_sin129;
+Definir Cursor cur_esc129;
+
+Definir Data dFimCmp;
+Definir Data dIniCal;
+
+
+@====================== Principais tipos de cálculo ===========================@
+Se ((TipCal = 11) ou (TipCal = 12) ou (TipCal = 13) ou (TipCal = 15) 
+ ou (TipCal = 31) ou (TipCal = 32) ou (TipCal = 33) ou (TipCal = 35)
+ ou (TipCal = 51) ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 55) 
+ ou (TipCal = 62) ou (TipCal = 63) ou (TipCal = 64) ou (TipCal = 65) 
+ ou (TipCal = 66) ou (TipCal = 69) ou (TipCal = 70) ou (TipCal = 71) 
+ ou (TipCal = 72) ou (TipCal = 75) ou (TipCal = 76) ou (TipCal = 77) 
+ ou (TipCal = 78) ou (TipCal = 79) ou (TipCal = 95) ou (TipCal = 96) 
+ ou (TipCal = 97) ou (TipCal = 98) ou (TipCal = 99) ou (TipCal = 54))
+ {
+@======== Não efetua cálculo automático p/ folhas complementares ==============@
+    Se ((TipCal = 12) ou (TipCal = 15))
+      {
+        Se ((OriMov <> "D") e (OriMov <> "X"))
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final129;
+          }  
+      }
+
+@================== busca lançamento realizado se existir =====================@  
+    Se ((TipCal = 11) ou (TipCal = 12) ou (TipCal = 13) ou (TipCal = 15) 
+     ou (TipCal = 31) ou (TipCal = 32) ou (TipCal = 51) ou (TipCal = 52)
+     ou (TipCal = 53))
+       {
+         Se ((OriMov = "D") ou (OriMov = "X"))
+           {
+             RefEvt = RefMov;
+             ValEvt = ValMov;
+             VaPara Final129;
+           }
+           
+         dFimCmp = FimCmp;  
+       }    
+@=========== apropriação da data de referência conforme cálculo ===============@
+    Se ((TipCal = 35) ou (TipCal = 55))
+    dFimCmp = FimCmp;
+    Senao Se ((TipCal = 51) ou (TipCal = 52) ou (TipCal = 53))
+    dFimCmp = R040FEM.IniFer;
+    Senao Se (TipCal = 54)
+    dFimCmp = FimCmp;
+    Senao Se (TipoRescisao > 0)
+    dFimCmp = R042RCM.DatDem;
+
+@== retorna adicionais de insalubridade do colaborador ao cálculo vigente =====@    
+    RetAdiEmp (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dFimCmp);
+
+@======= não efetua cálculo se não existir adicional de insalubridade =========@
+    Se (PerInsEmp = 0)
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final129;
+      }
+
+@============== retorna sindicato do colaborador ao cálculo vigente ===========@
+    RetSinEmp (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dFimCmp);    
+    nCodSin = CodSinEmp;
+
+    @ Trecho incluido para evento 1951 não calcular para o Sind 4050@
+    
+    Se (nCodSin = 4050) 
+       {
+         RefEvt = 0;
+         ValEvt = 0;
+         VaPara Final129;
+        }
+        
+@=============== zera variáveis da lógica de cálculo ==========================@
+    xSalHor = 0;
+    xSalMes = 0;
+
+/*= cursor p/ apenas aplicar condição se no cadastro do Sindicato, o parâmetro 
+"Base Insalubridade" for "B - Salário Base" ou "N - Salário Normativo (Piso)" =*/    
+    cur_sin129.sql "select usu_basins,per13s \
+                      from r014sin \
+                     where codsin = :nCodSin \
+                       and usu_basins in ('B','N')"; 
+    cur_sin129.AbrirCursor();
+    Se (cur_sin129.Achou)
+      {
+@================== apropriação quando for "Salário Base" =====================@
+        Se (cur_sin129.usu_basins = "B")
+          {
+            xSalHor = AcuCal[9002];
+            xSalMes = AcuCal[9001];
+          }  
+@======= apropriação quando for "N - Salário Normativo (Piso)" ================@
+        Senao
+          {
+@============== retorna escala do colaborador ao cálculo vigente ==============@
+            RetEscEmp (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dFimCmp);
+            nCodEsc = EscEmp;
+
+@=========== cursor p/ busca da qtde de horas da escala do colaborador ========@            
+            cur_esc129.sql "select hormes \
+                              from r006esc \
+                             where codesc = :nCodEsc \
+                               and hormes > 0";
+            cur_esc129.AbrirCursor();
+            Se (cur_esc129.Achou)
+              {
+                xSalHor = AcuCal[9096] / (cur_esc129.hormes / 60);
+                xSalMes = AcuCal[9096];
+              }
+            cur_esc129.FecharCursor();  
+          }
+
+@========== não calcula se não possuir apropriação de base encontrado =========@          
+        Se ((xSalHor = 0) ou (xSalMes = 0))
+          {
+            cur_sin129.FecharCursor();
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final129;
+          }                 
+        Senao
+          {
+@============================== cálculos mensais e férias =====================@
+            Se ((TipCal = 11) ou (TipCal = 13) ou (TipCal = 15) ou (TipCal = 51) 
+              ou (TipCal = 52) ou (TipCal = 53) ou (TipCal = 55) ou (TipCal = 62)
+              ou (TipCal = 54))
+              {   
+                ValEvt = (xSalHor * RefEvt) * (PerInsEmp / 100);
+              }  
+@============================== cálculos 13o salário ==========================@
+            Senao Se ((TipCal = 31) ou (TipCal = 32) ou (TipCal = 35))
+              {
+                DesmontaData(dFimCmp,xDia,xMes,xAno);
+                MontaData(16,01,xAno,dIniCal);
+                
+                Se (R034FUN.DatAdm > dIniCal)
+                dIniCal = R034FUN.DatAdm;
+                
+                Se (TipCal = 31)
+                MontaData(31,12,xAno,dFimCmp);
+                
+                nAvo = 0;
+                TempoTrabFun (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dIniCal,
+                dFimCmp,3,nAvo);
+                
+                ValEvt = ((xSalMes / 12) * nAvo) * (PerInsEmp / 100);               
+                
+                Se (TipCal = 31)
+                ValEvt = (ValEvt * (cur_sin129.per13s / 100)) * (PerInsEmp / 100);
+              }
+@=================== Cálculo de Aviso Prévio Indenizado =======================@
+            Senao Se (TipCal = 63)
+              {
+                ValEvt = ((xSalMes / 30) * R042RCM.QtdInd) * (PerInsEmp / 100);
+              }   
+@=================== Cálculo de Aviso Prévio Reavido ==========================@
+            Senao Se (TipCal = 64)
+              {
+                ValEvt = ((xSalMes / 30) * R042RCM.QtdRea) * (PerInsEmp / 100); 
+              }
+@======================= Cálculo de Estabilidade ==============================@
+            Senao Se (TipCal = 70)
+              {
+                ValEvt = ((xSalMes / 30) * R042RCM.QtdEst) * (PerInsEmp / 100); 
+              }
+@============== Cálculo de Indenização Mês Anterior Dissídio ==================@
+            Senao Se (TipCal = 69)
+              {
+                ValEvt = xSalMes * (PerInsEmp / 100); 
+              }
+@================ Cálculo de Fim Antecipado de Contrato =======================@
+            Senao Se ((TipCal = 65) ou (TipCal = 66))
+              {
+                ValEvt = ((xSalMes / 30) * R042RCM.QtdFca) * (PerInsEmp / 100); 
+              }
+@==================== Cálculo de 13o Proporcional =============================@
+            Senao Se (TipCal = 71)
+              {
+                DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+                MontaData(16,01,xAno,dIniCal);
+                
+                Se (R034FUN.DatAdm > dIniCal)
+                dIniCal = R034FUN.DatAdm;
+                
+                nAvo = 0;
+                TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                dIniCal,R042RCM.DatDem,3,nAvo);
+                
+                ValEvt = ((xSalMes / 12) * nAvo) * (PerInsEmp / 100); 
+              }
+@====================== Cálculo de 13o Indenizado =============================@
+            Senao Se (TipCal = 72)
+              {
+                nAvo = 0;
+                
+                Se ((R042RCM.QtdInd > 0) e (R042RCM.QtdRea = 0))
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R042RCM.DatDem,R042RCM.DatDem+R042RCM.QtdInd,2,nAvo);
+                  }
+                 Senao Se ((R042RCM.QtdInd = 0) e (R042RCM.QtdRea > 0))
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R042RCM.DatDem,R042RCM.DatDem+R042RCM.QtdRea,2,nAvo);
+                  }  
+                
+               /* Se (nAvo > 3)
+                nAvo = 3; */
+                
+                ValEvt = ((xSalMes / 12) * nAvo) * (PerInsEmp / 100); 
+              }
+@======== Cálculo de Férias Vencidas e ou Proporcionais em rescisão ===========@
+            Senao Se (((TipCal >= 75) e (TipCal <= 79)) 
+            ou ((TipCal >= 95) e (TipCal <= 99)))
+              {
+                nAvo = 0;
+  
+                Se (R040PER.FimPer >= R042RCM.DatDem)
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R040PER.IniPer,R042RCM.DatDem,1,nAvo);
+                  }
+                Senao
+                  {
+                    TempoTrabFun (R042RCM.NumEmp,R042RCM.TipCol,R042RCM.NumCad,
+                    R040PER.IniPer,R040PER.FimPer,1,nAvo);
+                  }
+  
+@ controle p/ apropriar eventos de férias em suas verbas corretas em rescisão =@                
+                Se (((CodCrt = 1301) e (R040PER.AvoFer <> 12)) 
+                 ou ((CodCrt = 1302) e (R040PER.AvoFer = 12)))
+                  {
+                    RefEvt = 0;
+                    ValEvt = 0;
+                    VaPara Final129;
+                  }
+  
+                ValEvt = ((xSalMes / 12) * nAvo) * (PerInsEmp / 100);
+              }  
+          }   
+      }   
+    cur_sin129.FecharCursor();                        
+ } 
+ 
+Final129:  
