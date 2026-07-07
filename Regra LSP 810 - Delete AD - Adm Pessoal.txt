@@ -1,0 +1,689 @@
+Definir Alfa cDuploVinculo;
+
+definir alfa anumemp;
+definir alfa atipcol;
+definir alfa anumcad;
+definir alfa anomfun;
+definir alfa acodloc;
+definir alfa anumloc;
+definir alfa anomloc;                                          
+definir alfa acodfil;                         
+definir alfa anomfil;                         
+definir alfa anumcpf;
+definir alfa acodcar;
+definir alfa atitred;                                       
+definir alfa adatadm;
+definir alfa asitafa;
+definir alfa astatus;
+definir alfa aemacom;
+definir alfa acursor;
+definir alfa apostra;
+definir alfa adespos;
+definir alfa atipo;
+definir alfa asql;
+definir alfa aret;
+definir alfa alog;
+definir alfa ajson;
+definir alfa avariavel;
+definir alfa anumemp_lider;
+definir alfa atipcol_lider;
+definir alfa anumcad_lider;
+definir alfa aemacom_lider;
+definir alfa anumcad;
+definir alfa anomfun;
+definir alfa acnpj;
+definir alfa anumcadche;
+definir alfa anomfil;
+definir alfa auffil;
+definir alfa atitred;
+definir alfa anumemp;
+definir alfa anomloc;
+definir alfa anomccu;
+definir alfa anumcpf;
+definir alfa adatadm;
+definir alfa adatdes;
+definir alfa aperfil;
+definir alfa astatus;
+definir alfa anomcid;
+definir alfa adessit;
+definir alfa alink2;
+definir alfa xecsqlex;
+definir alfa acodccu;
+definir alfa alocal;
+definir alfa acargo;
+definir alfa acentro;
+definir alfa aunidade;
+definir alfa amatricula;
+definir alfa aemager;
+definir alfa acodloc;
+definir alfa aemalider;
+definir alfa anomlider;
+
+definir numero ncoderro;  
+definir numero nhorenv;                      
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad;
+definir numero ncodfil;
+definir numero nsitafa;
+definir numero ntaborg;
+definir numero nestcar;
+definir numero nerro;
+definir numero nnumemp_lider;
+definir numero ntipcol_lider;
+definir numero nnumcad_lider;
+definir numero ncoderro;
+definir numero ntipcon;
+definir numero nnumcgc;
+definir numero nnumcpf;
+definir numero nlocal;
+definir numero ncargo;
+definir numero ncentro;
+definir numero nnomfil;
+definir numero nmatricula;
+
+definir data ddatadm;
+definir data ddatenv;
+definir data ddatafa;
+
+definir cursor cur_cpf;
+definir cursor curafa;
+
+nhorenv = horsis;
+ddatenv = datsis;
+aemalider ="";
+alocal = "";
+acargo = "";
+acentro = "";
+aunidade = "";
+amatricula = "";
+
+definir alfa alinkdelete;
+definir data ddata;
+definir alfa anumcpf;
+definir alfa adatafa;
+
+
+Definir Alfa aBody;
+Definir Alfa client_id;
+Definir Alfa client_secret;
+Definir Alfa grant_type;
+Definir Alfa scope;
+Definir Alfa aHttpToken;
+Definir Alfa aRetTokenHUB;
+Definir Alfa aTokenHUB;
+Definir Alfa aError;
+Definir Alfa aDesError;
+
+
+
+@Chave para chamada da API@
+scope = "api://6110f67d-e6b6-4d41-b9bb-59cf2b0a0d7d/.default";          
+grant_type = "client_credentials";
+client_id =  "6110f67d-e6b6-4d41-b9bb-59cf2b0a0d7d";
+client_secret = "9Yy8Q~YK8abrZkde_s5-LYOpYKRIgQY3hdscocmw"; 
+
+aBody ="client_id=#client_id#&client_secret=#client_secret#&grant_type=#grant_type#&scope=#scope#";
+
+TrocaString(aBody, "#client_id#", client_id, aBody);
+TrocaString(aBody, "#client_secret#", client_secret, aBody);
+TrocaString(aBody, "#grant_type#", grant_type, aBody);
+TrocaString(aBody, "#scope#", scope, aBody);    
+
+@Realiza chamada da API para pegar o token@ 
+HttpObjeto(aHttpToken); 
+HttpDesabilitaErroResposta(aHttpToken); 
+HttpAlteraCabecalhoRequisicao(aHttpToken, "Content-Type", "application/x-www-form-urlencoded");
+HttpDesabilitaErroResposta(aHttpToken);
+HttpPost(aHttpToken,"https://login.microsoftonline.com/00e23c10-0247-48c3-8132-39f54b0363f7/oauth2/v2.0/token", aBody, aRetTokenHUB);
+HttpLeCodigoResposta(aHttpToken, nCodHttp);
+Se (nCodHttp =  200)
+{
+  getJSONString(aRetTokenHUB,"access_token", aTokenHUB);
+  aTokenHUB = "Bearer "+ aTokenHUB;    
+}
+Senao
+{
+  getJSONString(aRetTokenHUB,"error",aError);
+  getJSONString(aRetTokenHUB,"error_description",aDesError);    
+}
+                      
+
+asql = "select distinct fun.numemp, fun.tipcol, fun.numcad, fun.nomfun,    \   
+        fun.codcar, fun.numloc, fun.sitafa, fun.datadm,                    \   
+        fun.numcpf, fun.codfil, cpl.emacom, car.titred,                    \   
+        car.codcar, car.estcar, ccu.nomccu, sit.dessit,                    \   
+        pos.despos, orn.nomloc, orn.taborg, fil.nomfil,                    \  
+        fil.codest, fun.tipcon, fil.numcgc, fun.datafa,                    \   
+        fil.codcid, cid.nomcid                                             \          
+        from r034fun fun, r034cpl cpl, r024car car, r017pos pos,           \   
+             r018ccu ccu, r010sit sit, r074cid cid,                        \   
+             r016orn orn, r030fil fil, usu_tadmarista usu                  \    
+        where                                                              \ 
+        fun.sitafa = sit.codsit and                                        \ 
+        fun.numemp = ccu.numemp and                                        \   
+        fun.codccu = ccu.codccu and                                        \   
+        fun.numemp = cpl.numemp and                                        \   
+        fun.tipcol = cpl.tipcol and                                        \   
+        fun.numcad = cpl.numcad and                                        \   
+        fun.postra = pos.postra and                                        \   
+        fun.estpos = pos.estpos and                                        \   
+        fun.codcar = car.codcar and                                        \   
+        fun.estcar = car.estcar and                                        \   
+        fun.taborg = orn.taborg and                                        \   
+        fun.numloc = orn.numloc and                                        \   
+        fun.numemp = fil.numemp and                                        \   
+        fun.codfil = fil.codfil and                                        \   
+        fil.codcid = cid.codcid and                                        \   
+        fun.numemp = usu.usu_numemp and                                    \   
+        fun.tipcol = usu.usu_tipcol and                                    \   
+        fun.numcad = usu.usu_numcad and                                    \
+        fun.tipcol = 1 and                                                 \ 
+        usu.usu_status = 'OK' and                                          \
+       (fun.sitafa = 7 or fun.usu_deslad = 'S')  and                       \ 
+        usu.usu_datenv = (select max(dat.usu_datenv)                       \  
+                            from usu_tadmarista dat                        \
+                              where dat.usu_numemp = fun.numemp            \
+                                and dat.usu_tipcol = fun.tipcol            \
+                                and dat.usu_numcad = fun.numcad) and       \
+        usu.usu_horenv = (select max(hor.usu_horenv)                       \
+                            from usu_tadmarista hor                        \
+                              where  hor.usu_numemp = fun.numemp           \
+                                and  hor.usu_tipcol = fun.tipcol           \
+                                and  hor.usu_numcad = fun.numcad           \
+                                and  hor.usu_datenv = usu.usu_datenv) "; 
+                                         
+SQL_Criar(acursor); 
+SQL_UsarSQLSenior2(acursor, 0); 
+SQL_UsarAbrangencia(acursor, 0);
+SQL_DEFINIRCOMANDO(acursor, asql);
+
+SQL_AbrirCursor(acursor); 
+ENQUANTO (SQL_EOF(acursor) = 0) @Se cursor posição final retorna 1@
+{ 
+
+  SQL_RetornarAlfa(acursor, "nomfun", anomfun);
+  SQL_RetornarAlfa(acursor, "nomfil", anomfil);
+  SQL_RetornarAlfa(acursor, "codcar", acodcar);
+  SQL_RetornarAlfa(acursor, "titred", atitred);
+  SQL_RetornarAlfa(acursor, "nomccu", anomccu); 
+  SQL_RetornarAlfa(acursor, "dessit", adessit); 
+  SQL_RetornarAlfa(acursor, "emacom", aemacom);
+  SQL_RetornarAlfa(acursor, "nomloc", anomloc);
+  SQL_RetornarAlfa(acursor, "codest", auffil);
+  SQL_RetornarAlfa(acursor, "nomcid", anomcid);
+  
+  SQL_RetornarInteiro(acursor, "numemp", nnumemp);
+  SQL_RetornarInteiro(acursor, "tipcol", ntipcol);
+  SQL_RetornarInteiro(acursor, "numcad", nnumcad);
+  SQL_RetornarInteiro(acursor, "codfil", ncodfil);
+  SQL_RetornarInteiro(acursor, "sitafa", nsitafa);                         
+  SQL_RetornarInteiro(acursor, "numloc", nnumloc);
+  SQL_RetornarInteiro(acursor, "numcpf", nnumcpf);
+  SQL_RetornarInteiro(acursor, "taborg", ntaborg);
+  SQL_RetornarInteiro(acursor, "estcar", nestcar);
+  SQL_RetornarInteiro(acursor, "tipcon", ntipcon);
+  SQL_RetornarInteiro(acursor, "numcgc", nnumcgc);
+  
+  /*SQL_RetornarInteiro(acursor, "emplid", nnumemp_lider);
+  SQL_RetornarInteiro(acursor, "tiplid", ntipcol_lider);
+  SQL_RetornarInteiro(acursor, "cadlid", nnumcad_lider); */
+  
+  /*cur_cpf.SQL "SELECT NUMEMP, TIPCOL, NUMCAD                                   \
+                 FROM R034FUN                                                  \
+                   WHERE NUMCPF = :nnumcpf                                     \
+                     AND SITAFA <> 7";
+  
+   cur_cpf.AbrirCursor();
+   Se(cur_cpf.Achou) {
+     cur_cpf.FecharCursor();
+     VaPara ProximoRegistro;
+   }
+   cur_cpf.FecharCursor();   */ 
+   
+  SQL_RetornarData(acursor, "datadm", ddatadm);
+  
+  Se (nSitAfa <> 7){      @-- Tratativa para desativação de usuário com data futura fun.usu_deslad = 'S' Vinicius Dias 03/12/2025--@
+    nSitAfa = 7;    
+  }
+  
+  ddatafa = 0;
+  se(nsitafa = 7)
+  {
+    curafa.sql "select datafa from r038afa            \
+                       where                          \
+                       numemp = :nnumemp and          \
+                       tipcol = :ntipcol and          \
+                       numcad = :nnumcad and          \
+                       sitafa = 7";
+                       
+    curafa.abrircursor();
+    se(curafa.achou)
+    {
+      ddatafa = curafa.datafa;
+      convertemascara(3,ddatafa, adatafa,"YYYY-MM-DD");      
+    } 
+    
+    curafa.fecharcursor();     
+  } 
+  se(ddatafa = 0)
+  {
+    ddatafa = datsis;
+    convertemascara(3,ddatafa, adatafa,"YYYY-MM-DD");
+    
+  }
+  
+  
+  @definir alfa acnpj;@
+ 
+  
+  intparaalfa(nnumemp, anumemp);
+  intparaalfa(ntipcol, atipcol);
+  intparaalfa(nnumcad, anumcad);
+  intparaalfa(ncodfil, acodfil);
+  intparaalfa(nsitafa, asitafa);
+  intparaalfa(nnumloc, anumloc);
+  convertemascara(1,nnumcpf, anumcpf,"99999999999");
+  intparaalfa(nnumcgc, acnpj);
+  intparaalfa(nnumemp_lider, anumemp_lider);
+  intparaalfa(ntipcol_lider, atipcol_lider);
+  intparaalfa(nnumcad_lider, anumcad_lider);
+  anumcadche = anumcad_lider;
+
+  convertemascara(3, ddatadm, adatadm,"DD/MM/YYYY");
+  @convertemascara(3, datsis, adatdes,"YYYY-MM-DD");@
+  
+    
+  
+  atipo = "Marista";
+  se(ntipcol <> 1)
+  {
+    atipo = "Outras Empresas";
+  }
+  
+  aperfil = "Corporativo";
+  se(ntipcon = 10)
+  {
+    aperfil = "Acadêmico";
+  }
+  
+  aSQL = "SELECT * FROM USU_TADMARISTA T                                       \
+            WHERE T.USU_NUMCPF = :aNumCpf                                      \
+              AND T.USU_NUMCAD <> :aNumCad                                     \
+              AND T.USU_DATENV = (SELECT MAX(T2.USU_DATENV)                    \
+                                    FROM USU_TADMARISTA T2                     \
+                                      WHERE T2.USU_NUMCPF = T.USU_NUMCPF       \
+                                        AND T2.USU_NUMCAD = T.USU_NUMCAD)      \
+              AND T.USU_STATUS = 'OK'";
+
+    SQL_Criar(cDuploVinculo);
+    SQL_UsarSqlSenior2 (cDuploVinculo, 0);
+    SQL_UsarAbrangencia(cDuploVinculo, 0);
+    SQL_DefinirComando (cDuploVinculo, aSQL);
+    SQL_DefinirAlfa (cDuploVinculo, "aNumCpf", aNumCpf);
+    SQL_DefinirAlfa (cDuploVinculo, "aNumCad", aNumCad);
+    SQL_AbrirCursor    (cDuploVinculo); 
+    
+    Se(SQL_EOF(cDuploVinculo) = 0)
+    {
+      aLog = "Duplo Vínculo - Não enviado para o HUB/AD";
+      
+      IniciarTransacao();
+      
+      VaPara InserirNaTabela;
+    }
+    SQL_FecharCursor(cDuploVinculo);
+    SQL_Destruir(cDuploVinculo);   
+  
+   ajson ="{";
+    
+      aemager = "";
+      aemager = aemalider;
+      aemager = "francisdil.sagrado@maristabrasil.org";
+      adessit = "ativo";
+      atipcol = "empregado";
+      acodloc = "01.05.06";
+      @anumcpf = "45710283002";@
+      anumcad = anumcad+", "+anumcad;
+      @anomfun = "Fabiano Galdino Juarez";@
+      
+      ajson = ajson + "\"matricula\":\""+anumcad+"\",";     
+ 	    ajson = ajson + "\"nome\":\""+anomfun+"\",";
+ 	    ajson = ajson + "\"cpf\":\""+anumcpf+"\",";  	  
+      ajson = ajson + "\"cnpj_empresa\":\""+acnpj+"\",";
+      ajson = ajson + "\"unidade_nome\":\""+anomfil+"\",";
+      ajson = ajson + "\"unidade_cidade\":\""+anomcid+"\",";
+      ajson = ajson + "\"unidade_uf\":\""+auffil+"\",";
+      ajson = ajson + "\"cargo_nome\":\""+atitred+"\",";
+      ajson = ajson + "\"cargo_codigo\":\""+acodcar+"\",";
+      ajson = ajson + "\"setor_nome\":\""+anomloc+"\",";
+      ajson = ajson + "\"setor_codigo\":\""+anumloc+"\",";
+      ajson = ajson + "\"departamento_nome\":\""+anomccu+"\","; 
+      ajson = ajson + "\"departamento_codigo\":\""+acodccu+"\",";    
+      ajson = ajson + "\"gerente\":\""+aemager+"\",";
+      ajson = ajson + "\"tipo_colaborador\":\""+atipcol+"\",";
+      ajson = ajson + "\"codigo_organizacao\":\""+acodloc+"\",";
+      ajson = ajson + "\"data_admissao\":\""+adatadm+"\",";    
+    
+    se(nsitafa = 7)
+    {
+      ajson = ajson + "\"data_desligamento\":\""+adatafa+"\",";
+    }
+    senao
+    {
+      ajson = ajson + "\"data_desligamento\":null,";
+    }
+    @ajson = ajson + "\"empresa\":\""+anumemp+"\",";@
+    /*ajson = ajson + "\"departamento\":\""+anomccu+"\",";
+    ajson = ajson + "\"perfil_de_grupo\":\""+aperfil+"\","; */
+    ajson = ajson + "\"status\":\""+adessit+"\"}"; 
+
+  @Integração@
+ 
+    definir alfa ahttphub;
+    definir alfa alinkhub;
+    definir alfa ajsonhub;
+    definir alfa arethub;
+    definir alfa ahttphub;
+    definir numero ncoderrohu;
+    definir alfa link2;
+    
+    ajsonhub = ajson;
+    
+    alink2 = "https://af-hub-sno-ad-brs-hmg01.azurewebsites.net/api/ad/employees/";
+    
+    alinkdelete  = "https://apihub.maristabrasil.org/senior/hmg/colaborador/"+anumcpf+"?data_desligamento="+adatafa;    
+    alinkdelete  = "https://apihub.maristabrasil.org/senior/prd/colaborador/"+anumcpf+"?data_desligamento="+adatafa;   
+        
+    HTTPOBJETO(ahttphub);
+    HttpHabilitaSNI(ahttphub);
+    HTTPDESABILITAERRORESPOSTA(ahttphub);
+    HTTPALTERACODIFCARACPADRAO(ahttphub, "UTF-8");  
+    HTTPALTERACABECALHOREQUISICAO(ahttphub, "Accept", "*/*"); 
+    HttpAlteraCabecalhoRequisicao(ahttphub, "Authorization", aTokenHUB);
+    HTTPALTERACABECALHOREQUISICAO(ahttphub, "Ocp-Apim-Subscription-Key", "ef9803b2f5d546a18aa134fd0858e0e3"); 
+    
+    @HTTPPOST(ahttphub,alink2,ajson,arethub);@
+    @HTTPPOST(ahttphub,alinkhub,ajson,arethub); @  
+    @HTTPPUT(ahttphub,alinkhub,ajson,arethub); @ 
+    HTTPdelete(ahttphub,alinkdelete,arethub);          
+    HTTPLECODIGORESPOSTA(ahttphub,ncoderrohub);    
+    
+    alog = arethub;
+    
+    @Integração@
+    iniciartransacao();
+    se(ncoderrohub = 200)
+    {  
+      InserirNaTabela:
+                   
+      astatus = "INATIVO";
+      execsqlex("insert into usu_tadmarista                                  \
+                 (usu_numemp, usu_tipcol, usu_numcad, usu_nomfun,            \
+                 usu_numcpf, usu_codfil, usu_taborg, usu_numloc,             \
+                 usu_estcar, usu_codcar, usu_datadm, usu_sitafa,             \
+                 usu_numemplid, usu_tipcollid, usu_numcadlid, usu_emacomlid, \
+                 usu_nomfunlid,                                              \
+                 usu_datenv, usu_horenv, usu_status, usu_log)                \
+                 values                                                      \
+                 (:nnumemp, :ntipcol, :nnumcad, :anomfun,                    \
+                  :nnumcpf, :ncodfil, :ntaborg, :nnumloc,                    \
+                  :nestcar, :acodcar, :ddatadm, :nsitafa,                    \
+                  :nnumemp_lider, :ntipcol_lider, :nnumcad_lider,            \
+                  :aemager, :anomlider, :ddatenv, :nhorenv, :astatus, :alog)",nerro, aret); 
+                  
+       finalizartransacao();                          
+    }
+    senao
+    {
+      nPosIni = 0;
+      PosicaoAlfa ("detail", arethub, nPosIni);
+      
+      nPosIni = nPosIni + 9;
+      CopiarAlfa(arethub, nPosIni, 22);
+      
+      Se(arethub = "Usuário não cadastrado") {
+        astatus = "INATIVO";
+        alog = "Ação realizada com sucesso.";
+      }
+      Senao
+        astatus = "ERRO";
+               
+      execsqlex("insert into usu_tadmarista                                  \
+                 (usu_numemp, usu_tipcol, usu_numcad, usu_nomfun,            \
+                 usu_numcpf, usu_codfil, usu_taborg, usu_numloc,             \
+                 usu_estcar, usu_codcar, usu_datadm, usu_sitafa,             \
+                 usu_numemplid, usu_tipcollid, usu_numcadlid, usu_emacomlid, \
+                 usu_nomfunlid,                                              \
+                 usu_datenv, usu_horenv, usu_status, usu_log)                \
+                 values                                                      \
+                 (:nnumemp, :ntipcol, :nnumcad, :anomfun,                    \
+                  :nnumcpf, :ncodfil, :ntaborg, :nnumloc,                    \
+                  :nestcar, :acodcar, :ddatadm, :nsitafa,                    \
+                  :nnumemp_lider, :ntipcol_lider, :nnumcad_lider,            \
+                  :aemager, :anomlider, :ddatenv, :nhorenv, :astatus, :alog)",nerro, aret); 
+                  
+      finalizartransacao(); 
+    }
+    
+  ProximoRegistro:
+   
+  SQL_PROXIMO(acursor);
+}
+SQL_FECHARCURSOR(acursor);
+SQL_DESTRUIR(acursor);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*definir alfa anumemp;
+definir alfa atipcol;
+definir alfa anumcad;
+definir alfa anomfun;
+definir alfa acodloc;
+definir alfa anumloc;
+definir alfa anomloc;
+definir alfa acodfil;
+definir alfa anomfil;
+definir alfa anumcpf;
+definir alfa acodcar;
+definir alfa atitred;
+definir alfa adatadm;
+definir alfa asitafa;
+definir alfa astatus;
+definir alfa aemacom;
+definir alfa acursor;
+definir alfa apostra;
+definir alfa adespos;
+definir alfa atipo;
+definir alfa asql;
+definir alfa aret;
+definir alfa alog;
+definir alfa anumemp_lider;
+definir alfa atipcol_lider;
+definir alfa anumcad_lider;
+definir alfa aemacom_lider;
+
+definir numero ncoderro;
+
+definir numero nhorenv;
+definir numero nnumemp;
+definir numero ntipcol;
+definir numero nnumcad;
+definir numero ncodfil;
+definir numero nsitafa;
+definir numero ntaborg;
+definir numero nestcar;
+definir numero nerro;
+definir numero nnumemp_lider;
+definir numero ntipcol_lider;
+definir numero nnumcad_lider;
+
+definir data ddatadm;
+definir data ddatenv;
+
+nhorenv = horsis;
+ddatenv = datsis;
+alog = "teste";
+
+asql = "fun.numemp, fun.tipcol, fun.numcad, fun.nomfun,                       \
+        fun.codcar, fun.numloc, fun.sitafa, fun.datadm,                       \
+        fun.numcpf, fun.codfil, cpl.emacom, car.titred,                       \
+        pos.despos, orn.nomloc, fil.nomfil,                                   \
+        usu.usu_numemplid, usu.usu_tipcollid, usu.usu_numcadlid,              \
+        usu.usu_emacomlid                                                         \
+        from r034fun fun, r034cpl cpl, r024car car, r017pos pos,              \
+             r016orn orn, r030fil fil, usu_tliderad usu                       \
+        where                                                                 \
+        fun.numemp = cpl.numemp and                                           \
+        fun.tipcol = cpl.tipcol and                                           \
+        fun.numcad = cpl.numcad and                                           \
+        fun.postra = pos.postra and                                           \
+        fun.estpos = pos.estpos and                                           \
+        fun.codcar = car.codcar and                                           \
+        fun.estcar = car.estcar and                                           \
+        fun.taborg = orn.taborg and                                           \
+        fun.numloc = orn.numloc and                                           \
+        fun.numemp = fil.numemp and                                           \
+        fun.codfil = fil.codfil and                                           \
+        fun.numemp = usu.usu_numemp and                                       \
+        fun.tipcol = usu.usu_tipcol and                                       \
+        fun.numcad = usu.usu_numcad and                                       \
+        fun.sitafa <> 7 and                                                   \
+        not exists (select 'x' from usu_tadmarista ad                         \
+                     where                                                    \
+                     fun.numemp = ad.usu_numemp and                           \
+                     fun.tipcol = ad.usu_tipcol and                           \
+                     fun.numcad = ad.usu_numcad and                           \
+                     ad.usu_status = 'OK' and                                 \
+                     ad.usu_datenv = (select max(dat.usu_datenv)              \
+                                             from usu_tadmarista dat          \
+                                             where                            \
+                                             dat.usu_numemp = fun.numemp and  \
+                                             dat.usu_tipcol = fun.tipcol and  \
+                                             dat.usu_numcad = fun.numcad and  \
+                                             dat.usu_status = 'OK') and       \
+                     ad.usu_horenv = (select max(hor.usu_datenv)              \
+                                             from usu_tadmarista hor          \
+                                             where                            \
+                                             hor.usu_numemp = fun.numemp and  \
+                                             hor.usu_tipcol = fun.tipcol and  \
+                                             hor.usu_numcad = fun.numcad and  \
+                                             hor.usu_datenv = ad.usu_datenv   \
+                                         and hor.usu_status = 'OK'))"; 
+                                         
+
+
+SQL_Criar(acursor); 
+SQL_UsarSQLSenior2(acursor, 0); 
+SQL_UsarAbrangencia(acursor, 0);
+SQL_DEFINIRCOMANDO(acursor, asql);
+
+
+SQL_AbrirCursor(acursor); 
+ENQUANTO (SQL_EOF(acursor) = 0) @Se cursor posição final retorna 1@
+{ 
+  SQL_RetornarAlfa(acursor, "nomfun", anomfun);
+  SQL_RetornarAlfa(acursor, "nomfil", anomfil);
+  SQL_RetornarAlfa(acursor, "codcar", acodcar);
+  SQL_RetornarAlfa(acursor, "titred", atitred);
+  SQL_RetornarAlfa(acursor, "postra", apostra);
+  SQL_RetornarAlfa(acursor, "despos", adespos);
+  SQL_RetornarAlfa(acursor, "emacom", aemacom);
+  SQL_RetornarAlfa(acursor, "nomloc", anomloc);
+  SQL_RetornarAlfa(acursor, "usu_emacomlid", aemacom_lider);
+  
+  SQL_RetornarInteiro(acursor, "numemp", nnumemp);
+  SQL_RetornarInteiro(acursor, "tipcol", ntipcol);
+  SQL_RetornarInteiro(acursor, "numcad", nnumcad);
+  SQL_RetornarInteiro(acursor, "codfil", ncodfil);
+  SQL_RetornarInteiro(acursor, "sitafa", nsitafa);
+  SQL_RetornarInteiro(acursor, "numloc", nnumloc);
+  SQL_RetornarInteiro(acursor, "numcpf", nnumcpf);
+  SQL_RetornarInteiro(acursor, "taborg", ntaborg);
+  SQL_RetornarInteiro(acursor, "estcar", nestcar);
+  
+  SQL_RetornarInteiro(acursor, "usu_numemplid", nnumemp_lider);
+  SQL_RetornarInteiro(acursor, "usu_tipcollid", ntipcol_lider);
+  SQL_RetornarInteiro(acursor, "usu_numcadlid", nnumcad_lider);
+   
+  SQL_RetornarData(acursor, "datadm", ddatadm);
+  
+  intparaalfa(nnumemp, anumemp);
+  intparaalfa(ntipcol, atipcol);
+  intparaalfa(nnumcad, anumcad);
+  intparaalfa(ncodfil, acodfil);
+  intparaalfa(nsitafa, asitafa);
+  intparaalfa(nnumloc, anumloc);
+  intparaalfa(nnumcpf, anumcpf);
+  intparaalfa(nnumemp_lider, anumemp_lider);
+  intparaalfa(ntipcol_lider, atipcol_lider);
+  intparaalfa(nnumcad_lider, anumcad_lider);
+
+  convertemascara(3, ddatadm, adatadm,"DD/MM/YYYY");
+  
+  atipo = "Marista";
+  se(ntipcol <> 1)
+  {
+    atipo = "Outras Empresas";
+  }
+
+  @Integração@
+ 
+  se(ncoderro = 200)
+  {  definir alfa xecsqlex;
+    /*execsqlex("insert into usu_tadmarista                                     \
+               usu_numemp, usu_tipcol, usu_numcad, usu_nomfun,                \
+               usu_numcpf, usu_codfil, usu_taborg, usu_numloc,                \
+               usu_estcar, usu_codcar, usu_datadm, usu_sitafa,                \
+               usu_numemplid, usu_tipcollid, usu_numcadlid, usu_emacomlid,    \
+               usu_datenv, usu_horenv, usu_status, usu_log)                   \
+               values                                                         \
+               (:nnumemp, :ntipcol, :nnumcad, :anomfun,                       \
+                :nnumcpf, :ncodfil, :ntaborg, :nnumloc,                       \
+                :nestcar, :acodcar, :ddatadm, :nsitafa,                       \
+                :nnumemp_lider, :ntipcol_lider, :nnumcad_lider,               \
+                :ddatenv, :nhorenv, :astatus, :alog,                          \
+                :aemacom_lider)",nerro, aret); */
+  
+ /* 
+ execsqlex("insert into usu_tadmarista                                        \
+               (usu_numemp, usu_tipcol, usu_numcad, usu_nomfun,                \
+               usu_numcpf, usu_codfil, usu_taborg, usu_numloc,                \
+               usu_estcar, usu_codcar, usu_datadm, usu_sitafa,                \
+               usu_numemplid, usu_tipcollid, usu_numcadlid, usu_emacomlid,    \
+               usu_datenv, usu_horenv, usu_status, usu_log)                   \
+               values                                                         \
+               (:nnumemp, :ntipcol, :nnumcad, :anomfun,                       \
+                :nnumcpf, :ncodfil, :ntaborg, :nnumloc,                       \
+                :nestcar, :acodcar, :ddatadm, :nsitafa,                       \
+                :nnumemp_lider, :ntipcol_lider, :nnumcad_lider,               \
+                :aemacom_lider, :ddatenv, :nhorenv, :astatus, :alog)",nerro, aret);    
+  
+  
+  
+  
+  }  
+  SQL_PROXIMO(acursor);
+  }
+SQL_FECHARCURSOR(acursor);
+SQL_DESTRUIR(acursor);
+ */                         
