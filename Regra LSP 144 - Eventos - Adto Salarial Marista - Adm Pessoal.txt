@@ -1,0 +1,289 @@
+/* Regra Especial desenvolvida para atender o cálculo adicional de verbas de 
+Adto Salarial;
+Vinculada no Evento "1961 - ADIANTAMENTO SALARIAL";
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 02/09/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@====================== Definição das Variáveis Padrões =======================@
+Definir Cursor cur_emp144;
+Definir Cursor cur_sin144;
+Definir Cursor cur_ver144;
+Definir Cursor cur_afa144;
+
+Definir Data dFimCmp;
+Definir Data dPerAnt;
+
+@====================== somente ao cálculo adto salarial ======================@
+        dIniCmp = PerRef;
+        dFimCmp = PerRef;
+        UltimoDia(dFimCmp); 
+
+Se (TipCal = 91)
+  {
+@=============== busca valores fixo ou variável se tiver lançado ==============@
+    Se ((OriMov = "D") ou (OriMov = "X"))
+      {
+        RefEvt = RefMov;
+        ValEvt = ValMov;
+        Vapara Final144;
+      }
+      
+    DesmontaData(PerRef,xDia,xMes,xAno);
+    MontaData(01,xMes,xAno,dIniCmp);  
+    dFimCmp = dIniCmp;
+    Ultimodia(dFimCmp);
+
+@============= zera variáveis de dias trabalhados e dias do mês ===============@        
+        nDiaTra = 0;
+        nDiaMes = 0;
+
+@=================== encontra qtde dias do mês vigente ========================@
+        DesmontaData(dFimCmp,nDiaMes,xMes,xAno);
+        
+        Se (nDiaMes = 0)
+        nDiaMes = 1;         
+
+@========= apropriação de direitos de dias trabalhados no mês vigente =========@        
+        Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+        nDiaTra = (dFimCmp - R034FUN.DatAdm) + 1;
+        Senao
+        nDiaTra = nDiaMes;        
+
+@=================== encontra qtde dias do mês vigente ========================@
+        DesmontaData(dFimCmp,nDiaMes,xMes,xAno);
+        
+        Se (nDiaMes = 0)
+        nDiaMes = 1;         
+
+@========= apropriação de direitos de dias trabalhados no mês vigente =========@        
+        Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+        nDiaTra = (dFimCmp - R034FUN.DatAdm) + 1;
+        Senao
+        nDiaTra = nDiaMes;        
+
+@======= a pedido do Cliente, não efetua cálculo p/ admitidos do mês ==========@    
+    Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+      {
+        RefEvt = 0;
+        ValEvt = 0;
+        VaPara Final144;
+      }
+
+@===================== variáveis do colaborador no cálculo ====================@      
+    nNumEmp = R034FUN.NumEmp;
+    nTipCol = R034FUN.TipCol;
+    nNumCad = R034FUN.NumCad;
+    nFatorHorSem = 0;
+    xValEvt = 0;
+    
+    xBasAnt = 0; @= zera base do mês anterior =@
+    dPerAnt = PerRef - 1; @ início de apropriação do mês anterior =@
+
+@========= somente se colaborador for admitido antes do mês anterior ==========@    
+    Se (R034FUN.DatAdm <= dPerAnt)
+      {
+        DesmontaData(dPerAnt,xDia,xMes,xAno);
+        MontaData(01,xMes,xAno,dPerAnt);
+
+@= cursor p/ busca do valor recebido no mês anterior conforme totalizador 1000 =@      
+        cur_ver144.sql "select numemp from r030emp where numemp = 0 union \
+                        select sum(case \
+                                    when \
+                                     r008tob.tipsin = '-' \
+                                       then r046ver.valeve * -1 \
+                                    else \
+                                      r046ver.valeve \
+                                    end) \
+                          from r046ver,\
+                               r044cal,\
+                               r008tob \
+                         where r046ver.numemp = r044cal.numemp \
+                           and r046ver.codcal = r044cal.codcal \
+                           and r046ver.tabeve = r008tob.tabeve \
+                           and r046ver.codeve = r008tob.codeve \
+                           and r044cal.tipcal not in (14,31,32,91,92,93,94) \ 
+                           and r008tob.codtot = 1000 \
+                           and r046ver.numemp = :nNumEmp \
+                           and r046ver.tipcol = :nTipCol \
+                           and r046ver.numcad = :nNumCad \
+                           and r044cal.perref = :dPerAnt";
+        cur_ver144.AbrirCursor();
+        Se (cur_ver144.Achou)
+        xBasAnt = cur_ver144.numemp;
+    
+        cur_ver144.FecharCursor();                       
+      }
+
+@=============== retroage mais um mês anterior se não encontrar ===============@    
+    Se (xBasAnt = 0)
+      {
+        Ultimodia(dPerAnt);
+        dPerAnt = dPerAnt - 40;
+        Ultimodia(dPerAnt);
+
+        Se (R034FUN.DatAdm <= dPerAnt)
+          {
+            DesmontaData(dPerAnt,xDia,xMes,xAno);
+            MontaData(01,xMes,xAno,dPerAnt);
+          
+            cur_ver144.sql "select numemp from r030emp where numemp = 0 union \
+                            select sum(case \
+                                        when \
+                                         r008tob.tipsin = '-' \
+                                           then r046ver.valeve * -1 \
+                                        else \
+                                          r046ver.valeve \
+                                        end) \
+                              from r046ver,\
+                                   r044cal,\
+                                   r008tob \
+                             where r046ver.numemp = r044cal.numemp \
+                               and r046ver.codcal = r044cal.codcal \
+                               and r046ver.tabeve = r008tob.tabeve \
+                               and r046ver.codeve = r008tob.codeve \
+                               and r044cal.tipcal not in (14,31,32,91,92,93,94) \ 
+                               and r008tob.codtot = 1000 \
+                               and r046ver.numemp = :nNumEmp \
+                               and r046ver.tipcol = :nTipCol \
+                               and r046ver.numcad = :nNumCad \
+                               and r044cal.perref = :dPerAnt";
+            cur_ver144.AbrirCursor();
+            Se (cur_ver144.Achou)
+            xBasAnt = cur_ver144.numemp;
+        
+            cur_ver144.FecharCursor();                       
+          }
+      }
+
+@===== soma ao evento sendo calculado a base encontrada no mês anterior =======@    
+    Se (xBasAnt > 0)
+      {
+        pPerAdi = 0;
+        
+        cur_emp144.sql "select peradi \
+                          from r030emp \
+                         where numemp = :nNumEmp \
+                           and peradi > 0";
+        cur_emp144.AbrirCursor();
+        Se (cur_emp144.Achou)
+        pPerAdi = cur_emp144.peradi / 100;
+        
+        cur_emp144.FecharCursor();
+        
+        Se (pPerAdi = 0)
+          {
+            RetSinEmp (R034FUN.NumEmp,R034FUN.TipCol,R034FUN.NumCad,dFimCmp);
+            nCodSin = CodSinEmp;
+            
+            cur_sin144.sql "select peradi \
+                              from r014sin \
+                             where codsin = :nCodSin \
+                               and peradi > 0";
+            cur_sin144.AbrirCursor();
+            Se (cur_sin144.Achou)
+            pPerAdi = cur_sin144.peradi / 100;
+            
+            cur_sin144.FecharCursor();
+          }
+
+@============= zera variáveis de dias trabalhados e dias do mês ===============@        
+        nDiaTra = 0;
+        nDiaMes = 0;
+
+@=================== encontra qtde dias do mês vigente ========================@
+        DesmontaData(dFimCmp,nDiaMes,xMes,xAno);
+        
+        Se (nDiaMes = 0)
+        nDiaMes = 1;         
+
+@========= apropriação de direitos de dias trabalhados no mês vigente =========@        
+        Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+        nDiaTra = (dFimCmp - R034FUN.DatAdm) + 1;
+        Senao
+        nDiaTra = nDiaMes;        
+
+@=================== encontra qtde dias do mês vigente ========================@
+        DesmontaData(dFimCmp,nDiaMes,xMes,xAno);
+        
+        Se (nDiaMes = 0)
+        nDiaMes = 1;         
+
+@========= apropriação de direitos de dias trabalhados no mês vigente =========@        
+        Se ((R034FUN.DatAdm >= dIniCmp) e (R034FUN.DatAdm <= dFimCmp))
+        nDiaTra = (dFimCmp - R034FUN.DatAdm) + 1;
+        Senao
+        nDiaTra = nDiaMes;        
+        
+/* Não usado a função "BuscaDiaSit" pq a mesma não carrega qdo é falta injust.
+Dedicado cursor p/ busca do histórico de afastamento vigente qdo a situação 
+estiver parametrizada p/ Perde Adt Salarial ==================================*/        
+        cur_afa144.sql "select datafa,datter \
+                          from r038afa \
+                         where numemp = :nNumEmp \
+                           and tipcol = :nTipCol \
+                           and numcad = :nNumCad \
+                           and exists (select 1 \
+                                         from r010sit sit \
+                                        where r038afa.sitafa = sit.codsit \
+                                          and sit.peradt = 'S') \
+                           and ((datter between :dIniCmp and :dFimCmp) \
+                             or (datafa between :dIniCmp and :dFimCmp) \
+                             or (datafa <= :dFimCmp and (datter = :dDatZer or datter > :dFimCmp))) \
+                      order by datafa";        
+        cur_afa144.AbrirCursor();
+        Enquanto (cur_afa144.Achou)
+          {
+   @Trecho inserido por Pedro Carli, pois a regra estava somando 2x o nAfa@
+@============= zera variáveis de Afastamento ===============@        
+        nAfa = 0;
+        nDiaAfa = 0;
+        
+   @Fim Trecho inserido por Pedro Carli, pois a regra estava somando 2x o nAfa@
+  
+@============= apropriação lógica de dias afastados no mês vigente ============@
+            dDatAfa = cur_afa144.datafa;
+            
+            Se (cur_afa144.datafa < dIniCmp)
+            dDatAfa = dIniCmp;
+            
+            dDatTer = cur_afa144.datter;
+            
+            Se ((cur_afa144.datter = dDatZer) ou (cur_afa144.datter >= dFimCmp))
+            dDatTer = dFimCmp;
+            
+            nAfa = (dDatTer - dDatAfa) + 1;
+            
+            Se (nAfa > 0)
+            nDiaAfa = nDiaAfa + nAfa;
+
+            cur_afa144.Proximo();
+          }
+        cur_afa144.FecharCursor();                                   
+
+@== Não efetua cálculo se colaborador(a) estiver afastado todo o mês vigente ==@        
+        Se (nDiaAfa >= nDiaTra)
+          {
+            RefEvt = 0;
+            ValEvt = 0;
+            VaPara Final144;
+          }
+                               
+
+@========= proporcionalidade de direitos se possuir afastamento ===============@          
+        nDiaTra = nDiaTra - nDiaAfa;          
+
+      }      
+      
+  Se (ValEvt > 0)
+    {
+      ValEvt = ValEvt + (((xBasAnt / nDiaMes) * nDiaTra) * pPerAdi);
+    }
+  Senao
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+  }
+Final144:    

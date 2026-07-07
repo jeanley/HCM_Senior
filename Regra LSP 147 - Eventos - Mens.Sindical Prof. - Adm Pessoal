@@ -1,0 +1,119 @@
+/* Regra Especial desenvolvida para atender o cálculo de o menor valor hora de 
+atividade do professor, respeitando teto de desconto do Sindicato;
+Vinculada no Evento "2304 - MENS SIND SINPRO RS";
+Cliente: Marista Brasil;
+Autor: Murilo Fenerick;
+Data(s): 30/09/2025;
+Senior Sistemas - Noroeste Paulista (Grupo KOMVOS) */
+
+@============== Definição das variáveis padrões do colaborador=================@
+Definir Cursor cur_apf147;
+Definir Cursor cur_pds147;
+
+Definir Data dFimCmp;
+Definir Data dIniCmp;
+Definir Data dDatZer;
+
+@===== somente qdo for cálculo mensal e ou saldo de salários em rescisão ======@
+Se ((TipCal = 11) ou (TipCal = 62))
+  {
+@============= se existir lançamento feito pelo usuário =======================@
+    Se ((OriMov = "D") ou (OriMov = "F"))
+      {
+        RefEvt = RefMov;
+        ValEvt = Valmov;
+        VaPara Final147;
+      }
+
+@===================== se existir cálculo padrão do evento ====================@      
+     Se (ValEvt > 0)
+       {
+         Se ((R034FUN.TipCon = 10) ou (R034FUN.TipCon = 13))
+           {
+
+@=============== variáveis do colaborador no cálculo vigente ==================@
+             nNumEmp = R034FUN.NumEmp;
+             nTipCol = R034FUN.TipCol;
+             nNumCad = R034FUN.NumCad;
+
+@==================== identificação qdo for cálculo mensal ====================@             
+             Se (TipCal = 11)
+               {
+                 dIniCmp = IniCmp;
+                 dFimCmp = FimCmp;
+               }  
+             Senao @ qdo for saldo de salário em rescisão =@
+               {
+                 DesmontaData(R042RCM.DatDem,xDia,xMes,xAno);
+                 MontaData(01,xMes,xAno,dIniCmp);
+                 dFimCmp = R042RCM.DatDem;
+               }  
+
+@========================= zera variáveis de lógica ===========================@             
+             xValHor = 0;
+             dDatZer = 0;
+
+@== cursor p/ busca do menor valor hora da grade de atividades do professor ===@             
+             cur_apf147.sql "select numemp from r030emp where numemp = 0 union \
+                             select min(valapf) \
+                               from r171apf \
+                              where numemp = :nNumEmp \
+                                and tipcol = :nTipCol \
+                                and numcad = :nNumCad \
+                                and datini <= :dFimCmp \
+                                and (datfim is null \
+                                  or datfim = :dDatZer \
+                                  or datfim >= :dIniCmp)";
+             cur_apf147.AbrirCursor();
+             Se (cur_apf147.Achou)
+             xValHor = cur_apf147.numemp;
+             
+             cur_apf147.FecharCursor();                     
+
+@========================= apropriação de cálculo =============================@             
+             Se (xValHor > 0)
+               {
+                 xTetSoc = 0;
+
+@=============== retorna sindicato do colaborador no cálculo vigente ==========@                 
+                 RetSinEmp(nNumEmp,nTipCol,nNumCad,dFimCmp);
+                 nCodSin = CodSinEmp;
+
+@============ cursor p/ busca do valor de teto no sindicato qdo existir =======@                 
+                 cur_pds147.sql "select tetsoc \
+                                   from r014pds \
+                                  where codsin = :nCodSin \
+                                    and tippds = 2 \
+                                    and tetsoc > 0";
+                 cur_pds147.AbrirCursor();
+                 Se (cur_pds147.Achou)
+                 xTetSoc = cur_pds147.tetsoc;
+                 
+                 cur_pds147.FecharCursor();                   
+
+@=============== limita ao valor teto se o resultador for maior ===============@                 
+                 Se ((xValHor > xTetSoc) e (xTetSoc > 0))
+                 xValHor = xTetSoc;
+                 
+                 ValEvt = xValHor;
+               }  
+             Senao
+               {
+                 RefEvt = 0;
+                 ValEvt = 0;
+               }
+           }
+       }
+       Senao
+         {
+           RefEvt = 0;
+           ValEvt = 0;
+         } 
+  }
+  Senao
+    {
+      RefEvt = 0;
+      ValEvt = 0;
+    }
+    
+Final147:    

@@ -1,0 +1,6 @@
+  Se ((R034Fun.Numemp <> 3) e (R034Fun.Numemp <> 4))
+       {
+         RefEvt = 0;
+         ValEvt = 0;
+         
+ fim;

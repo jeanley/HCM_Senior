@@ -1,0 +1,22 @@
+
+/* Regra Especial desenvolvida para atender a necessidade da empresa da geração do 
+DSR Professor sobre valores variáveis, cuja base não esta na grade dos professores.
+O valor do eveno será dividido por 6 (1/6 regra DSR professor)
+
+Cliente: Marista Brasil;
+Autor: Elcio Junior;
+Data: 24/09/2025;
+Senior Sistemas - Noroeste Paulista */
+
+@=================== Definição das variáveis padrões ==========================@
+  
+CodEvt = 2453;
+BusEvt = 1;
+nValEve2453 = ValEv2;
+
+CodEvt = 1651;
+busEvt = 1;
+nValEve1651 = ValEv2;
+
+Se(nValEve1651 >= nValEve2453)
+  ValEvt = nValEve1651 - nValEve2453;

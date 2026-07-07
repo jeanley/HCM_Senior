@@ -1,0 +1,29 @@
+Definir Cursor Cur_R048CLC;
+
+nCodClc = R048CTB.CodClc;
+nValPer = 0;
+nValBas = 0;
+
+Cur_R048CLC.SQL "Select PerCal from R048CLC where TabEve = 100 and CodClc = :nCodClc";
+
+Cur_R048CLC.AbrirCursor();
+  Se (Cur_R048CLC.Achou)
+    {
+     nValPer = Cur_R048CLC.PerCal / 100;
+    }
+Cur_R048CLC.FecharCursor();
+
+Se ((nCodClc = 7000) ou (nCodClc = 7001) ou (nCodClc = 7002) ou (nCodClc = 7006))
+  {
+   nValBas = ACUCAL[9026];
+  }
+Senao
+Se ((nCodClc = 7003) ou (nCodClc = 7004) ou (nCodClc = 7005) ou (nCodClc = 7007))
+  {
+   nValBas = ACUCAL[9028];
+  }
+
+Se (nValBas > 0)
+  {
+  R048CTB.VALLAN = nValBas * nValPer;
+  }
