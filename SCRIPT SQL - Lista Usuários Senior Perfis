@@ -1,0 +1,14 @@
+SELECT DISTINCT 
+    usu.codent                          AS codigo_usuario,
+    ISNULL(usu.nomcom, usu.desusu)       AS nome_usuario,
+    isnull(grp.desgrp,'Sem perfil associado') AS perfil
+FROM r910usu usu
+LEFT JOIN r910mgp mgp
+    ON mgp.codmbr = usu.codent
+LEFT JOIN r910grp grp
+    ON grp.codent = mgp.codgrp
+LEFT JOIN r910pam pam
+    ON pam.codent = grp.codent
+
+where grp.desgrp like '%MASTER%'
+order by  3,2
