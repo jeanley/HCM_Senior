@@ -1,0 +1,204 @@
+CREATE VIEW USU_VPCD_TOT AS SELECT    
+    U.NUMEMP,    
+    U.CODFIL,    
+    U.NOMFIL,    
+    U.NUMCGC,    
+    U.QTD_TOTAL_UNIDADE,    
+    U.QTD_COM_DEFICIENCIA,    
+    U.QTD_SEM_DEFICIENCIA,    
+    E.QTD_TOTAL_EMPRESA,    
+    -- ===== PERCENTUAL DEFINIDO PELO HEADCOUNT DA EMPRESA =====    
+    CASE     
+        WHEN E.QTD_TOTAL_EMPRESA BETWEEN 100 AND 200  THEN 0.02    
+        WHEN E.QTD_TOTAL_EMPRESA BETWEEN 201 AND 500  THEN 0.03    
+        WHEN E.QTD_TOTAL_EMPRESA BETWEEN 501 AND 1000 THEN 0.04    
+        WHEN E.QTD_TOTAL_EMPRESA > 1000               THEN 0.05    
+        ELSE 0.00    
+    END AS PERC_COTA_APLICAVEL,    
+    -- ===== COTA MÍNIMA: percentual da empresa aplicado sobre a quantidade da unidade =====    
+    CEILING(    
+        U.QTD_TOTAL_UNIDADE *    
+        CASE     
+            WHEN E.QTD_TOTAL_EMPRESA BETWEEN 100 AND 200  THEN 0.02    
+            WHEN E.QTD_TOTAL_EMPRESA BETWEEN 201 AND 500  THEN 0.03    
+            WHEN E.QTD_TOTAL_EMPRESA BETWEEN 501 AND 1000 THEN 0.04    
+            WHEN E.QTD_TOTAL_EMPRESA > 1000               THEN 0.05    
+            ELSE 0.00    
+        END    
+    ) AS COTA_MINIMA_PCD,    
+    U.QTD_COM_DEFICIENCIA    
+        - CEILING(    
+            U.QTD_TOTAL_UNIDADE *    
+            CASE     
+                WHEN E.QTD_TOTAL_EMPRESA BETWEEN 100 AND 200  THEN 0.02    
+                WHEN E.QTD_TOTAL_EMPRESA BETWEEN 201 AND 500  THEN 0.03    
+                WHEN E.QTD_TOTAL_EMPRESA BETWEEN 501 AND 1000 THEN 0.04    
+                WHEN E.QTD_TOTAL_EMPRESA > 1000               THEN 0.05    
+                ELSE 0.00    
+            END    
+          ) AS SALDO_COTA    
+FROM    
+(    
+    -- ===== TOTAIS POR UNIDADE (CODFIL) =====    
+    SELECT    
+        B.NUMEMP,    
+        B.CODFIL,    
+        B.NOMFIL,    
+        B.NUMCGC,    
+        COUNT(*)               AS QTD_TOTAL_UNIDADE,    
+        SUM(B.FLG_PCD)         AS QTD_COM_DEFICIENCIA,    
+        SUM(1 - B.FLG_PCD)     AS QTD_SEM_DEFICIENCIA    
+    FROM    
+    (    
+        -- ============================================    
+        -- BASE_FINAL: colaboradores sem deficiência (todos os contratos)     
+        -- + colaboradores PCD (só o contrato de admissão mais antiga por CPF)    
+        -- ============================================    
+    
+        SELECT    
+            R.NUMEMP, R.CODFIL, R.NOMFIL, R.NUMCGC, R.FLG_PCD    
+        FROM    
+        (    
+            SELECT    
+                R034FUN.NUMEMP,    
+                R034FUN.CODFIL,    
+                R030FIL.NOMFIL,    
+                R030FIL.NUMCGC,    
+                CASE WHEN R034FUN.DEFFIS = 'S' THEN 1 ELSE 0 END AS FLG_PCD    
+            FROM R034FUN    
+            INNER JOIN R030EMP     
+                ON R034FUN.NUMEMP = R030EMP.NUMEMP    
+            INNER JOIN R030FIL     
+                ON R034FUN.NUMEMP = R030FIL.NUMEMP    
+               AND R034FUN.CODFIL = R030FIL.CODFIL    
+            INNER JOIN R024CAR     
+                ON R034FUN.ESTCAR = R024CAR.ESTCAR    
+               AND R034FUN.CODCAR = R024CAR.CODCAR    
+            INNER JOIN R010SIT     
+                ON R034FUN.SITAFA = R010SIT.CODSIT    
+            WHERE    
+                R034FUN.TIPCOL = 1    
+    AND R034FUN.NUMEMP <> 5    
+                AND R034FUN.SITAFA NOT IN (37,7,17)    
+                AND R034FUN.SITAFA NOT IN (3,4,19,23,53,54,69)    
+                AND R034FUN.TIPCON NOT IN (5,6)    
+        ) R    
+        WHERE R.FLG_PCD = 0    
+    
+        UNION ALL    
+    
+        SELECT    
+            D.NUMEMP, D.CODFIL, D.NOMFIL, D.NUMCGC, D.FLG_PCD    
+        FROM    
+        (    
+            SELECT    
+                R034FUN.NUMEMP,    
+                R034FUN.CODFIL,    
+                R030FIL.NOMFIL,    
+                R030FIL.NUMCGC,    
+                1 AS FLG_PCD,    
+                ROW_NUMBER() OVER (    
+                    PARTITION BY R034FUN.NUMCPF     
+                    ORDER BY R034FUN.DATADM ASC, R034FUN.CODFIL ASC    
+                ) AS RN_CPF    
+            FROM R034FUN    
+            INNER JOIN R030EMP     
+                ON R034FUN.NUMEMP = R030EMP.NUMEMP    
+            INNER JOIN R030FIL     
+                ON R034FUN.NUMEMP = R030FIL.NUMEMP    
+               AND R034FUN.CODFIL = R030FIL.CODFIL    
+ INNER JOIN R024CAR     
+                ON R034FUN.ESTCAR = R024CAR.ESTCAR    
+               AND R034FUN.CODCAR = R024CAR.CODCAR    
+            INNER JOIN R010SIT     
+                ON R034FUN.SITAFA = R010SIT.CODSIT    
+            WHERE    
+                R034FUN.TIPCOL = 1    
+    AND R034FUN.NUMEMP <> 5    
+                AND R034FUN.SITAFA NOT IN (37,7,17)    
+                AND R034FUN.SITAFA NOT IN (3,4,19,23,53,54,69)    
+                AND R034FUN.TIPCON NOT IN (5,6)    
+                AND R034FUN.DEFFIS = 'S'    
+        ) D    
+        WHERE D.RN_CPF = 1    
+    ) B    
+    GROUP BY B.NUMEMP, B.CODFIL, B.NOMFIL, B.NUMCGC    
+) U    
+INNER JOIN    
+(    
+    -- ===== TOTAL DA EMPRESA (base do percentual da cota) =====    
+    SELECT    
+        B2.NUMEMP,    
+        COUNT(*) AS QTD_TOTAL_EMPRESA    
+    FROM    
+    (    
+        SELECT    
+            R.NUMEMP, R.FLG_PCD    
+        FROM    
+        (    
+            SELECT    
+                R034FUN.NUMEMP,    
+                R034FUN.NUMCPF,    
+                R034FUN.CODFIL,    
+                R034FUN.DATADM,    
+                CASE WHEN R034FUN.DEFFIS = 'S' THEN 1 ELSE 0 END AS FLG_PCD    
+            FROM R034FUN    
+            INNER JOIN R030EMP     
+                ON R034FUN.NUMEMP = R030EMP.NUMEMP    
+            INNER JOIN R030FIL     
+                ON R034FUN.NUMEMP = R030FIL.NUMEMP    
+               AND R034FUN.CODFIL = R030FIL.CODFIL    
+            INNER JOIN R024CAR     
+                ON R034FUN.ESTCAR = R024CAR.ESTCAR    
+               AND R034FUN.CODCAR = R024CAR.CODCAR    
+            INNER JOIN R010SIT     
+                ON R034FUN.SITAFA = R010SIT.CODSIT    
+            WHERE    
+                R034FUN.TIPCOL = 1    
+    AND R034FUN.NUMEMP <> 5    
+                AND R034FUN.SITAFA NOT IN (37,7,17)    
+                AND R034FUN.SITAFA NOT IN (3,4,19,23,53,54,69)    
+                AND R034FUN.TIPCON NOT IN (5,6)    
+        ) R    
+        WHERE R.FLG_PCD = 0    
+    
+        UNION ALL    
+    
+        SELECT    
+            D.NUMEMP, D.FLG_PCD    
+        FROM    
+        (    
+            SELECT    
+                R034FUN.NUMEMP,    
+                R034FUN.NUMCPF,    
+                R034FUN.CODFIL,    
+                R034FUN.DATADM,    
+                1 AS FLG_PCD,    
+                ROW_NUMBER() OVER (    
+                    PARTITION BY R034FUN.NUMCPF     
+                    ORDER BY R034FUN.DATADM ASC, R034FUN.CODFIL ASC    
+                ) AS RN_CPF    
+            FROM R034FUN    
+            INNER JOIN R030EMP     
+                ON R034FUN.NUMEMP = R030EMP.NUMEMP    
+            INNER JOIN R030FIL     
+                ON R034FUN.NUMEMP = R030FIL.NUMEMP    
+               AND R034FUN.CODFIL = R030FIL.CODFIL    
+            INNER JOIN R024CAR     
+                ON R034FUN.ESTCAR = R024CAR.ESTCAR    
+               AND R034FUN.CODCAR = R024CAR.CODCAR    
+            INNER JOIN R010SIT     
+                ON R034FUN.SITAFA = R010SIT.CODSIT    
+            WHERE    
+                R034FUN.TIPCOL = 1    
+    AND R034FUN.NUMEMP <> 5    
+                AND R034FUN.SITAFA NOT IN (37,7,17)    
+                AND R034FUN.SITAFA NOT IN (3,4,19,23,53,54,69)    
+                AND R034FUN.TIPCON NOT IN (5,6)    
+                AND R034FUN.DEFFIS = 'S'    
+        ) D    
+        WHERE D.RN_CPF = 1    
+    ) B2    
+    GROUP BY B2.NUMEMP    
+) E    
+    ON E.NUMEMP = U.NUMEMP
