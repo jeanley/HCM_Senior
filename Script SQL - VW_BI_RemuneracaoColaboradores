@@ -1,0 +1,89 @@
+CREATE VIEW dbo.VW_BI_RemuneracaoColaboradores  
+AS  
+WITH SalarioDocentes AS  
+(  
+SELECT   
+    t1.numemp,  
+    mantenedora = CASE t1.numemp  
+                    WHEN 1 THEN 'ABEC'  
+                    WHEN 2 THEN 'SOME'  
+                    WHEN 3 THEN 'UBEE'  
+                    WHEN 4 THEN 'UNBEC'  
+                  END,  
+    t1.tipcol,  
+    t1.numcad,  
+    t2.valapf,  
+    t2.horsem,  
+    t2.hormes,  
+    t2.datini,  
+    t2.datfim  
+FROM dbo.r034fun t1 WITH (NOLOCK)  
+LEFT JOIN dbo.r171apf t2 WITH (NOLOCK)  
+    ON  t1.numemp = t2.numemp  
+    AND t1.tipcol = t2.tipcol  
+    AND t1.numcad = t2.numcad  
+    AND (  
+            t2.datfim > GETDATE()  
+         OR t2.datfim = '1900-12-31T00:00:00.000'  
+        )  
+LEFT JOIN dbo.r038afa t8 WITH (NOLOCK)  
+    ON  t8.numemp = t1.numemp  
+    AND t8.tipcol = t1.tipcol  
+    AND t8.numcad = t1.numcad  
+    AND t8.sitafa = 7  
+WHERE  
+    t1.tipcon = 10  
+    AND t1.numemp <> 5  
+    AND (t8.datafa IS NULL OR t8.datafa >= DATEADD(DAY, -60, GETDATE()))  
+    
+),  
+Adicionais AS  
+(  
+    SELECT  
+        numemp,  
+        tipcol,  
+        numcad,  
+        TIPODEADICIONAL = desper,  
+        PERCENTUAL = CONVERT(decimal(15,2), perliv)  
+    FROM dbo.r034pli WITH (NOLOCK)  
+    WHERE desper <> 'ABONO CCT ANUAL' and numemp <> 5  
+)  
+SELECT  
+    t1.Mantenedora,  
+    t1.CodMantenedora,  
+    t1.CodUnidadeFolha,  
+    t1.NomeUnidadeFolha,  
+    t1.Matricula,  
+    t1.nomfun,  
+    t1.GrauInstrucao,  
+    t1.DataAdmissao,  
+    t1.TempoDeCasa,  
+    t1.SituacaoFolha,  
+    t1.CodCargo,  
+    t1.NomeCargo,  
+    t1.CodCBO,  
+    t1.TipoContrato,  
+    t1.TipoSalario,  
+  
+    ValorSalario  = CASE WHEN t1.Tipcon = '10' THEN sd.valapf   ELSE t1.ValorSalario  END,  
+    horassemanal  = CASE WHEN t1.Tipcon = '10' THEN sd.horsem   ELSE t1.horassemanal  END,  
+      
+ dbo.fn_ConverteMinutosHoras(CASE WHEN t1.Tipcon = '10' THEN sd.hormes ELSE t1.horasmensais  END) as horasmensais,  
+    t1.nomegestor,  
+    t1.cargogestor,  
+    a.TIPODEADICIONAL,  
+    a.PERCENTUAL  
+FROM dbo.USU_VREMUNERACAOCOLABORADORES t1 WITH (NOLOCK)  
+LEFT JOIN Adicionais a  
+    ON a.numemp = t1.numemp  
+    AND   
+ TRY_CONVERT(BIGINT, a.numcad )  = TRY_CONVERT(BIGINT, t1.Matricula)  
+  
+    -- se fizer sentido no seu dado, inclua tipcol aqui para evitar multiplicação:  
+     AND a.tipcol = t1.tipcol  
+LEFT JOIN SalarioDocentes sd  
+    ON  sd.numemp = t1.numemp  
+    AND   
+ TRY_CONVERT(BIGINT, sd.numcad ) = TRY_CONVERT(BIGINT, t1.Matricula)  
+    AND sd.tipcol = t1.tipcol  
+;  
