@@ -1,0 +1,65 @@
+--SELECT DISTINCT T1.*, T2.CR_DYNAMICS 
+
+UPDATE T1 SET codrat = T2.CR_DYNAMICS
+FROM r044fix T1
+JOIN ZTMP_DE_PARA_CR_DYN T2 on T1.codrat = T2.CODIGO_RED_CR AND T2.MANTENEDORA = 'SOME'
+WHERE 
+NUMEMP = 2 AND (DATFIM >= '2026-05-01' OR DATFIM = '1900-12-31') AND 
+CODRAT IN ('32110','32120','32130','32140','32150')
+
+
+SELECT t1.*,t2.CR_DYNAMICS
+--
+--UPDATE T1 SET CODRAT = T2.CR_DYNAMICS
+--INTO #TMP_r046ffr_29062026
+FROM r046ffr t1
+left join ZTMP_DE_PARA_CR_DYN t2 on t2.CODIGO_RED_CR = t1.codrat AND T2.MANTENEDORA = 'SOME'
+WHERE NUMEMP = 2  AND codrat in ('32110','32120','32130','32140','32150') and codcal in (select distinct codcal from r048ctb where numemp = 2 and datlan = '2026-05-31')
+
+select * into r046ffr_30062026 from r046ffr where exists (select * from #TMP_r046ffr_29062026 z where z.numemp = r046ffr.numemp and z.tipcol = r046ffr.tipcol and z.numcad = r046ffr.numcad and z.codcal = r046ffr.codcal)
+drop table r046ffr_30062026
+
+
+UPDATE T2 
+SET codrat = T1.CR_DYNAMICS
+FROM #TMP_r046ffr_29062026 T1
+JOIN r046ffr T2 ON T1.NUMEMP = T2.NUMEMP AND T1.tipcol = T2.TIPCOL AND T1.numcad = T2.numcad AND T1.codcal = T2.codcal AND T1.codeve = T2.codeve AND T1.codraT = T2.codrat
+WHERE T1.NUMCAD NOT IN (20005323,20006811)
+--ORDER BY 3,T1.CODEVE,T1.codrat
+
+--20005323
+
+insert into r046ffr
+SELECT T1.NUMEMP,T1.TIPCOL,T1.NUMCAD,T1.CODCAL,T1.TABEVE,T1.CODEVE, ISNULL(T2.CR_DYNAMICS,T1.CODRAT) AS CODRAT,SUM(T1.REFEVE) AS REFEVE,SUM(T1.VALEVE) AS VALEVE
+FROM r046ffr_30062026 t1
+left join ZTMP_DE_PARA_CR_DYN t2 on t2.CODIGO_RED_CR = t1.codrat AND T2.MANTENEDORA = 'SOME'
+group by  T1.NUMEMP,T1.TIPCOL,T1.NUMCAD,T1.CODCAL,T1.TABEVE,T1.CODEVE, ISNULL(T2.CR_DYNAMICS,T1.CODRAT)
+
+insert into r046ffr
+select * from r046ffr_30062026 
+
+delete
+--INTO r046ffr_30062026
+from r046ffr where exists ( select * from r046ffr_30062026 z where z.numemp = r046ffr.numemp and z.tipcol = r046ffr.tipcol and z.numcad = r046ffr.numcad and z.codcal = r046ffr.codcal and
+z.codeve = r046ffr.codeve and z.codrat = r046ffr.codrat )
+
+select * from r046ffr where codcal = 21377 and numcad = 20005323
+
+-- INSERT NA FICHA FINANCEIRA
+--INSERT INTO R046FFR
+SELECT T1.NUMEMP,T1.TIPCOL,T1.NUMCAD,T1.CODCAL,T1.TABEVE,T1.CODEVE, ISNULL(T1.CR_DYNAMICS,T1.CODRAT) AS CODRAT,SUM(T1.REFEVE) AS REFEVE,SUM(T1.VALEVE) AS VALEVE
+FROM #TMP_r046ffr_29062026 T1
+where t1.numcad = 20005323
+GROUP BY T1.NUMEMP,T1.TIPCOL,T1.NUMCAD,T1.CODCAL,T1.TABEVE,T1.CODEVE, ISNULL(T1.CR_DYNAMICS,T1.CODRAT)
+
+SELECT * FROM #TMP_r046ffr_29062026
+--TABELA R146PRR
+update t1 
+set codrat = isnull(T2.CR_DYNAMICS,t1.codrat) 
+--SELECT T1.numemp,T1.tipcol,T1.numcad,T1.mesano,T1.tipprv,T1.seqprv,T1.tipval,isnull(T2.CR_DYNAMICS,t1.codrat) AS codrat,T1.basprv,T1.perval,T1.salant,T1.saltrf,
+--T1.ajuprv,T1.prvmes,T1.valpag,T1.valadt,T1.valind,T1.pagmai,T1.ajumai,T1.sldatu,T1.anb13s,T1.valpar,T1.cmpau1,T1.cmpau2,T1.cmpau3 
+FROM R146PRR T1
+LEFT join #DEPARA t2 on t1.codrat = t2.CODIGO_RED_CR and t2.CR_DYNAMICS IN (SELECT DISTINCT CODCCU FROM R018CCU WHERE ccutxt = 'DYNAMICS' )
+WHERE NUMEMP = 2 AND MESANO >= CONVERT(DATE,'2026-01-01') AND MESANO <= CONVERT(DATE,'2026-04-30')
+
+
