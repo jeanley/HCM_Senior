@@ -1,0 +1,182 @@
+CREATE VIEW USU_VPCD AS SELECT      
+    B.NUMEMP,      
+ B.APEEMP,  
+    B.CODFIL,      
+    B.NOMFIL,      
+    B.NUMCGC,      
+    B.TIPCOL,      
+    B.NUMCAD,      
+    B.NOMFUN,      
+    B.NUMCPF,      
+    B.DATADM,      
+    B.SITAFA,      
+    B.DESSIT,      
+    B.DATAFA,      
+    B.CODCAR,      
+    B.TITRED,      
+    B.DEFFIS,      
+    B.CODDEF,      
+    B.FLG_PCD,      
+ B.DESDEF,    
+ B.DESDEM,  
+    -- ===== QUANTIDADES POR UNIDADE (CODFIL) =====      
+    SUM(1)             OVER (PARTITION BY B.NUMEMP, B.CODFIL) AS QTD_TOTAL_UNIDADE,      
+    SUM(B.FLG_PCD)     OVER (PARTITION BY B.NUMEMP, B.CODFIL) AS QTD_COM_DEFICIENCIA,      
+    SUM(1-B.FLG_PCD)   OVER (PARTITION BY B.NUMEMP, B.CODFIL) AS QTD_SEM_DEFICIENCIA,      
+    -- ===== TOTAL DA EMPRESA TODA (base do percentual) =====      
+    SUM(1)             OVER (PARTITION BY B.NUMEMP) AS QTD_TOTAL_EMPRESA,      
+    -- ===== PERCENTUAL DEFINIDO PELO HEADCOUNT DA EMPRESA =====      
+    CASE       
+        WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) BETWEEN 100 AND 200  THEN 0.02      
+        WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) BETWEEN 201 AND 500  THEN 0.03      
+        WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) BETWEEN 501 AND 1000 THEN 0.04      
+        WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) > 1000              THEN 0.05      
+        ELSE 0.00      
+    END AS PERC_COTA_APLICAVEL,      
+    -- ===== COTA MÍNIMA: percentual da empresa aplicado sobre a quantidade da unidade =====      
+    CEILING(      
+        SUM(1) OVER (PARTITION BY B.NUMEMP, B.CODFIL) *      
+        CASE       
+            WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) BETWEEN 100 AND 200  THEN 0.02      
+            WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) BETWEEN 201 AND 500  THEN 0.03      
+            WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) BETWEEN 501 AND 1000 THEN 0.04      
+            WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) > 1000              THEN 0.05      
+            ELSE 0.00      
+        END      
+    ) AS COTA_MINIMA_PCD,      
+    SUM(B.FLG_PCD) OVER (PARTITION BY B.NUMEMP, B.CODFIL)       
+        - CEILING(      
+            SUM(1) OVER (PARTITION BY B.NUMEMP, B.CODFIL) *      
+            CASE       
+                WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) BETWEEN 100 AND 200  THEN 0.02      
+                WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) BETWEEN 201 AND 500  THEN 0.03      
+                WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) BETWEEN 501 AND 1000 THEN 0.04      
+                WHEN SUM(1) OVER (PARTITION BY B.NUMEMP) > 1000              THEN 0.05      
+                ELSE 0.00      
+            END      
+          ) AS SALDO_COTA      
+FROM      
+(      
+    -- ============================================      
+    -- BASE_FINAL: colaboradores sem deficiência (todos os contratos)       
+    -- + colaboradores PCD (só o contrato de admissão mais antiga por CPF)      
+    -- ============================================      
+      
+    -- Sem deficiência: entram todos os contratos      
+    SELECT      
+        R.NUMEMP, R.TIPCOL, R.NUMCAD, R.SITAFA, R.DEFFIS, R.CODDEF, R.NOMFUN, R.CODFIL,      
+        R.APEEMP, R.DATADM, R.NUMCPF, R.CODCAR, R.ESTCAR, R.TITRED, R.DESSIT, R.DATAFA,      
+        R.NOMFIL, R.NUMCGC, R.FLG_PCD, R.DESDEF, R.DESDEM     
+    FROM      
+    (      
+        -- ============================================      
+        -- BASE_RAW: colaboradores elegíveis (sem dedup ainda)      
+        -- ============================================      
+        SELECT      
+            R034FUN.NUMEMP,      
+     
+            R034FUN.TIPCOL,      
+            R034FUN.NUMCAD,      
+            R034FUN.SITAFA,      
+            R034FUN.DEFFIS,      
+            R034FUN.CODDEF,      
+            R034FUN.NOMFUN,      
+            R034FUN.CODFIL,      
+            R030EMP.APEEMP,      
+            R034FUN.DATADM,      
+            R034FUN.NUMCPF,      
+            R034FUN.CODCAR,      
+            R034FUN.ESTCAR,      
+            R024CAR.TITRED,      
+            R010SIT.DESSIT,      
+            R034FUN.DATAFA,      
+    R030FIL.NOMFIL,      
+            R030FIL.NUMCGC,      
+            CASE WHEN R034FUN.DEFFIS = 'S' THEN 1 ELSE 0 END AS FLG_PCD  ,    
+  R022DEF.DESDEF,  
+  R042CAU.DESDEM  
+        FROM R034FUN      
+        INNER JOIN R030EMP       
+ON R034FUN.NUMEMP = R030EMP.NUMEMP      
+        INNER JOIN R030FIL       
+            ON R034FUN.NUMEMP = R030FIL.NUMEMP      
+           AND R034FUN.CODFIL = R030FIL.CODFIL      
+        INNER JOIN R024CAR       
+            ON R034FUN.ESTCAR = R024CAR.ESTCAR      
+           AND R034FUN.CODCAR = R024CAR.CODCAR      
+        INNER JOIN R010SIT       
+            ON R034FUN.SITAFA = R010SIT.CODSIT      
+  LEFT JOIN R022DEF    
+   ON R022DEF.CODDEF = R034FUN.CODDEF   
+  LEFT JOIN r042cau  
+   ON R042CAU.caudem = R034FUN.caudem      
+        WHERE      
+            R034FUN.TIPCOL = 1      
+            -- Demitido, Aposentadoria por invalidez, Suspensão MP936      
+            AND R034FUN.SITAFA NOT IN (37,7,17)      
+            -- Afastamentos por benefício previdenciário      
+            AND R034FUN.SITAFA NOT IN (3,4,19,23,53,54,69)      
+            -- Estagiário (5) e Aprendiz (6), conforme Ltipcon      
+            AND R034FUN.TIPCON NOT IN (5,6)      
+    ) R      
+    WHERE R.FLG_PCD = 0      
+      
+    UNION ALL      
+      
+    -- Com deficiência: só o contrato de admissão mais antiga por CPF      
+    SELECT      
+        D.NUMEMP, D.TIPCOL, D.NUMCAD, D.SITAFA, D.DEFFIS, D.CODDEF, D.NOMFUN, D.CODFIL,      
+        D.APEEMP, D.DATADM, D.NUMCPF, D.CODCAR, D.ESTCAR, D.TITRED, D.DESSIT, D.DATAFA,      
+        D.NOMFIL, D.NUMCGC, D.FLG_PCD, D.DESDEF, D.DESDEM      
+    FROM      
+    (      
+        SELECT      
+            R034FUN.NUMEMP,      
+            R034FUN.TIPCOL,      
+            R034FUN.NUMCAD,      
+            R034FUN.SITAFA,      
+            R034FUN.DEFFIS,      
+            R034FUN.CODDEF,      
+            R034FUN.NOMFUN,      
+            R034FUN.CODFIL,      
+            R030EMP.APEEMP,      
+            R034FUN.DATADM,      
+            R034FUN.NUMCPF,      
+            R034FUN.CODCAR,      
+            R034FUN.ESTCAR,      
+            R024CAR.TITRED,      
+            R010SIT.DESSIT,      
+            R034FUN.DATAFA,      
+            R030FIL.NOMFIL,      
+            R030FIL.NUMCGC,      
+            1 AS FLG_PCD,      
+            ROW_NUMBER() OVER (      
+                PARTITION BY R034FUN.NUMCPF       
+                ORDER BY R034FUN.DATADM ASC, R034FUN.CODFIL ASC      
+            ) AS RN_CPF  ,    
+   R022DEF.DESDEF,   
+   R042CAU.desdem  
+        FROM R034FUN      
+        INNER JOIN R030EMP       
+            ON R034FUN.NUMEMP = R030EMP.NUMEMP      
+        INNER JOIN R030FIL       
+            ON R034FUN.NUMEMP = R030FIL.NUMEMP      
+           AND R034FUN.CODFIL = R030FIL.CODFIL      
+        INNER JOIN R024CAR       
+            ON R034FUN.ESTCAR = R024CAR.ESTCAR      
+           AND R034FUN.CODCAR = R024CAR.CODCAR      
+        INNER JOIN R010SIT       
+            ON R034FUN.SITAFA = R010SIT.CODSIT      
+  LEFT JOIN R022DEF    
+   ON R022DEF.CODDEF = R034FUN.CODDEF    
+  LEFT JOIN r042cau  
+   ON R042CAU.caudem = R034FUN.caudem  
+        WHERE      
+            R034FUN.TIPCOL = 1      
+            AND R034FUN.SITAFA NOT IN (37,7,17)      
+            AND R034FUN.SITAFA NOT IN (3,4,19,23,53,54,69)      
+            AND R034FUN.TIPCON NOT IN (5,6)      
+            AND R034FUN.DEFFIS = 'S'      
+    ) D      
+    WHERE D.RN_CPF = 1      
+) B
