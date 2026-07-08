@@ -1,0 +1,519 @@
+  /* =========================================================
+       0. BACKUP DAS TABELAS ENVOLVIDAS
+       ========================================================= */  
+/*
+select * into r038hcc_15052026 from r038hcc where numemp = 2
+select * into R017CAR_15052026 from R017CAR where numemp = 2
+select * into R171APF_15052026 from R171APF where numemp = 2
+
+SELECT T1.*, T2.DESEVE, T2.TIPINF, T2.CODCRT
+INTO R046FFR_15052026
+FROM R046FFR T1
+JOIN R008EVC T2 ON T1.CODEVE = T2.CODEVE AND T1.TABEVE = T2.CODTAB
+WHERE T1.NUMEMP = 2 AND T1.CODCAL IN (SELECT CODCAL FROM R044CAL WHERE NUMEMP = 2 AND INICMP >= CONVERT(DATE,'2026-01-01') AND FIMCMP <= CONVERT(DATE,'2026-04-30')) --AND T1.NUMCAD = 20000118
+
+select * into R146PRR_15052026 from R146PRR where numemp = 2 and mesano >= '2026-01-01'
+select * into R044MOV_15052026 from R044MOV where numemp = 2 and CODCAL IN (SELECT CODCAL FROM R044CAL WHERE NUMEMP = 2 AND INICMP >= CONVERT(DATE,'2026-01-01') AND FIMCMP <= CONVERT(DATE,'2026-04-30'))
+select * into r044fix_15052026 from r044fix where numemp = 2
+*/
+
+
+  /* =========================================================
+       0. PARÂMETROS
+       ========================================================= */
+    DECLARE @NUMEMP            INT  = 2;
+    DECLARE @TIPCOL            INT  = 1;
+    DECLARE @DATA_INICIO_2026  DATE = '2026-01-01';
+    DECLARE @DATA_FIM_2025     DATE = '2025-12-31';
+    DECLARE @DATA_FIM_ABR_2026 DATE = '2026-04-30';
+	
+    /* =========================================================
+       1. LIMPEZA DE TEMPORÁRIAS
+       ========================================================= */
+    IF OBJECT_ID('tempdb..#DEPARA') IS NOT NULL DROP TABLE #DEPARA;
+    IF OBJECT_ID('tempdb..#DEPARA_CORRETO') IS NOT NULL DROP TABLE #DEPARA_CORRETO;
+    IF OBJECT_ID('tempdb..#LISTA_COLABORADORES') IS NOT NULL DROP TABLE #LISTA_COLABORADORES;
+	IF OBJECT_ID('tempdb..#TMP_FILTRO_COLABORADOR') IS NOT NULL DROP TABLE #TMP_FILTRO_COLABORADOR;
+    IF OBJECT_ID('tempdb..#SEM_MOV_2026') IS NOT NULL DROP TABLE #SEM_MOV_2026;
+    IF OBJECT_ID('tempdb..#COM_MOV_2026') IS NOT NULL DROP TABLE #COM_MOV_2026;
+    IF OBJECT_ID('tempdb..#TMP_R038HCC_BLOCO_A') IS NOT NULL DROP TABLE #TMP_R038HCC_BLOCO_A;
+    IF OBJECT_ID('tempdb..#TMP_R038HCC_BLOCO_B') IS NOT NULL DROP TABLE #TMP_R038HCC_BLOCO_B;
+    IF OBJECT_ID('tempdb..#TMP_POSTOS') IS NOT NULL DROP TABLE #TMP_POSTOS;
+    IF OBJECT_ID('tempdb..#TMP_APF') IS NOT NULL DROP TABLE #TMP_APF;
+    IF OBJECT_ID('tempdb..#TMP_APF_NOVA') IS NOT NULL DROP TABLE #TMP_APF_NOVA;	
+
+	
+    SELECT DISTINCT *
+    INTO #DEPARA
+    FROM ZTMP_DE_PARA_CR_DYN
+    WHERE MANTENEDORA = 'SOME'
+      AND CODIGO_RED_CR IS NOT NULL
+	  order by 2
+  
+	  
+    /* =========================================================
+       4. LISTA DE COLABORADORES ELEGÍVEIS
+       ========================================================= */
+
+    DECLARE @NUMEMP            INT  = 2;
+    DECLARE @TIPCOL            INT  = 1;
+    DECLARE @DATA_INICIO_2026  DATE = '2026-01-01';
+    DECLARE @DATA_FIM_2025     DATE = '2025-12-31';
+    DECLARE @DATA_FIM_ABR_2026 DATE = '2026-04-30';
+
+    SELECT DISTINCT
+        A.NUMEMP,
+        A.TIPCOL,
+        A.NUMCAD,
+        H.SITAFA,
+        H.DATAFA
+    INTO #LISTA_COLABORADORES
+    FROM R034FUN A WITH (NOLOCK)
+    LEFT JOIN R038AFA H
+        ON H.NUMEMP = A.NUMEMP
+       AND H.TIPCOL = A.TIPCOL
+       AND H.NUMCAD = A.NUMCAD
+       AND H.SITAFA IN (7,18)
+    LEFT JOIN R018CCU J
+        ON J.NUMEMP = A.NUMEMP
+       AND J.CODCCU = A.CODCCU
+    WHERE A.NUMEMP = @NUMEMP
+      AND A.TIPCOL = @TIPCOL
+      AND (
+            A.SITAFA NOT IN (7,18)
+            OR (A.SITAFA IN (7,18) AND H.DATAFA >= @DATA_INICIO_2026)
+          );	  
+
+		  
+		  
+   ;WITH HIST_ANTERIOR2 AS
+    (
+
+	    SELECT 
+        H.*,
+        ROW_NUMBER() OVER (
+            PARTITION BY H.numemp, H.tipcol, H.numcad
+            ORDER BY H.datalt DESC
+        ) AS RN
+    FROM r038hcc H
+	JOIN #LISTA_COLABORADORES X ON X.NUMEMP = H.NUMEMP AND X.TIPCOL = H.TIPCOL AND X.NUMCAD = H.NUMCAD
+    WHERE H.NUMEMP = 2 AND
+        H.tipcol = 1
+		--AND H.NUMCAD = 20007775
+        AND H.datalt <= CONVERT(DATE,'2025-12-31')
+        AND NOT EXISTS (
+            SELECT 1
+            FROM r038hcc Z
+            WHERE 
+                Z.numemp = H.numemp
+                AND Z.numcad = H.numcad
+                AND Z.tipcol = H.tipcol
+                AND Z.datalt = CONVERT(DATE,'2026-01-01')
+        )
+
+    )
+    SELECT DISTINCT 
+        H.NUMEMP,
+        H.TIPCOL,
+        H.NUMCAD,
+        CONVERT(DATE,'2026-01-01') AS DATALT,
+        D.CR_DYNAMICS AS CODCCU,
+        1 AS STAHIS,
+        0 AS CONFIN,
+		NULL AS USU_INSBPM,
+		T3.ccutxt
+
+    INTO #TMP_R038HCC_BLOCO_AA
+    FROM HIST_ANTERIOR2 H
+     JOIN #DEPARA D
+        ON D.CODIGO_RED_CR = H.codccu
+	 JOIN r018ccu T3 ON T3.codccu = D.CR_DYNAMICS AND T3.NUMEMP = H.NUMEMP AND T3.ccutxt = 'DYNAMICS'
+	 
+    WHERE H.RN = 1 
+
+
+    /* Inserção do histórico de CR para quem não teve mudança em 2026 - INSERIDO NOVO TRECHO 08052026 */
+    INSERT INTO R038HCC
+    (
+        NUMEMP,
+        TIPCOL,
+        NUMCAD,
+        DATALT,
+        CODCCU,
+        STAHIS,
+        CONFIN,
+		USU_INSBPM
+    )
+    SELECT
+        T.NUMEMP,
+        T.TIPCOL,
+        T.NUMCAD,
+        T.DATALT,
+        T.CODCCU,
+        T.STAHIS,
+        T.CONFIN,
+		USU_INSBPM
+
+    FROM #TMP_R038HCC_BLOCO_AA T
+    WHERE 
+	NOT EXISTS
+    (
+        SELECT 1
+        FROM R038HCC X
+        WHERE X.NUMEMP = T.NUMEMP
+          AND X.TIPCOL = T.TIPCOL
+          AND X.NUMCAD = T.NUMCAD
+          AND X.DATALT = T.DATALT
+		  AND X.codccu = T.CODCCU
+    );
+		  
+		  
+		  
+    /* =========================================================
+       6. BLOCO B
+          COLABORADORES COM ALTERAÇÕES ENTRE JAN E ABR/2026
+       ========================================================= */
+	DECLARE @NUMEMP            INT  = 2;
+    DECLARE @TIPCOL            INT  = 1;
+    DECLARE @DATA_INICIO_2026  DATE = '2026-01-01';
+    DECLARE @DATA_FIM_2025     DATE = '2025-12-31';
+    DECLARE @DATA_FIM_ABR_2026 DATE = '2026-04-30';
+
+    ;WITH MOV_2026 AS
+    (
+        SELECT
+            H.NUMEMP,
+            H.TIPCOL,
+            H.NUMCAD,
+            H.DATALT,
+            H.CODCCU AS CODCCU_ANTIGO,
+            D.CR_DYNAMICS AS CODCCU_NOVO,
+            ROW_NUMBER() OVER
+            (
+                PARTITION BY H.NUMEMP, H.TIPCOL, H.NUMCAD, H.DATALT
+                ORDER BY H.DATALT, H.CODCCU
+            ) AS RN
+        FROM R038HCC H
+        JOIN #DEPARA D
+            ON D.CODIGO_RED_CR = H.CODCCU
+        JOIN #LISTA_COLABORADORES L
+            ON L.NUMEMP = H.NUMEMP
+           AND L.TIPCOL = H.TIPCOL
+           AND L.NUMCAD = H.NUMCAD
+        WHERE H.NUMEMP = @NUMEMP
+          AND H.TIPCOL = @TIPCOL
+          AND H.DATALT BETWEEN @DATA_INICIO_2026 AND @DATA_FIM_ABR_2026
+    )
+    SELECT
+        NUMEMP,
+        TIPCOL,
+        NUMCAD,
+        DATALT,
+        CODCCU_ANTIGO,
+        CODCCU_NOVO
+    INTO #TMP_R038HCC_BLOCO_B
+    FROM MOV_2026
+    WHERE RN = 1;
+
+    /* Update do próprio histórico quando já existe registro no período */
+    UPDATE H
+       SET H.CODCCU = T.CODCCU_NOVO
+    FROM R038HCC H
+    JOIN #TMP_R038HCC_BLOCO_B T
+      ON T.NUMEMP = H.NUMEMP
+     AND T.TIPCOL = H.TIPCOL
+     AND T.NUMCAD = H.NUMCAD
+     AND T.DATALT = H.DATALT
+    WHERE ISNULL(H.CODCCU, '') <> ISNULL(T.CODCCU_NOVO, '');		  
+	
+	
+    /* =========================================================
+       7. BLOCO C
+          AJUSTE DE POSTOS - R017CAR
+       ========================================================= */
+	DECLARE @NUMEMP            INT  = 2;
+    DECLARE @TIPCOL            INT  = 1;
+    DECLARE @DATA_INICIO_2026  DATE = '2026-01-01';
+    DECLARE @DATA_FIM_2025     DATE = '2025-12-31';
+    DECLARE @DATA_FIM_ABR_2026 DATE = '2026-04-30';
+
+    --SELECT *
+    --INTO #TMP_POSTOS
+    --FROM R017CAR
+    --WHERE NUMEMP = @NUMEMP
+    --  AND DATFIM >= @DATA_INICIO_2026
+    --  AND CODRAT <> 0;
+
+	--SELECT * INTO R017CAR_15052026 FROM R017CAR WHERE NUMEMP = 2
+    SELECT * 
+	INTO #TMP_POSTOS_NOVO
+	FROM R017CAR 
+	WHERE NUMEMP = 2 AND NOT EXISTS (SELECT * FROM R017CAR Z WHERE Z.NUMEMP = R017CAR.NUMEMP AND Z.ESTPOS = R017CAR.ESTPOS AND Z.POSTRA = R017CAR.POSTRA AND Z.DATFIM = CONVERT(DATE,'2025-12-31'))
+	ORDER BY POSTRA
+
+    /* Encerrar característica antiga em 31/12/2025 */
+    UPDATE C
+       SET C.DATFIM = CONVERT(DATE,'2025-12-31')
+    FROM R017CAR C
+    JOIN #TMP_POSTOS_NOVO P
+      ON P.NUMEMP = C.NUMEMP
+     AND P.POSTRA = C.POSTRA
+     AND P.ESTPOS = C.ESTPOS
+     AND P.DATINI = C.DATINI
+     AND P.DATFIM = C.DATFIM
+    LEFT JOIN #DEPARA D
+      ON D.CODIGO_RED_CR = P.CODCCU
+    WHERE D.CODIGO_RED_CR IS NOT NULL;
+	
+	--SELECT * FROM R017CAR WHERE POSTRA = '2000.001' '2009.036'
+	--SELECT * FROM #TMP_POSTOS_NOVO WHERE POSTRA = '2009.036'
+	   /* Inserir nova característica a partir de 01/01/2026 */
+    INSERT INTO R017CAR
+    (
+        ESTPOS, POSTRA, DATINI, NUMEMP, CODFIL, TABORG, NUMLOC,        CODCCU, VARCAR, ESTCAR, CODCAR, CODSIN, CODHIE, TIPCOL,        TURPOS, CODVIN, TIPVAG, TIPCON, PERPNE, DATFIM,
+        CODESC, CODTMA, TURINT, CODEQP, CODCAT, HORBAS, HORSAB,        HORSEM, HORDSR, NATDES, CODPRJ, CODFAS, CODOEM, CODRAT
+    )
+    SELECT DISTINCT
+        P.ESTPOS,        P.POSTRA,
+        CONVERT(DATE,'2026-01-01') AS DATINI,
+        P.NUMEMP,        P.CODFIL,        P.TABORG,        P.NUMLOC,
+        D.CR_DYNAMICS AS CODCCU,
+        P.VARCAR,        P.ESTCAR,        P.CODCAR,        P.CODSIN,        P.CODHIE,        P.TIPCOL,        P.TURPOS,        P.CODVIN,        P.TIPVAG,
+        P.TIPCON,        P.PERPNE,        P.DATFIM,        P.CODESC,        P.CODTMA,        P.TURINT,        P.CODEQP,        P.CODCAT,        P.HORBAS,        P.HORSAB,
+        P.HORSEM,        P.HORDSR,        P.NATDES,        P.CODPRJ,        P.CODFAS,
+        P.CODOEM,
+        D.CR_DYNAMICS AS CODRAT
+    FROM #TMP_POSTOS_NOVO P
+    LEFT JOIN #DEPARA D
+      ON D.CODIGO_RED_CR = P.CODCCU AND D.CR_DYNAMICS IN (SELECT DISTINCT CODCCU FROM R018CCU WHERE ccutxt = 'DYNAMICS' )
+    WHERE D.CODIGO_RED_CR IS NOT NULL  and p.datfim = convert(date,'2080-06-04 00:00:00.000') 
+      AND NOT EXISTS
+      (
+          SELECT 1          FROM R017CAR X          WHERE X.NUMEMP = P.NUMEMP
+            AND X.POSTRA = P.POSTRA
+            AND X.ESTPOS = P.ESTPOS
+            AND X.DATINI = CONVERT(DATE,'2026-01-01')
+			--AND X.DATFIM = CONVERT(DATE,'2025-12-31')
+      );	
+	  
+	  
+    /* =========================================================
+       8. BLOCO D
+          AJUSTE DE ATIVIDADES DOCENTES - R171APF
+       ========================================================= */
+	DECLARE @NUMEMP            INT  = 2;
+    DECLARE @TIPCOL            INT  = 1;
+    DECLARE @DATA_INICIO_2026  DATE = '2026-01-01';
+    DECLARE @DATA_FIM_2025     DATE = '2025-12-31';
+    DECLARE @DATA_FIM_ABR_2026 DATE = '2026-04-30';
+
+	SELECT *  
+    INTO #TMP_APF
+    FROM R171APF
+    WHERE NUMEMP = 2
+      AND (DATFIM >= CONVERT(DATE,'2026-01-01 00:00:00.000') or datfim = CONVERT(DATE,'1900-12-31 00:00:00.000')) AND DATINI <= CONVERT(DATE,'2025-12-31') 
+
+
+    /* Encerrar atividade antiga em 31/12/2025 */
+    UPDATE A
+       SET A.DATFIM = convert(date,'2025-12-31')
+    FROM R171APF A
+    JOIN #TMP_APF T
+      ON T.NUMEMP = A.NUMEMP
+     AND T.TIPCOL = A.TIPCOL
+     AND T.NUMCAD = A.NUMCAD
+     AND T.DATINI = A.DATINI
+     AND T.DATFIM = A.DATFIM
+     AND T.CODAPF = A.CODAPF
+     AND T.SEQAPF = A.SEQAPF;
+
+    /* Preparar novas atividades com nova sequência */
+    SELECT
+        T.NUMEMP,
+        T.TIPCOL,
+        T.NUMCAD,
+        CONVERT(DATE,'2026-01-01 00:00:00.000') AS DATINI,
+        ISNULL
+        (
+            (
+                SELECT MAX(X.SEQAPF)
+                FROM R171APF X
+                WHERE X.NUMEMP = T.NUMEMP
+                  AND X.TIPCOL = T.TIPCOL
+                  AND X.NUMCAD = T.NUMCAD
+            ), 0
+        )
+        +
+        ROW_NUMBER() OVER
+        (
+            PARTITION BY T.NUMEMP, T.TIPCOL, T.NUMCAD
+            ORDER BY T.CODAPF, T.DATINI, T.SEQAPF
+        ) AS NOVO_SEQAPF,
+        T.DATFIM,
+        T.CODAPF,
+        D.CR_DYNAMICS AS CODRAT,
+        T.MARPTO,
+        T.HORMES,
+        T.hormno,
+        T.HORSEM,
+        T.HORSNO,
+        T.HORSEG,
+        T.HORTER,
+        T.HORQUA,
+        T.HORQUI,
+        T.HORSEX,
+        T.HORSAB,
+        T.HORDOM,
+        T.ESTSAL,
+        T.CLASAL,
+        T.NIVSAL,
+        T.REFAPF,
+        T.VALAPF,
+        T.ORIAPF,
+        T.OBSAPF,
+        T.USU_PAGRES,
+        T.USU_CAURES,
+        T.USU_ULTALT,
+        T.USU_MOTRES,
+        T.USU_INSBPM
+    INTO #TMP_APF_NOVA
+    FROM #TMP_APF T
+    LEFT JOIN #DEPARA D
+      ON D.CODIGO_RED_CR = T.CODRAT
+    WHERE T.NUMEMP = 2
+      AND D.CODIGO_RED_CR IS NOT NULL;
+
+    INSERT INTO R171APF
+    (
+        NUMEMP, TIPCOL, NUMCAD, DATINI, SEQAPF, DATFIM, CODAPF, CODRAT,
+        MARPTO, HORMES, hormno, HORSEM, HORSNO, HORSEG, HORTER, HORQUA,
+        HORQUI, HORSEX, HORSAB, HORDOM, ESTSAL, CLASAL, NIVSAL, REFAPF,
+        VALAPF, ORIAPF, OBSAPF, USU_PAGRES, USU_CAURES, USU_ULTALT,
+        USU_MOTRES, USU_INSBPM
+    )
+    SELECT
+        N.NUMEMP,
+        N.TIPCOL,
+        N.NUMCAD,
+        N.DATINI,
+        N.NOVO_SEQAPF,
+        N.DATFIM,
+        N.CODAPF,
+        N.CODRAT,
+        N.MARPTO,
+        N.HORMES,
+        N.hormno,
+        N.HORSEM,
+        N.HORSNO,
+        N.HORSEG,
+        N.HORTER,
+        N.HORQUA,
+        N.HORQUI,
+        N.HORSEX,
+        N.HORSAB,
+        N.HORDOM,
+        N.ESTSAL,
+        N.CLASAL,
+        N.NIVSAL,
+        N.REFAPF,
+        N.VALAPF,
+        N.ORIAPF,
+        N.OBSAPF,
+        N.USU_PAGRES,
+        N.USU_CAURES,
+        N.USU_ULTALT,
+        N.USU_MOTRES,
+        N.USU_INSBPM
+    FROM #TMP_APF_NOVA N
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM R171APF Z
+        WHERE Z.NUMEMP = N.NUMEMP
+          AND Z.TIPCOL = N.TIPCOL
+          AND Z.NUMCAD = N.NUMCAD
+          AND Z.CODAPF = N.CODAPF
+          AND Z.DATINI = N.DATINI
+          AND Z.CODRAT = N.CODRAT
+    );
+
+
+    /* Atualizar atividades já iniciadas em 01/01/2026 */
+    UPDATE A
+       SET A.CODRAT = D.CR_DYNAMICS
+    FROM R171APF A
+    LEFT JOIN #DEPARA D
+      ON D.CODIGO_RED_CR = A.CODRAT
+    WHERE A.DATINI >= CONVERT(DATE,'2026-01-01 00:00:00.000')
+	  AND A.NUMEMP = 2
+      AND D.CODIGO_RED_CR IS NOT NULL;
+	  
+	  
+	  
+	  
+	  --insert into r046ffr (	  numemp,tipcol,numcad,codcal,tabeve,codeve,codrat,refeve,valeve)
+	  --select numemp,tipcol,numcad,codcal,tabeve,codeve,codrat,refeve,valeve from r046ffr_06052026
+	  select * from r046ffr WHERE r046ffr.NUMEMP = 2 AND r046ffr.CODCAL IN (SELECT codcal FROM R044CAL WHERE NUMEMP = 2 AND INICMP >= CONVERT(DATE,'2026-01-01') AND FIMCMP <= CONVERT(DATE,'2026-04-30')) --AND T1.NUMCAD = 20000118
+	  
+	-- INSERT NA FICHA FINANCEIRA - BKP
+	SELECT T1.*, T2.DESEVE, T2.TIPINF, T2.CODCRT
+	INTO R046FFR_15052026
+	FROM R046FFR T1
+	JOIN R008EVC T2 ON T1.CODEVE = T2.CODEVE AND T1.TABEVE = T2.CODTAB
+	WHERE T1.NUMEMP = 2 AND T1.CODCAL IN (SELECT CODCAL FROM R044CAL WHERE NUMEMP = 2 AND INICMP >= CONVERT(DATE,'2026-01-01') AND FIMCMP <= CONVERT(DATE,'2026-04-30')) --AND T1.NUMCAD = 20000118
+
+	--REMOVE A FICHA FINANCEIRA RATEADA PARA INSERIR COM OS NOVOS CRS
+	DELETE FROM R046FFR WHERE R046FFR.NUMEMP = 2 AND R046FFR.CODCAL IN (SELECT CODCAL FROM R044CAL WHERE NUMEMP = 2 AND INICMP >= CONVERT(DATE,'2026-01-01') AND FIMCMP <= CONVERT(DATE,'2026-04-30')) --AND T1.NUMCAD = 20000118
+
+	SELECT * FROM r020rat
+
+	INSERT INTO r020rat
+	SELECT codccu AS CODRAT,nomccu AS DESRAT,1 AS TIPDSP FROM R018CCU WHERE CCUTXT = 'DYNAMICS' AND NUMEMP = 2 AND NOT EXISTS (SELECT * FROM r020rat Z WHERE Z.codrat = R018CCU.codccu)
+
+
+	
+-- INSERT NA FICHA FINANCEIRA
+INSERT INTO R046FFR
+SELECT T1.NUMEMP,T1.TIPCOL,T1.NUMCAD,T1.CODCAL,T1.TABEVE,T1.CODEVE, ISNULL(T2.CR_DYNAMICS,T1.CODRAT) AS CODRAT,SUM(T1.REFEVE) AS REFEVE,SUM(T1.VALEVE) AS VALEVE
+FROM R046FFR_15052026 T1
+ JOIN #DEPARA T2 ON T1.CODRAT = T2.CODIGO_RED_CR AND T2.CR_DYNAMICS IN (SELECT DISTINCT CODCCU FROM R018CCU WHERE CCUTXT = 'DYNAMICS' )
+WHERE T1.NUMEMP = 2 AND T1.CODCAL IN (SELECT CODCAL FROM R044CAL WHERE NUMEMP = 2 AND INICMP >= CONVERT(DATE,'2026-01-01') AND FIMCMP <= CONVERT(DATE,'2026-04-30'))
+AND NOT EXISTS (SELECT * FROM R046FFR Z WHERE Z.NUMEMP = T1.NUMEMP AND Z.NUMCAD = T1.NUMCAD AND Z.TIPCOL = T1.TIPCOL AND Z.CODCAL = T1.CODCAL AND Z.CODEVE = T1.CODEVE AND Z.CODRAT = ISNULL(T2.CR_DYNAMICS,T1.CODRAT) )
+GROUP BY  T1.NUMEMP,T1.TIPCOL,T1.NUMCAD,T1.CODCAL,T1.TABEVE,T1.CODEVE, ISNULL(T2.CR_DYNAMICS,T1.CODRAT)
+
+--TABELA R146PRR
+update t1 
+set codrat = isnull(T2.CR_DYNAMICS,t1.codrat) 
+--SELECT T1.numemp,T1.tipcol,T1.numcad,T1.mesano,T1.tipprv,T1.seqprv,T1.tipval,isnull(T2.CR_DYNAMICS,t1.codrat) AS codrat,T1.basprv,T1.perval,T1.salant,T1.saltrf,
+--T1.ajuprv,T1.prvmes,T1.valpag,T1.valadt,T1.valind,T1.pagmai,T1.ajumai,T1.sldatu,T1.anb13s,T1.valpar,T1.cmpau1,T1.cmpau2,T1.cmpau3 
+FROM R146PRR T1
+LEFT join #DEPARA t2 on t1.codrat = t2.CODIGO_RED_CR and t2.CR_DYNAMICS IN (SELECT DISTINCT CODCCU FROM R018CCU WHERE ccutxt = 'DYNAMICS' )
+WHERE NUMEMP = 2 AND MESANO >= CONVERT(DATE,'2026-01-01') AND MESANO <= CONVERT(DATE,'2026-04-30')
+
+
+
+
+--MOVIMENTAÇÃO DOS VARIAVEIS
+UPDATE T1 
+SET CODRAT = isnull(T2.CR_DYNAMICS,t1.codrat) 
+--SELECT T1.*, T3.tipinf, T3.codcrt
+--INTO R044MOV_15052026
+FROM R044MOV T1
+LEFT join #DEPARA t2 on t1.codrat = t2.CODIGO_RED_CR
+join R008EVC T3 ON T1.CODEVE = T3.CODEVE AND T1.tabeve = T3.codtab
+WHERE NUMEMP = 2 AND CODCAL IN (SELECT codcal FROM R044CAL WHERE NUMEMP = 2 AND INICMP >= CONVERT(DATE,'2026-01-01') AND FIMCMP <= CONVERT(DATE,'2026-04-30'))
+
+--MOVIMENTAÇÃO FIXA
+UPDATE T1 
+SET CODRAT =  isnull(T2.CR_DYNAMICS,t1.codrat) 
+FROM r044fix T1 LEFT join #DEPARA t2 on t1.codrat = t2.CODIGO_RED_CR WHERE NUMEMP = 2 AND CODRAT <> 0 AND DATFIM >= '2026-01-01'
+
+	 
+
+UPDATE T1 
+SET CODRAT = isnull(T2.CR_DYNAMICS,t1.codrat) 
+from r042rcr T1 
+LEFT join #DEPARA t2 on t1.codrat = t2.CODIGO_RED_CR and t2.CR_DYNAMICS IN (SELECT DISTINCT CODCCU FROM R018CCU WHERE ccutxt = 'DYNAMICS' )
+where numemp = 2 and datpag >= '2026-01-01' 
+
+--SELECT * INTO r042rcr_15052026 FROM r042rcr where numemp = 2 and datpag >= '2026-01-01' 
