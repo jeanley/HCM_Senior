@@ -1,0 +1,71 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r008evc]    Script Date: 7/23/2026 5:47:58 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r008evc](
+	[codtab] [smallint] NOT NULL,
+	[codeve] [smallint] NOT NULL,
+	[deseve] [varchar](25) NULL,
+	[crteve] [varchar](3) NULL,
+	[codcrt] [smallint] NULL,
+	[horuti] [varchar](1) NULL,
+	[rgreve] [smallint] NULL,
+	[rgresp] [smallint] NULL,
+	[tipeve] [smallint] NULL,
+	[nateve] [smallint] NULL,
+	[sinsel] [varchar](1) NULL,
+	[codsel] [smallint] NULL,
+	[valcal] [numeric](13, 4) NULL,
+	[valtet] [numeric](11, 2) NULL,
+	[codclc] [smallint] NULL,
+	[alfaev] [varchar](10) NULL,
+	[tipinf] [varchar](1) NULL,
+	[dimnor] [varchar](1) NULL,
+	[gereve] [smallint] NULL,
+	[prjeve] [varchar](1) NULL,
+	[pereve] [varchar](1) NULL,
+	[codsin] [smallint] NULL,
+	[rateve] [varchar](1) NULL,
+	[tiprat] [smallint] NULL,
+	[remcag] [varchar](1) NULL,
+	[evedpo] [smallint] NULL,
+	[evedne] [smallint] NULL,
+	[arrval] [smallint] NULL,
+	[arrpre] [smallint] NULL,
+	[arresp] [smallint] NULL,
+	[rempat] [varchar](1) NULL,
+	[rubhom] [smallint] NULL,
+	[obseve] [varchar](255) NULL,
+	[inival] [datetime] NULL,
+	[fimval] [datetime] NULL,
+	[descom] [varchar](100) NULL,
+	[usu_eveadp] [varchar](150) NULL,
+	[usu_evegol] [varchar](150) NULL,
+	[usu_evemet] [varchar](150) NULL,
+	[usu_eveats] [varchar](1) NULL,
+	[usu_bpmfolha] [varchar](1) NULL,
+ CONSTRAINT [cp_r008evc] PRIMARY KEY CLUSTERED 
+(
+	[codtab] ASC,
+	[codeve] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r008evc] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r008evc]  WITH CHECK ADD  CONSTRAINT [ir_r008evc_000] FOREIGN KEY([codtab])
+REFERENCES [dbo].[r008evm] ([codtab])
+GO
+
+ALTER TABLE [dbo].[r008evc] CHECK CONSTRAINT [ir_r008evc_000]
+GO
+
+
