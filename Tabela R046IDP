@@ -1,0 +1,53 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r046idp]    Script Date: 7/23/2026 5:00:34 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r046idp](
+	[numemp] [smallint] NOT NULL,
+	[tipcol] [smallint] NOT NULL,
+	[numcad] [int] NOT NULL,
+	[codcal] [int] NOT NULL,
+	[perref] [datetime] NULL,
+	[datpag] [datetime] NULL,
+	[salbas] [numeric](13, 4) NULL,
+	[valliq] [numeric](13, 4) NULL,
+	[basins] [numeric](11, 2) NULL,
+	[basirf] [numeric](11, 2) NULL,
+	[basfgt] [numeric](11, 2) NULL,
+	[fgtmes] [numeric](11, 2) NULL,
+	[codfai] [smallint] NULL,
+	[depirf] [smallint] NULL,
+	[depsaf] [smallint] NULL,
+	[modpag] [varchar](1) NULL,
+	[totven] [numeric](11, 2) NULL,
+	[totdes] [numeric](11, 2) NULL,
+	[datger] [datetime] NULL,
+	[horger] [int] NULL,
+	[basipe] [numeric](11, 2) NULL,
+	[difeco] [numeric](11, 2) NULL,
+	[valeco] [numeric](11, 2) NULL,
+	[msgeco] [varchar](100) NULL,
+	[cmpau1] [numeric](11, 2) NULL,
+	[cmpau2] [numeric](11, 2) NULL,
+	[cmpau3] [datetime] NULL,
+	[cmpau4] [int] NULL,
+ CONSTRAINT [cp_r046idp] PRIMARY KEY CLUSTERED 
+(
+	[numemp] ASC,
+	[tipcol] ASC,
+	[numcad] ASC,
+	[codcal] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r046idp] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+
