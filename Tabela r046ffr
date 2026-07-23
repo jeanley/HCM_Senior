@@ -1,0 +1,51 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r046ffr]    Script Date: 7/23/2026 5:39:36 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r046ffr](
+	[numemp] [smallint] NOT NULL,
+	[tipcol] [smallint] NOT NULL,
+	[numcad] [int] NOT NULL,
+	[codcal] [int] NOT NULL,
+	[tabeve] [smallint] NOT NULL,
+	[codeve] [smallint] NOT NULL,
+	[codrat] [int] NOT NULL,
+	[refeve] [numeric](11, 2) NULL,
+	[valeve] [numeric](11, 2) NULL,
+ CONSTRAINT [cp_r046ffr] PRIMARY KEY CLUSTERED 
+(
+	[numemp] ASC,
+	[tipcol] ASC,
+	[numcad] ASC,
+	[codcal] ASC,
+	[tabeve] ASC,
+	[codeve] ASC,
+	[codrat] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r046ffr] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r046ffr]  WITH CHECK ADD  CONSTRAINT [ir_r046ffr_005] FOREIGN KEY([numemp], [tipcol], [numcad], [codcal], [tabeve], [codeve])
+REFERENCES [dbo].[r046ver] ([numemp], [tipcol], [numcad], [codcal], [tabeve], [codeve])
+GO
+
+ALTER TABLE [dbo].[r046ffr] CHECK CONSTRAINT [ir_r046ffr_005]
+GO
+
+ALTER TABLE [dbo].[r046ffr]  WITH CHECK ADD  CONSTRAINT [ir_r046ffr_006] FOREIGN KEY([codrat])
+REFERENCES [dbo].[r020rat] ([codrat])
+GO
+
+ALTER TABLE [dbo].[r046ffr] CHECK CONSTRAINT [ir_r046ffr_006]
+GO
+
+
