@@ -1,0 +1,108 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r044cal]    Script Date: 7/23/2026 5:54:57 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r044cal](
+	[numemp] [smallint] NOT NULL,
+	[codcal] [int] NOT NULL,
+	[tipcal] [smallint] NULL,
+	[sitcal] [varchar](1) NULL,
+	[perref] [datetime] NULL,
+	[datpag] [datetime] NULL,
+	[inicmp] [datetime] NULL,
+	[fimcmp] [datetime] NULL,
+	[codori] [int] NULL,
+	[inivtr] [datetime] NULL,
+	[fimvtr] [datetime] NULL,
+	[inifvt] [datetime] NULL,
+	[fimfvt] [datetime] NULL,
+	[iniapu] [datetime] NULL,
+	[fimapu] [datetime] NULL,
+	[iniace] [datetime] NULL,
+	[fimace] [datetime] NULL,
+	[iapcom] [datetime] NULL,
+	[fapcom] [datetime] NULL,
+	[inival] [datetime] NULL,
+	[fimval] [datetime] NULL,
+	[inifvl] [datetime] NULL,
+	[fimfvl] [datetime] NULL,
+	[grucal] [smallint] NULL,
+	[tipcao] [smallint] NULL,
+	[caldes] [varchar](1) NULL,
+	[conest] [varchar](1) NULL,
+	[diffol] [varchar](1) NULL,
+	[msgenv] [varchar](70) NULL,
+	[msgani] [varchar](70) NULL,
+	[folsim] [varchar](1) NULL,
+	[qtddia] [smallint] NULL,
+	[qtdute] [smallint] NULL,
+	[qtddsr] [smallint] NULL,
+	[posano] [smallint] NULL,
+	[tippar] [smallint] NULL,
+	[codpar] [int] NULL,
+	[codpro] [bigint] NULL,
+	[anopro] [smallint] NULL,
+	[numjcj] [int] NULL,
+	[inipro] [datetime] NULL,
+	[fimpro] [datetime] NULL,
+	[datlei] [datetime] NULL,
+	[numlei] [varchar](12) NULL,
+	[eftlei] [datetime] NULL,
+	[qtdpar] [smallint] NULL,
+	[perpar] [numeric](4, 2) NULL,
+	[per13s] [numeric](5, 2) NULL,
+	[proimp] [varchar](1) NULL,
+	[med13s] [smallint] NULL,
+	[atvace] [varchar](1) NULL,
+	[atvfol] [varchar](1) NULL,
+	[cmpdis] [datetime] NULL,
+	[dateft] [datetime] NULL,
+	[obsdis] [varchar](255) NULL,
+	[cmphdi] [varchar](1) NULL,
+	[obscal] [varchar](30) NULL,
+	[codlot] [smallint] NULL,
+	[abrfil] [varchar](100) NULL,
+	[abrloc] [varchar](1500) NULL,
+	[abrsin] [varchar](100) NULL,
+	[caladi] [smallint] NULL,
+	[datdis] [datetime] NULL,
+	[enveso] [smallint] NULL,
+	[tipaco] [smallint] NULL,
+	[rectra] [smallint] NULL,
+	[en1202] [varchar](1) NULL,
+	[inivlt] [datetime] NULL,
+	[fimvlt] [datetime] NULL,
+	[iniflt] [datetime] NULL,
+	[fimflt] [datetime] NULL,
+	[disrcs] [smallint] NULL,
+	[tippro] [smallint] NULL,
+	[numpro] [varchar](21) NULL,
+	[natpro] [varchar](50) NULL,
+	[pagplr] [smallint] NULL,
+	[cplplr] [int] NULL,
+	[envplr] [varchar](1) NULL,
+ CONSTRAINT [cp_r044cal] PRIMARY KEY CLUSTERED 
+(
+	[numemp] ASC,
+	[codcal] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r044cal] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r044cal]  WITH CHECK ADD  CONSTRAINT [ir_r044cal_000] FOREIGN KEY([numemp])
+REFERENCES [dbo].[r030emp] ([numemp])
+GO
+
+ALTER TABLE [dbo].[r044cal] CHECK CONSTRAINT [ir_r044cal_000]
+GO
+
+
