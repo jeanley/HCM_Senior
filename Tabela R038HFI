@@ -1,0 +1,88 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r038hfi]    Script Date: 7/23/2026 5:05:00 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r038hfi](
+	[numemp] [smallint] NOT NULL,
+	[tipcol] [smallint] NOT NULL,
+	[numcad] [int] NOT NULL,
+	[datalt] [datetime] NOT NULL,
+	[empatu] [smallint] NULL,
+	[codtap] [smallint] NULL,
+	[estpos] [smallint] NULL,
+	[postra] [varchar](24) NULL,
+	[codfil] [int] NULL,
+	[taborg] [smallint] NULL,
+	[numloc] [int] NULL,
+	[cadatu] [int] NULL,
+	[codccu] [varchar](18) NULL,
+	[natdes] [smallint] NULL,
+	[tipadm] [smallint] NULL,
+	[ficreg] [int] NULL,
+	[contov] [varchar](1) NULL,
+	[staacc] [smallint] NULL,
+	[motpos] [smallint] NULL,
+	[estcar] [smallint] NULL,
+	[codcar] [varchar](24) NULL,
+	[codmot] [smallint] NULL,
+	[codesc] [int] NULL,
+	[codtma] [smallint] NULL,
+	[turint] [int] NULL,
+	[horbas] [smallint] NULL,
+	[horsab] [smallint] NULL,
+	[horsem] [bigint] NULL,
+	[hordsr] [bigint] NULL,
+	[codmts] [smallint] NULL,
+	[codest] [smallint] NULL,
+	[valsal] [numeric](13, 4) NULL,
+	[cplsal] [numeric](13, 4) NULL,
+	[tipsal] [smallint] NULL,
+	[tipest] [smallint] NULL,
+	[clasal] [varchar](5) NULL,
+	[nivsal] [varchar](5) NULL,
+	[perdes] [numeric](5, 2) NULL,
+	[perrea] [numeric](8, 5) NULL,
+	[codsin] [smallint] NULL,
+	[numcra] [bigint] NULL,
+	[stahis] [smallint] NULL,
+	[confin] [int] NULL,
+	[codvin] [smallint] NULL,
+	[carvag] [varchar](24) NULL,
+	[socsin] [varchar](1) NULL,
+	[admeso] [smallint] NULL,
+	[trabhr] [smallint] NULL,
+	[codbhr] [int] NULL,
+ CONSTRAINT [cp_r038hfi] PRIMARY KEY CLUSTERED 
+(
+	[numemp] ASC,
+	[tipcol] ASC,
+	[numcad] ASC,
+	[datalt] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r038hfi] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r038hfi]  WITH CHECK ADD  CONSTRAINT [ir_r038hfi_002] FOREIGN KEY([numemp], [tipcol], [numcad])
+REFERENCES [dbo].[r034fun] ([numemp], [tipcol], [numcad])
+GO
+
+ALTER TABLE [dbo].[r038hfi] CHECK CONSTRAINT [ir_r038hfi_002]
+GO
+
+ALTER TABLE [dbo].[r038hfi]  WITH CHECK ADD  CONSTRAINT [ir_r038hfi_008] FOREIGN KEY([empatu], [codfil])
+REFERENCES [dbo].[r030fil] ([numemp], [codfil])
+GO
+
+ALTER TABLE [dbo].[r038hfi] CHECK CONSTRAINT [ir_r038hfi_008]
+GO
+
+
