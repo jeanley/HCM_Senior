@@ -1,0 +1,58 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r164dep]    Script Date: 7/24/2026 2:19:15 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r164dep](
+	[numemp] [smallint] NOT NULL,
+	[tipcol] [smallint] NOT NULL,
+	[numcad] [int] NOT NULL,
+	[coddep] [smallint] NOT NULL,
+	[codoem] [int] NOT NULL,
+	[codpla] [smallint] NOT NULL,
+	[mesinc] [datetime] NOT NULL,
+	[mesexc] [datetime] NULL,
+	[dscexc] [varchar](1) NULL,
+	[valins] [numeric](11, 2) NULL,
+	[cnasad] [varchar](22) NULL,
+	[matpla] [varchar](20) NULL,
+	[usu_codmot] [smallint] NULL,
+	[iniatu] [datetime] NULL,
+	[seqhis] [smallint] NULL,
+	[incexc] [varchar](1) NULL,
+ CONSTRAINT [cp_r164dep] PRIMARY KEY CLUSTERED 
+(
+	[numemp] ASC,
+	[tipcol] ASC,
+	[numcad] ASC,
+	[coddep] ASC,
+	[codoem] ASC,
+	[codpla] ASC,
+	[mesinc] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r164dep] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r164dep]  WITH CHECK ADD  CONSTRAINT [ir_r164dep_003] FOREIGN KEY([numemp], [tipcol], [numcad], [coddep])
+REFERENCES [dbo].[r036dep] ([numemp], [tipcol], [numcad], [coddep])
+GO
+
+ALTER TABLE [dbo].[r164dep] CHECK CONSTRAINT [ir_r164dep_003]
+GO
+
+ALTER TABLE [dbo].[r164dep]  WITH CHECK ADD  CONSTRAINT [ir_r164dep_005] FOREIGN KEY([codoem], [codpla])
+REFERENCES [dbo].[r164pla] ([codoem], [codpla])
+GO
+
+ALTER TABLE [dbo].[r164dep] CHECK CONSTRAINT [ir_r164dep_005]
+GO
+
+
