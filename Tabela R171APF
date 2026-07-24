@@ -1,0 +1,65 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r171apf]    Script Date: 7/24/2026 9:21:20 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r171apf](
+	[numemp] [smallint] NOT NULL,
+	[tipcol] [smallint] NOT NULL,
+	[numcad] [int] NOT NULL,
+	[datini] [datetime] NOT NULL,
+	[seqapf] [int] NOT NULL,
+	[datfim] [datetime] NULL,
+	[codapf] [smallint] NULL,
+	[codrat] [int] NULL,
+	[marpto] [varchar](1) NULL,
+	[hormes] [bigint] NULL,
+	[hormno] [bigint] NULL,
+	[horsem] [bigint] NULL,
+	[horsno] [bigint] NULL,
+	[horseg] [smallint] NULL,
+	[horter] [smallint] NULL,
+	[horqua] [smallint] NULL,
+	[horqui] [smallint] NULL,
+	[horsex] [smallint] NULL,
+	[horsab] [smallint] NULL,
+	[hordom] [smallint] NULL,
+	[estsal] [smallint] NULL,
+	[clasal] [varchar](5) NULL,
+	[nivsal] [varchar](5) NULL,
+	[refapf] [numeric](11, 2) NULL,
+	[valapf] [numeric](11, 2) NULL,
+	[oriapf] [varchar](1) NULL,
+	[obsapf] [varchar](400) NULL,
+	[usu_pagres] [varchar](1) NULL,
+	[usu_caures] [smallint] NULL,
+	[usu_ultalt] [varchar](100) NULL,
+	[usu_motres] [varchar](1) NULL,
+	[usu_insbpm] [int] NULL,
+ CONSTRAINT [cp_r171apf] PRIMARY KEY CLUSTERED 
+(
+	[numemp] ASC,
+	[tipcol] ASC,
+	[numcad] ASC,
+	[datini] ASC,
+	[seqapf] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r171apf] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r171apf]  WITH CHECK ADD  CONSTRAINT [ir_r171apf_006] FOREIGN KEY([codapf])
+REFERENCES [dbo].[r171ati] ([codapf])
+GO
+
+ALTER TABLE [dbo].[r171apf] CHECK CONSTRAINT [ir_r171apf_006]
+GO
+
+
