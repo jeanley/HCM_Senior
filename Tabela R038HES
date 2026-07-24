@@ -1,0 +1,56 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r038hes]    Script Date: 7/24/2026 1:47:18 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r038hes](
+	[numemp] [smallint] NOT NULL,
+	[tipcol] [smallint] NOT NULL,
+	[numcad] [int] NOT NULL,
+	[datalt] [datetime] NOT NULL,
+	[codesc] [int] NULL,
+	[codtma] [smallint] NULL,
+	[turint] [int] NULL,
+	[horbas] [smallint] NULL,
+	[horsab] [smallint] NULL,
+	[horsem] [bigint] NULL,
+	[hordsr] [bigint] NULL,
+	[staacc] [smallint] NULL,
+	[stahis] [smallint] NULL,
+	[codeqp] [smallint] NULL,
+	[codcat] [smallint] NULL,
+	[dessim] [varchar](999) NULL,
+	[usu_insbpm] [int] NULL,
+ CONSTRAINT [cp_r038hes] PRIMARY KEY CLUSTERED 
+(
+	[numemp] ASC,
+	[tipcol] ASC,
+	[numcad] ASC,
+	[datalt] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r038hes] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r038hes]  WITH CHECK ADD  CONSTRAINT [ir_r038hes_002] FOREIGN KEY([numemp], [tipcol], [numcad])
+REFERENCES [dbo].[r034fun] ([numemp], [tipcol], [numcad])
+GO
+
+ALTER TABLE [dbo].[r038hes] CHECK CONSTRAINT [ir_r038hes_002]
+GO
+
+ALTER TABLE [dbo].[r038hes]  WITH CHECK ADD  CONSTRAINT [ir_r038hes_004] FOREIGN KEY([codesc])
+REFERENCES [dbo].[r006esc] ([codesc])
+GO
+
+ALTER TABLE [dbo].[r038hes] CHECK CONSTRAINT [ir_r038hes_004]
+GO
+
+
