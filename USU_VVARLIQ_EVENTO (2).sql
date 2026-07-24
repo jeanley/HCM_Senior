@@ -88,6 +88,18 @@
        agora traz o salário mensal cadastral do colaborador (mesma fonte
        de ValorSalarioAtual/Anterior — histórico R038HSA com fallback
        para R034FUN.VALSAL), em vez de NULL.
+   v10 (esta versão):
+     - CORRIGIDO — carga horária de NÃO docentes: HorasMensaisAtual/
+       Anterior deixou de usar o valor cadastral fixo R034FUN.HORSEM e
+       passou a buscar a escala VIGENTE em cada competência através do
+       histórico R038HES (mais recente DATALT até o último dia da
+       competência) + R006ESC.HORMES (carga horária mensal da escala,
+       em minutos). Fallback para R034FUN.HORSEM se não houver histórico
+       de escala. Isso resolve a inconsistência de granularidade
+       sinalizada na v9 (antes misturava carga semanal cadastral com
+       carga mensal das atividades docentes).
+     - Formato de HorasMensaisAtual/Anterior alterado de "H:MM" para
+       "HHH,mm" (vírgula no lugar de dois pontos).
 
    PREMISSAS ASSUMIDAS (confirmar se necessário):
    1) R008EVC.TIPEVE: 1 e 2 = Proventos | 3 = Descontos, para o cálculo
@@ -115,24 +127,24 @@
    6) Salário de NÃO docentes: via histórico R038HSA (DATALT/SEQALT mais
       recente até o último dia da competência), com fallback para
       R034FUN.VALSAL quando não há histórico.
-   7) ATENÇÃO — HorasMensaisAtual/Anterior mistura duas granularidades
-      diferentes conforme o tipo de colaborador: para Docentes vem de
-      R171APF.HORMES (carga MENSAL somada das atividades), mas para
-      não-docentes continua vindo de R034FUN.HORSEM (carga SEMANAL
-      cadastral, sem conversão para mensal) — ambas agora só formatadas
-      como "horas:minutos", sem alterar essa diferença de base. Ou seja,
-      mesmo em texto, a coluna "HorasMensais" de um não-docente ainda
-      representa uma carga SEMANAL. Ainda pendente de confirmação se
-      você quer converter HORSEM para equivalente mensal.
-   8) HorasMensaisAtual/Anterior são colunas de TEXTO (formato "H:MM"),
-      não numéricas — para somar, comparar ou usar em gráfico é preciso
-      fazer o parse de volta para minutos/horas na consulta externa.
+   7) Carga horária de NÃO docentes: resolvida na v10 via histórico de
+      escala R038HES + R006ESC.HORMES (mesma lógica de "registro mais
+      recente até a data de referência" usada para situação e salário).
+      Se o colaborador não tiver nenhum histórico de escala migrado,
+      cai no fallback R034FUN.HORSEM (que é carga semanal cadastral —
+      nesse caso residual a granularidade ainda seria semanal em vez de
+      mensal; avise se quiser que eu remova esse fallback ou o converta).
+   8) HorasMensaisAtual/Anterior são colunas de TEXTO no formato
+      "HHH,mm" (horas e minutos separados por vírgula), não numéricas —
+      para somar, comparar ou usar em gráfico é preciso fazer o parse de
+      volta para minutos/horas na consulta externa.
 
    RECOMENDAÇÕES DE PERFORMANCE (para o DBA/responsável pelo ambiente):
    - Garantir índices em: R046VER (NUMEMP,TIPCOL,NUMCAD,CODCAL),
      R044CAL (NUMEMP,CODCAL), R171APF (NUMEMP,TIPCOL,NUMCAD,DATINI,DATFIM),
      R038AFA (NUMEMP,TIPCOL,NUMCAD,DATAFA), R046IDP (NUMEMP,TIPCOL,NUMCAD,DATPAG),
-     R038HSA (NUMEMP,TIPCOL,NUMCAD,DATALT,SEQALT).
+     R038HSA (NUMEMP,TIPCOL,NUMCAD,DATALT,SEQALT),
+     R038HES (NUMEMP,TIPCOL,NUMCAD,DATALT), R006ESC (CODESC).
    - Sempre filtrar por NUMEMP e por CompetenciaAtual (ou intervalo) na
      consulta externa — a view não tem filtro de data fixo, então uma
      consulta sem WHERE varre toda a base histórica de eventos.
@@ -164,21 +176,22 @@ SELECT
     CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ATU.ValSalDocente ELSE ISNULL(SALATU.VALSAL, FUN.VALSAL) END   AS ValorSalarioAtual,
     CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ANT.ValSalDocente ELSE ISNULL(SALANT.VALSAL, FUN.VALSAL) END   AS ValorSalarioAnterior,
 
-    -- Horas mensais em formato horas:minutos (o campo de origem, tanto em
-    -- R171APF.HORMES quanto em R034FUN.HORSEM, é armazenado em MINUTOS)
+    -- Horas mensais em formato "HHH,mm" (o campo de origem — R171APF.HORMES
+    -- para docentes, R006ESC.HORMES via histórico R038HES para os demais —
+    -- é armazenado em MINUTOS)
     CASE
         WHEN FUN.TIPCON IN (10,13)
             THEN CAST(ISNULL(DOC_ATU.HorMensaisDocente,0)/60 AS VARCHAR)
-                 + ':' + RIGHT('0' + CAST(ISNULL(DOC_ATU.HorMensaisDocente,0)%60 AS VARCHAR), 2)
-        ELSE CAST(ISNULL(FUN.HORSEM,0)/60 AS VARCHAR)
-                 + ':' + RIGHT('0' + CAST(ISNULL(FUN.HORSEM,0)%60 AS VARCHAR), 2)
+                 + ',' + RIGHT('0' + CAST(ISNULL(DOC_ATU.HorMensaisDocente,0)%60 AS VARCHAR), 2)
+        ELSE CAST(ISNULL(ESCATU.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))/60 AS VARCHAR)
+                 + ',' + RIGHT('0' + CAST(ISNULL(ESCATU.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))%60 AS VARCHAR), 2)
     END                                                   AS HorasMensaisAtual,
     CASE
         WHEN FUN.TIPCON IN (10,13)
             THEN CAST(ISNULL(DOC_ANT.HorMensaisDocente,0)/60 AS VARCHAR)
-                 + ':' + RIGHT('0' + CAST(ISNULL(DOC_ANT.HorMensaisDocente,0)%60 AS VARCHAR), 2)
-        ELSE CAST(ISNULL(FUN.HORSEM,0)/60 AS VARCHAR)
-                 + ':' + RIGHT('0' + CAST(ISNULL(FUN.HORSEM,0)%60 AS VARCHAR), 2)
+                 + ',' + RIGHT('0' + CAST(ISNULL(DOC_ANT.HorMensaisDocente,0)%60 AS VARCHAR), 2)
+        ELSE CAST(ISNULL(ESCANT.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))/60 AS VARCHAR)
+                 + ',' + RIGHT('0' + CAST(ISNULL(ESCANT.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))%60 AS VARCHAR), 2)
     END                                                   AS HorasMensaisAnterior,
 
     -- Salário composto: para Docentes, valor calculado a partir das horas
@@ -542,6 +555,35 @@ OUTER APPLY
       AND H.DATALT <= EOMONTH(EVO.CompetenciaAnterior)
     ORDER BY H.DATALT DESC, H.SEQALT DESC
 ) SALANT
+
+-- Carga horária vigente (não-docentes) no ÚLTIMO DIA da competência atual,
+-- via histórico de escala R038HES (mais recente DATALT até a data de
+-- referência) + R006ESC (carga horária mensal da escala, em minutos) —
+-- substitui o valor cadastral fixo de R034FUN.HORSEM.
+OUTER APPLY
+(
+    SELECT TOP (1) ESC.HORMES AS HorMensaisNaoDocente
+    FROM R038HES HES
+    JOIN R006ESC ESC ON ESC.CODESC = HES.CODESC
+    WHERE HES.NUMEMP = EVO.NUMEMP
+      AND HES.TIPCOL = EVO.TIPCOL
+      AND HES.NUMCAD = EVO.NUMCAD
+      AND HES.DATALT <= EOMONTH(EVO.CompetenciaAtual)
+    ORDER BY HES.DATALT DESC
+) ESCATU
+
+-- Carga horária vigente (não-docentes) no ÚLTIMO DIA da competência anterior
+OUTER APPLY
+(
+    SELECT TOP (1) ESC.HORMES AS HorMensaisNaoDocente
+    FROM R038HES HES
+    JOIN R006ESC ESC ON ESC.CODESC = HES.CODESC
+    WHERE HES.NUMEMP = EVO.NUMEMP
+      AND HES.TIPCOL = EVO.TIPCOL
+      AND HES.NUMCAD = EVO.NUMCAD
+      AND HES.DATALT <= EOMONTH(EVO.CompetenciaAnterior)
+    ORDER BY HES.DATALT DESC
+) ESCANT
 
 -- Exclui da análise colaboradores cuja situação no ÚLTIMO DIA da competência
 -- ANTERIOR era "Demitido" (comparação case-insensitive e tolerante a variações
