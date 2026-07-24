@@ -1,0 +1,65 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r017car]    Script Date: 7/24/2026 2:00:12 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r017car](
+	[estpos] [smallint] NOT NULL,
+	[postra] [varchar](24) NOT NULL,
+	[datini] [datetime] NOT NULL,
+	[numemp] [smallint] NULL,
+	[codfil] [int] NULL,
+	[taborg] [smallint] NULL,
+	[numloc] [int] NULL,
+	[codccu] [varchar](18) NULL,
+	[varcar] [varchar](1) NULL,
+	[estcar] [smallint] NULL,
+	[codcar] [varchar](24) NULL,
+	[codsin] [smallint] NULL,
+	[codhie] [smallint] NULL,
+	[tipcol] [smallint] NULL,
+	[turpos] [smallint] NULL,
+	[codvin] [smallint] NULL,
+	[tipvag] [smallint] NULL,
+	[tipcon] [smallint] NULL,
+	[perpne] [smallint] NULL,
+	[datfim] [datetime] NULL,
+	[codesc] [int] NULL,
+	[codtma] [smallint] NULL,
+	[turint] [int] NULL,
+	[codeqp] [smallint] NULL,
+	[codcat] [smallint] NULL,
+	[horbas] [smallint] NULL,
+	[horsab] [smallint] NULL,
+	[horsem] [bigint] NULL,
+	[hordsr] [bigint] NULL,
+	[natdes] [smallint] NULL,
+	[codprj] [int] NULL,
+	[codfas] [smallint] NULL,
+	[codoem] [int] NULL,
+	[codrat] [int] NULL,
+ CONSTRAINT [cp_r017car] PRIMARY KEY CLUSTERED 
+(
+	[estpos] ASC,
+	[postra] ASC,
+	[datini] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r017car] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r017car]  WITH CHECK ADD  CONSTRAINT [ir_r017car_001] FOREIGN KEY([estpos], [postra])
+REFERENCES [dbo].[r017pos] ([estpos], [postra])
+GO
+
+ALTER TABLE [dbo].[r017car] CHECK CONSTRAINT [ir_r017car_001]
+GO
+
+
