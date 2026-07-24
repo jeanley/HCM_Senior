@@ -100,6 +100,21 @@
        carga mensal das atividades docentes).
      - Formato de HorasMensaisAtual/Anterior alterado de "H:MM" para
        "HHH,mm" (vírgula no lugar de dois pontos).
+   v11 (esta versão):
+     - Novas colunas TemPlanoSaude ('Sim'/'Não') e MovimentacaoPlanoSaude
+       ('Inclusão' / 'Exclusão' / 'Inclusão e Exclusão' / 'Sem
+       Movimentação'), considerando titular (R164ASS) e dependentes
+       (R164DEP), referentes ao MÊS DE ANÁLISE (competência atual).
+     - Coluna genérica (sem distinguir Saúde x Odontológico): o campo
+       R164ASS.TIPASS existe mas não está preenchido neste ambiente
+       (confirmado pelo usuário), então não há como fazer essa distinção
+       com os dados disponíveis hoje.
+     - Movimentação derivada das datas MESINC/MESEXC (comparando
+       ano/mês com a competência), já que R164ASS.INCEXC está sempre
+       NULL neste ambiente (não confiável).
+     - Performance: mesmo padrão das demais buscas por competência —
+       pré-agregado por colaborador+competência via DISTINCT + JOIN, em
+       vez de subquery correlacionada por linha de evento.
 
    PREMISSAS ASSUMIDAS (confirmar se necessário):
    1) R008EVC.TIPEVE: 1 e 2 = Proventos | 3 = Descontos, para o cálculo
@@ -138,13 +153,25 @@
       "HHH,mm" (horas e minutos separados por vírgula), não numéricas —
       para somar, comparar ou usar em gráfico é preciso fazer o parse de
       volta para minutos/horas na consulta externa.
+   9) TemPlanoSaude/MovimentacaoPlanoSaude consideram vigência com base
+      em MESINC <= competência E (MESEXC IS NULL OU MESEXC >= competência)
+      — ou seja, o mês de exclusão ainda conta como "ativo" (mesma
+      convenção de "último mês vigente, inclusive" usada em R171APF e nos
+      demais históricos desta view). Se no seu processo o mês de exclusão
+      já deve contar como "não ativo", ajustar a condição para
+      MESEXC > competência.
+   10) TemPlanoSaude/MovimentacaoPlanoSaude são calculados apenas para a
+      COMPETÊNCIA ATUAL (o "mês de análise"), não para a anterior — se
+      quiser o mesmo par de colunas também para o mês anterior, é só
+      pedir que eu duplico a lógica.
 
    RECOMENDAÇÕES DE PERFORMANCE (para o DBA/responsável pelo ambiente):
    - Garantir índices em: R046VER (NUMEMP,TIPCOL,NUMCAD,CODCAL),
      R044CAL (NUMEMP,CODCAL), R171APF (NUMEMP,TIPCOL,NUMCAD,DATINI,DATFIM),
      R038AFA (NUMEMP,TIPCOL,NUMCAD,DATAFA), R046IDP (NUMEMP,TIPCOL,NUMCAD,DATPAG),
      R038HSA (NUMEMP,TIPCOL,NUMCAD,DATALT,SEQALT),
-     R038HES (NUMEMP,TIPCOL,NUMCAD,DATALT), R006ESC (CODESC).
+     R038HES (NUMEMP,TIPCOL,NUMCAD,DATALT), R006ESC (CODESC),
+     R164ASS (NUMEMP,TIPCOL,NUMCAD), R164DEP (NUMEMP,TIPCOL,NUMCAD).
    - Sempre filtrar por NUMEMP e por CompetenciaAtual (ou intervalo) na
      consulta externa — a view não tem filtro de data fixo, então uma
      consulta sem WHERE varre toda a base histórica de eventos.
@@ -278,7 +305,30 @@ SELECT
     ISNULL(SITATU.CODSIT, 0)                             AS CodSituacaoAtual,
     ISNULL(SITATU.DESSIT, 'Ativo')                       AS SituacaoAtual,
     ISNULL(SITANT.CODSIT, 0)                             AS CodSituacaoAnterior,
-    ISNULL(SITANT.DESSIT, 'Ativo')                        AS SituacaoAnterior
+    ISNULL(SITANT.DESSIT, 'Ativo')                        AS SituacaoAnterior,
+
+    -- Plano de saúde/odontológico (genérico — sem distinção de tipo, ver
+    -- observação no cabeçalho sobre TIPASS não preenchido): considera
+    -- titular (R164ASS) OU qualquer dependente (R164DEP) vigente no mês
+    -- de análise (competência atual).
+    CASE
+        WHEN ISNULL(PLANO_TIT_ATU.AtivoTitular,0) = 1 OR ISNULL(PLANO_DEP_ATU.AtivoDependente,0) = 1
+            THEN 'Sim' ELSE 'Não'
+    END                                                   AS TemPlanoSaude,
+
+    -- Movimentação de plano (inclusão/exclusão de titular OU dependente)
+    -- ocorrida NO MÊS DE ANÁLISE (competência atual), derivada das datas
+    -- MESINC/MESEXC (o campo INCEXC não é confiável neste ambiente)
+    CASE
+        WHEN (ISNULL(PLANO_TIT_ATU.IncTitular,0) = 1 OR ISNULL(PLANO_DEP_ATU.IncDependente,0) = 1)
+         AND (ISNULL(PLANO_TIT_ATU.ExcTitular,0) = 1 OR ISNULL(PLANO_DEP_ATU.ExcDependente,0) = 1)
+            THEN 'Inclusão e Exclusão'
+        WHEN (ISNULL(PLANO_TIT_ATU.IncTitular,0) = 1 OR ISNULL(PLANO_DEP_ATU.IncDependente,0) = 1)
+            THEN 'Inclusão'
+        WHEN (ISNULL(PLANO_TIT_ATU.ExcTitular,0) = 1 OR ISNULL(PLANO_DEP_ATU.ExcDependente,0) = 1)
+            THEN 'Exclusão'
+        ELSE 'Sem Movimentação'
+    END                                                   AS MovimentacaoPlanoSaude
 
 FROM
 (
@@ -584,6 +634,75 @@ OUTER APPLY
       AND HES.DATALT <= EOMONTH(EVO.CompetenciaAnterior)
     ORDER BY HES.DATALT DESC
 ) ESCANT
+
+-- ==========================================================================
+-- PLANO DE SAÚDE/ODONTOLÓGICO (R164ASS = titular, R164DEP = dependentes)
+-- Pré-agregado por colaborador+competência (mesmo padrão de performance
+-- usado para R171APF): DISTINCT de competências + JOIN de intervalo de
+-- vigência, uma vez por combinação — evita recomputar por linha de evento.
+-- Observação: TIPASS existe em R164ASS mas não está preenchido no ambiente
+-- (confirmado pelo usuário), então não há como distinguir Saúde x
+-- Odontológico — a coluna é genérica ("tem plano", sem tipo).
+-- ==========================================================================
+LEFT JOIN
+(
+    SELECT C.NUMEMP, C.TIPCOL, C.NUMCAD, C.Competencia,
+           MAX(CASE WHEN T.MESINC <= C.Competencia
+                     AND (T.MESEXC IS NULL OR T.MESEXC >= C.Competencia)
+                    THEN 1 ELSE 0 END)                                        AS AtivoTitular,
+           MAX(CASE WHEN YEAR(T.MESINC) = YEAR(C.Competencia)
+                     AND MONTH(T.MESINC) = MONTH(C.Competencia)
+                    THEN 1 ELSE 0 END)                                        AS IncTitular,
+           MAX(CASE WHEN YEAR(T.MESEXC) = YEAR(C.Competencia)
+                     AND MONTH(T.MESEXC) = MONTH(C.Competencia)
+                    THEN 1 ELSE 0 END)                                        AS ExcTitular
+    FROM
+    (
+        SELECT DISTINCT V.NUMEMP, V.TIPCOL, V.NUMCAD,
+               DATEFROMPARTS(YEAR(CAL.DATPAG), MONTH(CAL.DATPAG), 1) AS Competencia
+        FROM R046VER V
+        JOIN R044CAL CAL ON CAL.NUMEMP = V.NUMEMP AND CAL.CODCAL = V.CODCAL
+    ) C
+    LEFT JOIN R164ASS T
+        ON  T.NUMEMP = C.NUMEMP
+        AND T.TIPCOL = C.TIPCOL
+        AND T.NUMCAD = C.NUMCAD
+    GROUP BY C.NUMEMP, C.TIPCOL, C.NUMCAD, C.Competencia
+) PLANO_TIT_ATU
+    ON  PLANO_TIT_ATU.NUMEMP = EVO.NUMEMP
+    AND PLANO_TIT_ATU.TIPCOL = EVO.TIPCOL
+    AND PLANO_TIT_ATU.NUMCAD = EVO.NUMCAD
+    AND PLANO_TIT_ATU.Competencia = EVO.CompetenciaAtual
+
+LEFT JOIN
+(
+    SELECT C.NUMEMP, C.TIPCOL, C.NUMCAD, C.Competencia,
+           MAX(CASE WHEN D.MESINC <= C.Competencia
+                     AND (D.MESEXC IS NULL OR D.MESEXC >= C.Competencia)
+                    THEN 1 ELSE 0 END)                                        AS AtivoDependente,
+           MAX(CASE WHEN YEAR(D.MESINC) = YEAR(C.Competencia)
+                     AND MONTH(D.MESINC) = MONTH(C.Competencia)
+                    THEN 1 ELSE 0 END)                                        AS IncDependente,
+           MAX(CASE WHEN YEAR(D.MESEXC) = YEAR(C.Competencia)
+                     AND MONTH(D.MESEXC) = MONTH(C.Competencia)
+                    THEN 1 ELSE 0 END)                                        AS ExcDependente
+    FROM
+    (
+        SELECT DISTINCT V.NUMEMP, V.TIPCOL, V.NUMCAD,
+               DATEFROMPARTS(YEAR(CAL.DATPAG), MONTH(CAL.DATPAG), 1) AS Competencia
+        FROM R046VER V
+        JOIN R044CAL CAL ON CAL.NUMEMP = V.NUMEMP AND CAL.CODCAL = V.CODCAL
+    ) C
+    LEFT JOIN R164DEP D
+        ON  D.NUMEMP = C.NUMEMP
+        AND D.TIPCOL = C.TIPCOL
+        AND D.NUMCAD = C.NUMCAD
+    GROUP BY C.NUMEMP, C.TIPCOL, C.NUMCAD, C.Competencia
+) PLANO_DEP_ATU
+    ON  PLANO_DEP_ATU.NUMEMP = EVO.NUMEMP
+    AND PLANO_DEP_ATU.TIPCOL = EVO.TIPCOL
+    AND PLANO_DEP_ATU.NUMCAD = EVO.NUMCAD
+    AND PLANO_DEP_ATU.Competencia = EVO.CompetenciaAtual
 
 -- Exclui da análise colaboradores cuja situação no ÚLTIMO DIA da competência
 -- ANTERIOR era "Demitido" (comparação case-insensitive e tolerante a variações
