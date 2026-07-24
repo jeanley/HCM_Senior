@@ -1,0 +1,61 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r038hsa]    Script Date: 7/24/2026 10:44:32 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r038hsa](
+	[numemp] [smallint] NOT NULL,
+	[tipcol] [smallint] NOT NULL,
+	[numcad] [int] NOT NULL,
+	[datalt] [datetime] NOT NULL,
+	[seqalt] [smallint] NOT NULL,
+	[codmot] [smallint] NULL,
+	[codest] [smallint] NULL,
+	[valsal] [numeric](13, 4) NULL,
+	[cplsal] [numeric](13, 4) NULL,
+	[tipsal] [smallint] NULL,
+	[tipest] [smallint] NULL,
+	[clasal] [varchar](5) NULL,
+	[nivsal] [varchar](5) NULL,
+	[perdes] [numeric](5, 2) NULL,
+	[perrea] [numeric](8, 5) NULL,
+	[stahis] [smallint] NULL,
+	[codidm] [smallint] NULL,
+	[salest] [numeric](13, 4) NULL,
+	[cplest] [numeric](13, 4) NULL,
+	[datdis] [datetime] NULL,
+	[usu_insbpm] [int] NULL,
+ CONSTRAINT [cp_r038hsa] PRIMARY KEY CLUSTERED 
+(
+	[numemp] ASC,
+	[tipcol] ASC,
+	[numcad] ASC,
+	[datalt] ASC,
+	[seqalt] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r038hsa] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r038hsa]  WITH CHECK ADD  CONSTRAINT [ir_r038hsa_002] FOREIGN KEY([numemp], [tipcol], [numcad])
+REFERENCES [dbo].[r034fun] ([numemp], [tipcol], [numcad])
+GO
+
+ALTER TABLE [dbo].[r038hsa] CHECK CONSTRAINT [ir_r038hsa_002]
+GO
+
+ALTER TABLE [dbo].[r038hsa]  WITH CHECK ADD  CONSTRAINT [ir_r038hsa_005] FOREIGN KEY([codmot])
+REFERENCES [dbo].[r076mot] ([codmot])
+GO
+
+ALTER TABLE [dbo].[r038hsa] CHECK CONSTRAINT [ir_r038hsa_005]
+GO
+
+
