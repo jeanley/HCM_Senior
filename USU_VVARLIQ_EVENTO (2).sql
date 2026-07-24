@@ -76,7 +76,7 @@
        convertendo HORMES de minutos para horas antes de multiplicar
        pelo valor da hora (VALAPF) — a versão anterior multiplicava
        HORMES em minutos diretamente, inflando o valor por um fator de 60.
-   v9 (esta versão):
+   v9:
      - HorasMensaisAtual/Anterior agora são formatadas como texto
        "horas:minutos" (ex: "184:30"), convertendo o valor de origem
        (armazenado em MINUTOS tanto em R171APF.HORMES quanto em
@@ -88,7 +88,7 @@
        agora traz o salário mensal cadastral do colaborador (mesma fonte
        de ValorSalarioAtual/Anterior — histórico R038HSA com fallback
        para R034FUN.VALSAL), em vez de NULL.
-   v10 (esta versão):
+   v10:
      - CORRIGIDO — carga horária de NÃO docentes: HorasMensaisAtual/
        Anterior deixou de usar o valor cadastral fixo R034FUN.HORSEM e
        passou a buscar a escala VIGENTE em cada competência através do
@@ -100,7 +100,7 @@
        carga mensal das atividades docentes).
      - Formato de HorasMensaisAtual/Anterior alterado de "H:MM" para
        "HHH,mm" (vírgula no lugar de dois pontos).
-   v11 (esta versão):
+   v11:
      - Novas colunas TemPlanoSaude ('Sim'/'Não') e MovimentacaoPlanoSaude
        ('Inclusão' / 'Exclusão' / 'Inclusão e Exclusão' / 'Sem
        Movimentação'), considerando titular (R164ASS) e dependentes
@@ -115,6 +115,32 @@
      - Performance: mesmo padrão das demais buscas por competência —
        pré-agregado por colaborador+competência via DISTINCT + JOIN, em
        vez de subquery correlacionada por linha de evento.
+   v12 (esta versão — alteração manual do usuário via ALTER VIEW):
+     - Incluída coluna FUN.DATADM (data de admissão do colaborador).
+     - Reordenação de colunas no SELECT (sem mudança de lógica): dados
+       cadastrais, SituacaoAtividadeDocente, salário e horas passaram a
+       vir logo após os campos de evento/SituacaoEvento, antes dos
+       totais de proventos/descontos e do líquido.
+   v13 (esta versão):
+     - Nova coluna SituacaoLiquido, criada a partir da análise de um
+       export real de 353 casos que bateram o teto de 100% de
+       PercVariacaoLiquido: 38% eram admissão recente e 26,1% eram
+       situação diferente de "Ativo" (férias, afastamento, demissão,
+       licença) em um dos dois meses — juntos, 64% dos casos tinham
+       explicação estrutural. Os 36% restantes (Ativo/Ativo, admissão
+       antiga) não têm causa aparente e continuam sinalizados.
+     - SituacaoLiquido classifica como 'Variação Esperada (Admissão
+       Recente)' quando DATADM está a até 60 dias do fim da competência
+       atual, e 'Variação Esperada (Afastamento/Férias/Licença)' quando
+       SituacaoAtual ou SituacaoAnterior é diferente de 'Ativo'. Caso
+       contrário, aplica o mesmo limiar de 10% já usado em SituacaoEvento.
+     - IMPORTANTE: ao ler PercVariacaoLiquido/PercVariacaoEvento em
+       ferramentas Senior (Report Generator), esses campos podem ser
+       exportados multiplicados por 1.000.000 (convenção de campo
+       "Percentual" com 6 casas decimais implícitas) — dividir por
+       1.000.000 antes de interpretar como percentual 0–100%. Isso foi
+       identificado analisando um export real onde o teto de 100,00%
+       aparecia como 100000000.
 
    PREMISSAS ASSUMIDAS (confirmar se necessário):
    1) R008EVC.TIPEVE: 1 e 2 = Proventos | 3 = Descontos, para o cálculo
@@ -164,6 +190,10 @@
       COMPETÊNCIA ATUAL (o "mês de análise"), não para a anterior — se
       quiser o mesmo par de colunas também para o mês anterior, é só
       pedir que eu duplico a lógica.
+   11) SituacaoLiquido usa 60 dias como limiar de "admissão recente" —
+      valor escolhido por ser o que melhor cobriu os casos reais
+      analisados (admissão no mês atual OU no mês anterior à
+      competência). Ajustável conforme necessário.
 
    RECOMENDAÇÕES DE PERFORMANCE (para o DBA/responsável pelo ambiente):
    - Garantir índices em: R046VER (NUMEMP,TIPCOL,NUMCAD,CODCAL),
@@ -189,60 +219,7 @@ SELECT
     FUN.CODFIL,
     FIL.NOMFIL,
     EMP.APEEMP,
-
-    -- Dados cadastrais do colaborador
-    FUN.TIPCON                                           AS CodTipoContrato,
-    TPC.VALKEY                                           AS TipoContrato,
-    CAR.TITCAR                                           AS CargoAtual,
-    REG.VALKEY                                           AS Regional,
-
-    -- Salário e carga horária: para Docentes (TIPCON 10/13), soma das
-    -- atividades vigentes na competência (R171APF); para os demais,
-    -- valor cadastral corrente de R034FUN (ver observação de limitação
-    -- no cabeçalho do arquivo).
-    CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ATU.ValSalDocente ELSE ISNULL(SALATU.VALSAL, FUN.VALSAL) END   AS ValorSalarioAtual,
-    CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ANT.ValSalDocente ELSE ISNULL(SALANT.VALSAL, FUN.VALSAL) END   AS ValorSalarioAnterior,
-
-    -- Horas mensais em formato "HHH,mm" (o campo de origem — R171APF.HORMES
-    -- para docentes, R006ESC.HORMES via histórico R038HES para os demais —
-    -- é armazenado em MINUTOS)
-    CASE
-        WHEN FUN.TIPCON IN (10,13)
-            THEN CAST(ISNULL(DOC_ATU.HorMensaisDocente,0)/60 AS VARCHAR)
-                 + ',' + RIGHT('0' + CAST(ISNULL(DOC_ATU.HorMensaisDocente,0)%60 AS VARCHAR), 2)
-        ELSE CAST(ISNULL(ESCATU.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))/60 AS VARCHAR)
-                 + ',' + RIGHT('0' + CAST(ISNULL(ESCATU.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))%60 AS VARCHAR), 2)
-    END                                                   AS HorasMensaisAtual,
-    CASE
-        WHEN FUN.TIPCON IN (10,13)
-            THEN CAST(ISNULL(DOC_ANT.HorMensaisDocente,0)/60 AS VARCHAR)
-                 + ',' + RIGHT('0' + CAST(ISNULL(DOC_ANT.HorMensaisDocente,0)%60 AS VARCHAR), 2)
-        ELSE CAST(ISNULL(ESCANT.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))/60 AS VARCHAR)
-                 + ',' + RIGHT('0' + CAST(ISNULL(ESCANT.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))%60 AS VARCHAR), 2)
-    END                                                   AS HorasMensaisAnterior,
-
-    -- Salário composto: para Docentes, valor calculado a partir das horas
-    -- lançadas nas atividades vigentes em R171APF, SUM((HORMES/60) * VALAPF)
-    -- por atividade (HORMES convertido de minutos para horas antes de
-    -- multiplicar pelo valor da hora). Para NÃO docentes, traz o salário
-    -- mensal cadastral do colaborador (mesma fonte de ValorSalarioAtual/
-    -- Anterior — histórico R038HSA com fallback para R034FUN.VALSAL).
-    CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ATU.SalarioComposto ELSE ISNULL(SALATU.VALSAL, FUN.VALSAL) END       AS SalarioCompostoAtual,
-    CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ANT.SalarioComposto ELSE ISNULL(SALANT.VALSAL, FUN.VALSAL) END       AS SalarioCompostoAnterior,
-
-    -- Situação da atividade docente: só é preenchida na própria linha do
-    -- evento de Horas Normais (CODEVE = 1) de colaboradores Docentes,
-    -- comparando o valor lançado no evento com o salário composto
-    -- (horas x valor hora) calculado a partir das atividades vigentes na
-    -- competência atual (tolerância de R$ 0,01 para arredondamento)
-    CASE
-        WHEN FUN.TIPCON IN (10,13) AND EVO.CODEVE = 1 THEN
-            CASE
-                WHEN ROUND(ABS(ISNULL(EVO.ValorAtual,0) - ISNULL(DOC_ATU.SalarioComposto,0)), 2) <= 0.01 THEN 'OK'
-                ELSE 'Divergente'
-            END
-        ELSE NULL
-    END                                                   AS SituacaoAtividadeDocente,
+    FUN.DATADM,
 
     -- Período
     EVO.CompetenciaAtual,
@@ -282,6 +259,60 @@ SELECT
         ELSE 'OK'
     END                                                   AS SituacaoEvento,
 
+    -- Dados cadastrais do colaborador
+    FUN.TIPCON                                           AS CodTipoContrato,
+    TPC.VALKEY                                           AS TipoContrato,
+    CAR.TITCAR                                           AS CargoAtual,
+    REG.VALKEY                                           AS Regional,
+
+    -- Situação da atividade docente: só é preenchida na própria linha do
+    -- evento de Horas Normais (CODEVE = 1) de colaboradores Docentes,
+    -- comparando o valor lançado no evento com o salário composto
+    -- (horas x valor hora) calculado a partir das atividades vigentes na
+    -- competência atual (tolerância de R$ 0,01 para arredondamento)
+    CASE
+        WHEN FUN.TIPCON IN (10,13) AND EVO.CODEVE = 1 THEN
+            CASE
+                WHEN ROUND(ABS(ISNULL(EVO.ValorAtual,0) - ISNULL(DOC_ATU.SalarioComposto,0)), 2) <= 0.01 THEN 'OK'
+                ELSE 'Divergente'
+            END
+        ELSE NULL
+    END                                                   AS SituacaoAtividadeDocente,
+
+    -- Salário e carga horária: para Docentes (TIPCON 10/13), soma das
+    -- atividades vigentes na competência (R171APF); para os demais,
+    -- valor cadastral corrente de R034FUN (ver observação de limitação
+    -- no cabeçalho do arquivo).
+    CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ATU.ValSalDocente ELSE ISNULL(SALATU.VALSAL, FUN.VALSAL) END   AS ValorSalarioAtual,
+    CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ANT.ValSalDocente ELSE ISNULL(SALANT.VALSAL, FUN.VALSAL) END   AS ValorSalarioAnterior,
+
+    -- Horas mensais em formato "HHH,mm" (o campo de origem — R171APF.HORMES
+    -- para docentes, R006ESC.HORMES via histórico R038HES para os demais —
+    -- é armazenado em MINUTOS)
+    CASE
+        WHEN FUN.TIPCON IN (10,13)
+            THEN CAST(ISNULL(DOC_ATU.HorMensaisDocente,0)/60 AS VARCHAR)
+                 + ',' + RIGHT('0' + CAST(ISNULL(DOC_ATU.HorMensaisDocente,0)%60 AS VARCHAR), 2)
+        ELSE CAST(ISNULL(ESCATU.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))/60 AS VARCHAR)
+                 + ',' + RIGHT('0' + CAST(ISNULL(ESCATU.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))%60 AS VARCHAR), 2)
+    END                                                   AS HorasMensaisAtual,
+    CASE
+        WHEN FUN.TIPCON IN (10,13)
+            THEN CAST(ISNULL(DOC_ANT.HorMensaisDocente,0)/60 AS VARCHAR)
+                 + ',' + RIGHT('0' + CAST(ISNULL(DOC_ANT.HorMensaisDocente,0)%60 AS VARCHAR), 2)
+        ELSE CAST(ISNULL(ESCANT.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))/60 AS VARCHAR)
+                 + ',' + RIGHT('0' + CAST(ISNULL(ESCANT.HorMensaisNaoDocente, ISNULL(FUN.HORSEM,0))%60 AS VARCHAR), 2)
+    END                                                   AS HorasMensaisAnterior,
+
+    -- Salário composto: para Docentes, valor calculado a partir das horas
+    -- lançadas nas atividades vigentes em R171APF, SUM((HORMES/60) * VALAPF)
+    -- por atividade (HORMES convertido de minutos para horas antes de
+    -- multiplicar pelo valor da hora). Para NÃO docentes, traz o salário
+    -- mensal cadastral do colaborador (mesma fonte de ValorSalarioAtual/
+    -- Anterior — histórico R038HSA com fallback para R034FUN.VALSAL).
+    CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ATU.SalarioComposto ELSE ISNULL(SALATU.VALSAL, FUN.VALSAL) END       AS SalarioCompostoAtual,
+    CASE WHEN FUN.TIPCON IN (10,13) THEN DOC_ANT.SalarioComposto ELSE ISNULL(SALANT.VALSAL, FUN.VALSAL) END       AS SalarioCompostoAnterior,
+
     -- Totais do período (proventos / descontos)
     TOTATU.TotalProventos                                AS TotalProventosAtual,
     TOTATU.TotalDescontos                                AS TotalDescontosAtual,
@@ -300,6 +331,22 @@ SELECT
                 ELSE ROUND(ABS(((IDPATU.VALLIQ - IDPANT.VALLIQ) / IDPANT.VALLIQ) * 100), 2)
             END
     END                                                   AS PercVariacaoLiquido,
+
+    -- Situação do líquido: classificação da variação, mas tratando como
+    -- "Variação Esperada" (em vez de Divergente) os cenários estruturais
+    -- mais comuns identificados na análise de casos reais no teto de 100%:
+    -- (1) admissão recente (<=60 dias antes do fim da competência atual —
+    --     ajustar o "60" conforme necessário) e (2) situação diferente de
+    --     "Ativo" em qualquer um dos dois meses (férias, afastamento,
+    --     demissão, licença, atestado etc.). Casos "Ativo/Ativo" com
+    --     admissão antiga continuam sinalizados normalmente.
+    CASE
+        WHEN ISNULL(IDPANT.VALLIQ, 0) = 0 THEN 'Sem Base de Comparação'
+        WHEN DATEDIFF(DAY, FUN.DATADM, EOMONTH(EVO.CompetenciaAtual)) <= 60 THEN 'Variação Esperada (Admissão Recente)'
+        WHEN ISNULL(SITATU.DESSIT,'Ativo') <> 'Ativo' OR ISNULL(SITANT.DESSIT,'Ativo') <> 'Ativo' THEN 'Variação Esperada (Afastamento/Férias/Licença)'
+        WHEN ROUND(ABS(((IDPATU.VALLIQ - IDPANT.VALLIQ) / IDPANT.VALLIQ) * 100), 2) > 10 THEN 'Divergente'
+        ELSE 'OK'
+    END                                                   AS SituacaoLiquido,
 
     -- Situação do colaborador no último dia de cada competência
     ISNULL(SITATU.CODSIT, 0)                             AS CodSituacaoAtual,
