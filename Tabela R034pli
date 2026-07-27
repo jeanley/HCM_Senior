@@ -1,0 +1,38 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r034pli]    Script Date: 7/27/2026 2:20:32 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r034pli](
+	[numemp] [smallint] NOT NULL,
+	[tipcol] [smallint] NOT NULL,
+	[numcad] [int] NOT NULL,
+	[codper] [smallint] NOT NULL,
+	[desper] [varchar](30) NULL,
+	[perliv] [numeric](7, 4) NULL,
+ CONSTRAINT [cp_r034pli] PRIMARY KEY CLUSTERED 
+(
+	[numemp] ASC,
+	[tipcol] ASC,
+	[numcad] ASC,
+	[codper] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r034pli] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r034pli]  WITH CHECK ADD  CONSTRAINT [ir_r034pli_002] FOREIGN KEY([numemp], [tipcol], [numcad])
+REFERENCES [dbo].[r034fun] ([numemp], [tipcol], [numcad])
+GO
+
+ALTER TABLE [dbo].[r034pli] CHECK CONSTRAINT [ir_r034pli_002]
+GO
+
+
