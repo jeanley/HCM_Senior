@@ -1,0 +1,61 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r164pre]    Script Date: 7/29/2026 3:55:29 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r164pre](
+	[codoem] [int] NOT NULL,
+	[codpla] [smallint] NOT NULL,
+	[perref] [datetime] NOT NULL,
+	[faisal] [numeric](11, 2) NOT NULL,
+	[tipseg] [varchar](1) NULL,
+	[tottit] [numeric](10, 4) NULL,
+	[subtit] [numeric](11, 5) NULL,
+	[totdpl] [numeric](10, 4) NULL,
+	[subdpl] [numeric](11, 5) NULL,
+	[totout] [numeric](10, 4) NULL,
+	[subout] [numeric](10, 4) NULL,
+	[tetcol] [numeric](11, 2) NULL,
+	[tetdep] [numeric](11, 2) NULL,
+	[vlrins] [numeric](11, 2) NULL,
+	[vlrmen] [numeric](11, 2) NULL,
+	[segvia] [numeric](11, 2) NULL,
+	[vlrche] [numeric](11, 2) NULL,
+	[tetdes] [numeric](11, 2) NULL,
+	[tabeve] [smallint] NULL,
+	[eveins] [smallint] NULL,
+	[rgrins] [smallint] NULL,
+	[evemen] [smallint] NULL,
+	[rgrmen] [smallint] NULL,
+	[eveseg] [smallint] NULL,
+	[rgrseg] [smallint] NULL,
+	[eveche] [smallint] NULL,
+	[rgrche] [smallint] NULL,
+	[eveser] [smallint] NULL,
+	[rgrser] [smallint] NULL,
+ CONSTRAINT [cp_r164pre] PRIMARY KEY CLUSTERED 
+(
+	[codoem] ASC,
+	[codpla] ASC,
+	[perref] ASC,
+	[faisal] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r164pre] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r164pre]  WITH CHECK ADD  CONSTRAINT [ir_r164pre_001] FOREIGN KEY([codoem], [codpla])
+REFERENCES [dbo].[r164pla] ([codoem], [codpla])
+GO
+
+ALTER TABLE [dbo].[r164pre] CHECK CONSTRAINT [ir_r164pre_001]
+GO
+
+
