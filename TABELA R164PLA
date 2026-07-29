@@ -1,0 +1,51 @@
+USE [VETORH_PRD]
+GO
+
+/****** Object:  Table [dbo].[r164pla]    Script Date: 7/29/2026 11:57:03 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[r164pla](
+	[codoem] [int] NOT NULL,
+	[codpla] [smallint] NOT NULL,
+	[nompla] [varchar](100) NULL,
+	[tabeve] [smallint] NULL,
+	[evetit] [smallint] NULL,
+	[evedep] [smallint] NULL,
+	[eveemp] [smallint] NULL,
+	[rgrtit] [smallint] NULL,
+	[rgrdep] [smallint] NULL,
+	[rgremp] [smallint] NULL,
+	[tippla] [varchar](1) NULL,
+	[valins] [numeric](11, 2) NULL,
+	[intdir] [varchar](1) NULL,
+	[idedep] [smallint] NULL,
+	[propla] [smallint] NULL,
+	[usu_perdes] [numeric](5, 2) NULL,
+	[usu_perlim] [numeric](5, 2) NULL,
+	[usu_sigpla] [varchar](12) NULL,
+	[tipass] [smallint] NULL,
+	[tipabr] [smallint] NULL,
+	[tipaco] [smallint] NULL,
+ CONSTRAINT [cp_r164pla] PRIMARY KEY CLUSTERED 
+(
+	[codoem] ASC,
+	[codpla] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[r164pla] SET (LOCK_ESCALATION = DISABLE)
+GO
+
+ALTER TABLE [dbo].[r164pla]  WITH CHECK ADD  CONSTRAINT [ir_r164pla_000] FOREIGN KEY([codoem])
+REFERENCES [dbo].[r032oem] ([codoem])
+GO
+
+ALTER TABLE [dbo].[r164pla] CHECK CONSTRAINT [ir_r164pla_000]
+GO
+
+
