@@ -1,0 +1,102 @@
+CREATE VIEW USU_VCONTRAT AS SELECT DISTINCT TOP 100 PERCENT  
+ CASE  
+ WHEN T1.NUMEMP = 1 THEN 'ABEC'  
+ WHEN T1.NUMEMP = 2 THEN 'SOME'  
+ WHEN T1.NUMEMP = 3 THEN 'UBEE'  
+ WHEN T1.NUMEMP = 4 THEN 'UNBEC'  
+ END AS [Mantenedora],  
+ T1.NumEmp,  
+T36.valkey AS [Regional],  
+T1.CodFil,  
+T2.NomFil,  
+T1.PosTra,  
+T32.despos AS [DescrPostoTrabalho],  
+T32.datcri AS [DatainicioPostoTrabalho],  
+T32.datext AS [DataTerminoPostoTrabalho],  
+T33.nombai AS [Cidade],  
+T1.CODEST AS [UF],  
+T1.CodCcu,  
+T30.NomCcu,  
+T1.NUMCAD,  
+t1.nomfun,  
+t1.numcpf,  
+t1.datnas as [DataNascimento],  
+dbo.fn_CalcularIdade(t1.datnas) as [Idade],  
+t1.estciv as [EstadoCivil],  
+T20.DesEtn as [Raca],  
+t1.tipsex as [Sexo],  
+T19.DesGra as [Escolaridade],  
+T1.deffis as [Deficiente],  
+T9.DesDef as [Deficiencia],  
+T10.DesNac as [Nacionalidade],  
+T31.NomCid as [CidadeNascimento],  
+T31.CodEst as [UFNascimento],  
+t16.nombai as [CidadeMoradia],  
+t15.codest as [UFMoradia],  
+t15.emacom as [EMail],  
+case when t1.sitafa in (7,17) then 'Desligado' else 'Ativo' end as [Status],  
+t5.dessit as [Situacao],  
+t28.datafa as [DatadaSituacao],  
+t1.datadm as [DataAdmissao],  
+t28.datafa as [DataDemissao],  
+CASE WHEN G.matriculaGestor IS NOT NULL THEN 'Sim' ELSE 'Não' END as [Gestor],  
+T8.ValKey  as [Vinculo],  
+t3.codcb2 as [CBO],  
+t3.codcar as [CodCargo],  
+t3.titcar as [NomeCargo],  
+T1.cateso AS [CodCategoria],  
+T35.VALKEY AS [NomeCategoria],  
+T26.CodSin,  
+T27.NomSin as [NomeSindicato],  
+'' as [DataBaseSindic],  
+t37.TipoSalario as [TipoSalario],  
+CONVERT(NUMERIC(15,2),t37.ValorSalario) as [Salario],  
+T37.SalarioHora,  
+t37.SalarioComposto as [SalarioComposto],  
+case when (datediff(day,t1.datadm,t15.tercon)+1) > 0 then (datediff(day,t1.datadm,t15.tercon)+1) else 0 end as [PeriodoExperiencia],  
+t15.tercon as [DataFimExperiencia],  
+case when (datediff(day,t1.datadm,t15.tercon)+1) > 0 then (datediff(day,t1.datadm,t15.tercon)+1) else 0 end as [PeriodoRenovacao],  
+t15.tercon  as [DataFimRenovacao],  
+T8.valkey as [TipoContrato],  
+T37.horasmensais as [CargaHoraria],  
+G.nomeGestor as [NomeChefiaImediata],  
+G.cargoGestor as [FuncaoChefiaImediata],  
+G.emailGestor as [EMailChefiaImediata]  
+from r034fun T1  
+LEFT JOIN R030FIL (nolock) T2 on T2.NumEmp = T1.NumEmp and T2.CodFil = T1.CodFil  
+LEFT JOIN R024CAR (nolock) T3 on T3.EstCar = T1.EstCar and T3.CodCar = T1.CodCar  
+LEFT JOIN R010SIT (nolock) T5 on T5.codsit = T1.sitafa  
+LEFT JOIN R006ESC (nolock) T6 on T6.CodEsc = T1.CodEsc  
+LEFT JOIN R996LSF (nolock) T8 on T8.KeyNam = T1.TipCon and T8.LstNam = 'LTipCon'  
+LEFT JOIN R022DEF (nolock) T9 on T9.CodDef = T1.CodDef  
+LEFT JOIN R023NAC (nolock) T10 on T10.CodNac = T1.CodNac  
+LEFT JOIN R034CPL (nolock) T15 on T15.NumEmp = T1.NumEmp and T15.TipCol = T1.TipCol and T15.NumCad = T1.NumCad  
+LEFT JOIN R074BAI (nolock) T16 on T16.CodCid = T15.CodCid and T16.CodBai = T15.CodBai  
+LEFT JOIN R022GRA (nolock) T19 on T19.grains = T1.GraIns  
+LEFT JOIN R010ETN (nolock) T20 on T20.CodEtn = T1.RacCor  
+-- T26: sindicato vigente via R038HSI, agora como OUTER APPLY TOP(1)  
+-- (substitui LEFT JOIN + subquery escalar MAX(DatAlt) do original)  
+OUTER APPLY  
+(  
+    SELECT TOP (1) H.CodSin  
+    FROM R038HSI H  
+    WHERE H.NumEmp = T1.NumEmp AND H.TipCol = T1.TipCol AND H.NumCad = T1.NumCad  
+    ORDER BY H.DatAlt DESC  
+) T26  
+LEFT JOIN R014SIN (nolock) T27 on T27.CodSin = T26.CodSin  
+LEFT JOIN R038AFA (nolock) T28 on T28.NumEmp = T1.NumEmp and T28.TipCol = T1.TipCol and T28.NumCad = T1.NumCad and T28.DatAfa = T1.DatAfa  
+--LEFT JOIN R038AFA HH ON HH.NUMEMP = T1.NUMEMP AND HH.TIPCOL = T1.TIPCOL AND HH.NUMCAD = T1.NUMCAD AND HH.SITAFA = T1.SITAFA      
+--AND HH.DATAFA = (SELECT MAX(DATAFA) FROM R038AFA AFA WHERE AFA.NUMEMP = T1.NUMEMP AND AFA.TIPCOL = T1.TIPCOL AND AFA.NUMCAD = T1.NUMCAD AND AFA.SITAFA = T1.SITAFA)      
+LEFT JOIN R018CCU (nolock) T30 on T30.NumEmp = T1.NumEmp and T30.CodCcu = T1.CodCcu  
+LEFT JOIN R074CID (nolock) T31 on T31.CodCid = T15.CciNas and t31.codest = t15.estnas  
+LEFT JOIN R017POS (nolock) T32 ON T32.estpos = T1.estpos AND T32.postra = T1.postra AND T32.datext = CONVERT(DATETIME,'1900-12-31 00:00:00.000')  
+LEFT JOIN R074BAI (nolock) T33 ON T33.codbai = T2.codbai and t33.codcid = t2.codcid  
+LEFT JOIN r996lsf (NOLOCK) T35 ON T35.lstnam = 'lCATESO' AND T35.KEYNAM = T1.CATESO  
+left join r996lsf T36 on T36.keynam = T2.usu_region and T36.lstnam = 'usu_lRegion'      
+LEFT JOIN VW_BI_HieCol G ON G.empresaGestor = T1.NUMEMP AND G.matriculaGestor = T1.numcad  
+LEFT JOIN USU_VREMUNERACAOCOLABORADORES (NOLOCK) T37 ON T37.CodMantenedora = T1.numemp AND T37.tipcol = T1.TIPCOL AND T37.Matricula = T1.numcad  
+  
+WHERE ((T1.sitafa not in (7,18)) or ( T1.sitafa in(7,18) and T28.datafa > getDate() - 90) )      
+and t1.numemp <> 5  AND T1.TIPCOL <> 2  
+  
+ORDER BY T1.NUMEMP, T1.CODFIL, T1.nomfun
