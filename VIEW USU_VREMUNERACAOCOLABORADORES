@@ -1,0 +1,77 @@
+
+CREATE VIEW usu_vRemuneracaoColaboradores AS            
+select TOP 100 PERCENT                
+case when a.numemp = 1 then 'ABEC'            
+when a.numemp = 2 then 'SOME'             
+when a.numemp = 3 then 'UBEE'            
+when a.numemp = 4 then 'UNBEC'            
+END Mantenedora,            
+a.numemp as CodMantenedora,            
+a.codfil as CodUnidadeFolha,            
+c.nomfil as NomeUnidadeFolha,            
+a.numcad as Matricula,            
+a.nomfun,            
+k.desgra as GrauInstrucao,            
+a.datadm as DataAdmissao,            
+    CASE             
+        WHEN DATEDIFF(YEAR, DATADM, GETDATE()) = 0 THEN             
+            CASE             
+                WHEN DATEDIFF(MONTH, DATADM, GETDATE()) = 0             
+                    THEN CAST(            
+                            CASE             
+                                WHEN DATEDIFF(DAY, DATADM, GETDATE()) < 0             
+                                    THEN 0             
+                                ELSE DATEDIFF(DAY, DATADM, GETDATE())             
+                            END AS VARCHAR(3)            
+                         ) + ' Dia(s)'            
+                ELSE             
+                    CAST(DATEDIFF(MONTH, DATADM, GETDATE()) AS VARCHAR(3)) + ' Mes(es)'            
+            END            
+        ELSE             
+            CAST(DATEDIFF(YEAR, DATADM, GETDATE()) AS VARCHAR(3))             
+                + ' Ano(s) ' +            
+            CASE             
+                WHEN (DATEDIFF(MONTH, DATADM, GETDATE()) - (DATEDIFF(YEAR, DATADM, GETDATE()) * 12)) = 0             
+                    THEN ''             
+                ELSE 'e ' + CAST((DATEDIFF(MONTH, DATADM, GETDATE()) - (DATEDIFF(YEAR, DATADM, GETDATE()) * 12)) AS VARCHAR(2)) + ' Mes(es)'            
+            END            
+    END AS TempoDeCasa,            
+i.dessit as SituacaoFolha,            
+a.codcar as CodCargo,            
+d.titcar as NomeCargo,            
+d.codcb2 as CodCBO,            
+n.valkey as TipoContrato,            
+r.valkey as TipoSalario,            
+CONVERT(NUMERIC(15,2),a.valsal) as ValorSalario,            
+q.horsem/60 as horassemanal,            
+q.hormes/60 as horasmensais,            
+h.nomegestor,            
+h.cargogestor,      
+a.tipcon ,    
+a.tipcol ,  
+A.NUMEMP  
+            
+from r034fun (nolock) a              
+  inner join r030emp (nolock) b on b.numemp = a.numemp              
+  inner join r030fil (nolock) c on c.codfil = a.codfil and c.numemp = a.numemp              
+  inner join r024car (nolock) d on d.estcar = a.estcar and d.codcar = a.codcar                
+        left join r016orn (nolock) e on e.numloc = a.numloc              
+  left join r018ccu (nolock) f on f.codccu = a.codccu and f.numemp = a.numemp                
+  left join r074cid (nolock) g on g.codcid = c.codcid                
+  left join VW_BI_HieCol h on h.matriculaColaborador = a.numcad and h.tipoColaborador = a.tipcol and h.codigoEmpresaColaborador = a.numemp               
+  left join r010sit (nolock) i on i.codsit = a.sitafa              
+  left join r996lsf (nolock) j on j.keynam = a.estciv and j.lstnam = 'lEstCiv'              
+  left join r022gra (nolock) k on k.grains = a.grains              
+  left join r034cpl (nolock) l on l.numemp = a.numemp and l.tipcol = a.tipcol and l.numcad = a.numcad              
+  left join r023nac (nolock) m on m.codnac = a.codnac              
+  left join r996lsf (nolock) n on n.keynam = a.tipcon and n.lstnam = 'ltipCon'              
+  left join r996lsf (nolock) r on r.keynam = a.tipsal and r.lstnam = 'ltipSal'              
+  left join r074cid (nolock) o on o.codcid = l.codcid              
+  left join r074bai (nolock) p on p.codbai = l.codbai and p.codcid = l.codcid              
+  left join r006esc (nolock) q on q.codesc = a.codesc             
+where 1=1               
+and  a.tipcol in (1,3)              
+and  a.sitafa <> 7            
+and a.numemp <> 5            
+            
+ORDER BY 2,6     
